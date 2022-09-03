@@ -10,12 +10,12 @@ import webapp2
 import logging
 import datetime
 import traceback
-import __builtin__
+import builtins
 
 from decimal import Decimal
 from itertools import chain
 from functools import partial
-from cStringIO import StringIO
+from io import StringIO
 from collections import defaultdict
 
 from webapp2_extras import json
@@ -74,8 +74,8 @@ class UsersHandler(webapp2.RequestHandler):
                 query = query.filter(Log.author != user)
             rows = query.fetch(None)
             names = [log.msg.split('\n')[0][5:] for log in rows ]
-            names = sorted(set(map(lambda name: name.split(' ')[0], names)))
-            names = filter(lambda name: '@' in name, names)
+            names = sorted(set([name.split(' ')[0] for name in names]))
+            names = [name for name in names if '@' in name]
             self.response.write('%d<p>' % len(names) + '<br>'.join(names))
         else:
             template = JINJA_ENVIRONMENT.get_template('login.html')
@@ -287,7 +287,7 @@ class MainHandler(webapp2.RequestHandler):
                 'not yet shared' if not algo.public else '',
             )
         algos = reversed(sorted(query.fetch(None), key=lambda algo: algo.date))
-        algos = map(info, enumerate(algos))
+        algos = list(map(info, enumerate(algos)))
         found = set()
         result = []
         for algo in algos:
@@ -785,7 +785,7 @@ class Executor(object):
             sys.exc_clear()
             with sandbox:
                 with self:
-                    exec script in self.vars
+                    exec(script, self.vars)
                     self.createEvent(self.lastLine)
             lastViz = self.events[-1][1]
             msg = '\nProgram finished.\n\nHit F9 or Ctrl-Enter to run the script again.'
@@ -810,7 +810,7 @@ class Executor(object):
         sys.settrace(self.trace)
 
     def getVars(self, frame):
-        return [(k,v) for k,v in sorted(frame.f_locals.iteritems()) if '__' not in k]
+        return [(k,v) for k,v in sorted(frame.f_locals.items()) if '__' not in k]
 
     def trace(self, frame, event, args):
         now = time.time()
@@ -828,12 +828,12 @@ class Executor(object):
                 self.vizPrims[k] = v
             self.vizPrims['__lineno__'] = frame.f_lineno
             try:
-                exec self.viz in self.vizPrims
+                exec(self.viz, self.vizPrims)
             except Exception as e:
                 if self.showVizErrors:
                     tb = traceback.extract_tb(sys.exc_info()[2])
                     lines = [0]+[lineno for filename,lineno,fn,txt in tb if filename == '<string>']
-                    print 'line %d: %s' % (lines[-1], e)
+                    print('line %d: %s' % (lines[-1], e))
             self.createEvent(frame.f_lineno)
             self.lastLine = frame.f_lineno
             return self.trace
@@ -871,7 +871,7 @@ def __import__(name, globals=None, locals=None, fromlist=None, level=-1):
         if name in OK_IMPORTS:
             return IMPORT(name, globals, locals, fromlist, level)
         ERROR = 'Import Error: module "%s" is not supported.' % name
-        print ERROR
+        print(ERROR)
         raise NotImplementedError(ERROR)
 
 ORIGINAL = { "__import__": IMPORT }
@@ -900,7 +900,7 @@ def builtin_getattr(obj, name, default=None):
 
 def notimplemented(name, *args, **kwargs): 
     ERROR = '"%s" is an unsupported feature' % name.replace('_','')
-    print ERROR
+    print(ERROR)
     raise NotImplementedError(ERROR)
 
 
@@ -912,7 +912,7 @@ class Sandbox():
         
     def __enter__(self):
         ERROR = ''
-        __builtin__.getattr = builtin_getattr
+        builtins.getattr = builtin_getattr
         StaticChecker().visit(ast.parse(SCRIPT))
         for name in NOT_IMPLEMENTED:
             ORIGINAL[name] = getattr(__builtin__, name)
@@ -920,7 +920,7 @@ class Sandbox():
             setattr(__builtin__, name, replacement)
 
     def __exit__(self, *args):
-        __builtin__.getattr = GETATTR
+        builtins.getattr = GETATTR
         for name in NOT_IMPLEMENTED:
             setattr(__builtin__, name, ORIGINAL[name])
 

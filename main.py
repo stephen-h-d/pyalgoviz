@@ -5,24 +5,21 @@ import sys
 import time
 import types
 import jinja2
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import timeit
 import webapp2
 import logging
 import datetime
 import traceback
-import __builtin__
+import builtins
 
 from decimal import Decimal
 from itertools import chain
 from functools import partial
-from cStringIO import StringIO
+from io import StringIO
 from collections import defaultdict
 
 from webapp2_extras import json
-from google.appengine.ext import ndb
-from google.appengine.api import mail
-from google.appengine.api import users
 
 from models import Log
 from models import Algorithm
@@ -74,8 +71,8 @@ class UsersHandler(webapp2.RequestHandler):
                 query = query.filter(Log.author != user)
             rows = query.fetch(None)
             names = [log.msg.split('\n')[0][5:] for log in rows ]
-            names = sorted(set(map(lambda name: name.split(' ')[0], names)))
-            names = filter(lambda name: '@' in name, names)
+            names = sorted(set([name.split(' ')[0] for name in names]))
+            names = [name for name in names if '@' in name]
             self.response.write('%d<p>' % len(names) + '<br>'.join(names))
         else:
             template = JINJA_ENVIRONMENT.get_template('login.html')
@@ -118,7 +115,7 @@ class TutorialDashboardHandler(webapp2.RequestHandler):
                     return 'seconds'
 
             editMap = defaultdict(list)
-            for edit in reversed(last.values()):
+            for edit in reversed(list(last.values())):
                 editMap[ edit.name[8:].replace('+', ' ') ].append(
                     (
                         edit.date,
@@ -126,7 +123,7 @@ class TutorialDashboardHandler(webapp2.RequestHandler):
                         recency(edit),
                         edit.author.email().split('@')[0],
                         edit.author.email(),
-                        'show?' +  urllib.urlencode({
+                        'show?' +  urllib.parse.urlencode({
                             'name': 'Preview: ' + edit.name[8:].replace('+', ' '),
                             'share': 'false',
                             'script': '# Author: %s\n\n%s' % (edit.author, edit.script),
@@ -135,7 +132,7 @@ class TutorialDashboardHandler(webapp2.RequestHandler):
                     )
                 ) 
 
-            edits = reversed(sorted(editMap.iteritems(), key=lambda edit: min([e[0] for e in edit[1]])))
+            edits = reversed(sorted(iter(editMap.items()), key=lambda edit: min([e[0] for e in edit[1]])))
             when = datetime.datetime.utcnow() - datetime.timedelta(days=int(1))
             template = JINJA_ENVIRONMENT.get_template('dashboard.html')
             self.response.write(template.render(locals()))
@@ -173,8 +170,8 @@ class ShowHandler(webapp2.RequestHandler):
         tabs = self.request.get('tabs') == 'true'
         delay = self.request.get('delay') or '1'
         visualize = self.request.get('visualize') == 'true'
-        script = urllib.unquote(self.request.get('script') or '')
-        viz = urllib.unquote(self.request.get('viz') or '')
+        script = urllib.parse.unquote(self.request.get('script') or '')
+        viz = urllib.parse.unquote(self.request.get('viz') or '')
         name = self.request.get('name')
         url = 'https://pyalgoviz.appspot.com/show?name=%s' % name
         user = users.get_current_user()
@@ -400,7 +397,7 @@ class MainHandler(webapp2.RequestHandler):
                 'not yet shared' if not algo.public else '',
             )
         algos = reversed(sorted(query.fetch(None), key=lambda algo: algo.date))
-        algos = map(info, enumerate(algos))
+        algos = list(map(info, enumerate(algos)))
         found = set()
         result = []
         for algo in algos:
@@ -2156,7 +2153,7 @@ class TutorialHandler(ShowHandler):
             return prefix + "<a target=_blank href=" + url +">" + text + "</a>" + postfix
 
         def algo(name, script, viz):
-            params = urllib.urlencode({
+            params = urllib.parse.urlencode({
                 'name': name,
                 'share': 'false',
                 'script': script[1:-1],
@@ -2745,7 +2742,7 @@ class Executor(object):
             sys.exc_clear()
             with sandbox:
                 with self:
-                    exec script in self.vars
+                    exec(script, self.vars)
                     self.createEvent(self.lastLine)
             lastViz = self.events[-1][1]
             msg = '\nProgram finished.\n\nHit F9 or Ctrl-Enter to run the script again.'
@@ -2771,7 +2768,7 @@ class Executor(object):
         sys.settrace(self.trace)
 
     def getVars(self, frame):
-        return [(k,v) for k,v in sorted(frame.f_locals.iteritems()) if '__' not in k]
+        return [(k,v) for k,v in sorted(frame.f_locals.items()) if '__' not in k]
 
     def trace(self, frame, event, args):
         now = time.time()
@@ -2789,12 +2786,12 @@ class Executor(object):
                 self.vizPrims[k] = v
             self.vizPrims['__lineno__'] = frame.f_lineno
             try:
-                exec self.viz in self.vizPrims
+                exec(self.viz, self.vizPrims)
             except Exception as e:
                 if self.showVizErrors:
                     tb = traceback.extract_tb(sys.exc_info()[2])
                     lines = [0]+[lineno for filename,lineno,fn,txt in tb if filename == '<string>']
-                    print 'line %d: %s' % (lines[-1], e)
+                    print('line %d: %s' % (lines[-1], e))
             self.createEvent(frame.f_lineno)
             self.lastLine = frame.f_lineno
             return self.trace
@@ -2832,7 +2829,7 @@ def __import__(name, globals=None, locals=None, fromlist=None, level=-1):
         if name in OK_IMPORTS:
             return IMPORT(name, globals, locals, fromlist, level)
         ERROR = 'Import Error: module "%s" is not supported.' % name
-        print ERROR
+        print(ERROR)
         raise NotImplementedError(ERROR)
 
 ORIGINAL = { "__import__": IMPORT }
@@ -2862,7 +2859,7 @@ def builtin_getattr(obj, name, default=None):
 def notimplemented(name, *args, **kwargs): 
     if name != 'type':
         ERROR = '"%s" is an unsupported feature' % name.replace('_','')
-        print ERROR
+        print(ERROR)
         raise NotImplementedError(ERROR)
 
 
@@ -2874,7 +2871,7 @@ class Sandbox():
         
     def __enter__(self):
         ERROR = ''
-        __builtin__.getattr = builtin_getattr
+        builtins.getattr = builtin_getattr
         StaticChecker().visit(ast.parse(SCRIPT))
         for name in NOT_IMPLEMENTED:
             ORIGINAL[name] = getattr(__builtin__, name)
@@ -2882,7 +2879,7 @@ class Sandbox():
             setattr(__builtin__, name, replacement)
 
     def __exit__(self, *args):
-        __builtin__.getattr = GETATTR
+        builtins.getattr = GETATTR
         for name in NOT_IMPLEMENTED:
             setattr(__builtin__, name, ORIGINAL[name])
 
