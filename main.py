@@ -39,7 +39,7 @@ app.wsgi_app = wrap_wsgi_app(app.wsgi_app)
 def log():
     user = users.get_current_user()
     if user and user.email() in OWNERS:
-        days = request.get('days') or 1
+        days = request.args.get('days', 1)
         when = datetime.datetime.utcnow() - datetime.timedelta(days=int(days))
         key = ndb.Key('Python Algorithms', 'scrap')
         query = Log.query(ancestor=key).filter(Log.date > when).order(-Algorithm.date)
@@ -67,8 +67,6 @@ def users():
     if user and user.email() in OWNERS:
         key = ndb.Key('Python Algorithms', 'scrap')
         query = Log.query(ancestor=key)
-        # TODO I am not 100% sure if `self.request.get()` should be replaced with a call
-        # to `request.args.get()` -- figure that out
         if not request.args.get('all'):
             query = query.filter(Log.author != user)
         rows = query.fetch(None)
@@ -171,13 +169,13 @@ def loadScript(name, user=None):
 
 @app.route('/show')
 def show():
-    edit = request.args.get('edit', 'true')
-    tabs = request.args.get('tabs', 'false') == 'true'
-    delay = request.get('delay') or '1'
-    visualize = request.get('visualize') == 'true'
-    script = urllib.parse.unquote(request.get('script') or '')
-    viz = urllib.parse.unquote(request.get('viz') or '')
-    name = request.get('name')
+    edit = request.args.get('edit') == 'true'
+    tabs = request.args.get('tabs') == 'true'
+    delay = request.args.get('delay', '1')
+    visualize = request.args.get('visualize') == 'true'
+    script = urllib.parse.unquote(request.args.get('script', ''))
+    viz = urllib.parse.unquote(request.args.get('viz', ''))
+    name = request.args.get('name')
     url = 'https://pyalgoviz.appspot.com/show?name=%s' % name
     user = users.get_current_user()
     author = user
@@ -205,7 +203,7 @@ def show():
 
 @app.route('/link')
 def link():
-    name = request.get('name')
+    name = request.args.get('name')
     user = users.get_current_user()
     _, _, _, author = loadScript(name, user)
     return (
@@ -218,9 +216,9 @@ def link():
 
 @app.route('/run', methods=["POST"])
 def run():
-    name = request.get('name')
-    script = request.get('script')
-    viz = request.get('viz')
+    name = request.args.get('name')
+    script = request.args.get('script')
+    viz = request.args.get('viz')
     if script == 'none':
         algo = Algorithm.query(ancestor=ndb.Key('Python Algorithms', 'scrap')) \
             .filter(Algorithm.name == name) \
@@ -231,7 +229,7 @@ def run():
             viz = algo.viz
     result = Executor(
         script, viz,
-        request.get('showVizErrors') == 'true',
+        request.args.get('showVizErrors') == 'true',
     )
     author = users.get_current_user()
     info('Ran %s "%s":\n%s' % (author, name, script))
@@ -251,7 +249,7 @@ def loadfile(name):
 def source():
     user = users.get_current_user()
     if user and user.email() in OWNERS:
-        name = request.get('name') or 'main.py'
+        name = request.args.get('name', 'main.py')
         files = [
             (n, 'sourceLink selected' if n == name else 'sourceLink')
             for n in [
@@ -273,9 +271,9 @@ def update():
     # TODO I am not sure how this would work correctly.  Perhaps this was added for
     # debugging but is not used in production -- ask Chris Laffra
     if user and user.email() in OWNERS:
-        name = request.get('name')
+        name = request.args.get('name')
         name = 'test.py'
-        script = request.get('script')
+        script = request.args.get('script')
         try:
             path = os.path.join(os.path.split(__file__)[0], name)
             with open(path, "w") as file:
@@ -295,9 +293,9 @@ def save():
     try:
         algo = Algorithm(parent=ndb.Key('Python Algorithms', 'scrap'))
         algo.author = author
-        algo.script = request.get('script')
-        algo.viz = request.get('viz')
-        algo.name = request.get('name')
+        algo.script = request.args.get('script')
+        algo.viz = request.args.get('viz')
+        algo.name = request.args.get('name')
         algo.public = False
         algo.put()
         # notify(author, 'save', algo.name, algo.script, algo.viz)
@@ -311,7 +309,7 @@ def save():
 
 @app.route('/load')
 def load():
-    name = request.get('name').replace(' ', '+')
+    name = request.args.get('name').replace(' ', '+')
     author = users.get_current_user()
     try:
         query = Algorithm.query(ancestor=ndb.Key('Python Algorithms', 'scrap')) \
@@ -2570,7 +2568,7 @@ def oscon():
         TUTORIAL_SCRIPT,
         JINJA_ENVIRONMENT.get_template('all.html').render({
             'editor_width': 800,
-            'name': request.get('name'),
+            'name': request.args.get('name'),
             'editor_height': 800,
             'jstabs': False,
         }) + "</div></body></html>"
@@ -2593,7 +2591,7 @@ setInterval(showClock, 1000);function showClock() {var canvas=document.getElemen
 @app.route('/share')
 def share():
     author = users.get_current_user()
-    name = request.get('name')
+    name = request.args.get('name')
     query = Algorithm.query(ancestor=ndb.Key('Python Algorithms', 'scrap')) \
         .filter(Algorithm.author == author) \
         .filter(Algorithm.name == name) \
@@ -2627,7 +2625,7 @@ def share():
 @app.route('/delete')
 def delete():
     author = users.get_current_user()
-    name = request.get('name')
+    name = request.args.get('name')
     query = Algorithm.query(ancestor=ndb.Key('Python Algorithms', 'scrap')) \
         .filter(Algorithm.author == author) \
         .filter(Algorithm.name == name)
@@ -2637,7 +2635,7 @@ def delete():
             version.key.delete()
         info('User %s deleted "%s"' % (
             author.email(),
-            request.get('name'),
+            request.args.get('name'),
         ))
         return Response({'result': 'Deleted "%s"' % name},
                         mimetype="application/json")
