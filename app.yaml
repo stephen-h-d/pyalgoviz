@@ -74,4 +74,4 @@ handlers:
 app_engine_apis: true
 
 env_variables:
-  DEFERRED_USE_CROSS_COMPATIBLE_PICKLE_PROTOCOL: "True"
+  GOOGLE_CLOUD_PROJECT: "pyalgoviz-361922"
