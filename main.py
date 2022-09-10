@@ -13,15 +13,22 @@ from functools import partial
 from io import StringIO
 from collections import defaultdict
 
+from google.auth.transport import requests
+import google.oauth2.id_token
 from google.cloud import ndb
 from google.cloud import datastore
 # from google.appengine.api import mail
-from google.appengine.api import users
+# from google.appengine.api import users
 # from google.appengine.api import wrap_wsgi_app
-from flask import Flask, request, Response
+from flask import Flask, request, Response, redirect, url_for
 
+from middleware import jwt_authenticated
 from models import Log
 from models import Algorithm
+from models import User
+from flask_login import LoginManager, current_user, login_url
+
+login_manager = LoginManager()
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
@@ -32,8 +39,15 @@ OWNERS = [
     'test@example.com',
 ]
 
+SECRET_KEY = os.environ.get("SECRET_KEY")
+PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT")
 
-PROJECT="pyalgoviz-361922"
+firebase_request_adapter = requests.Request()
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query().filter(User.firebase_user_id == user_id).get()
 
 
 class NDBMiddleware:
@@ -49,6 +63,8 @@ class NDBMiddleware:
 app = Flask(__name__)
 app.wsgi_app = NDBMiddleware(app.wsgi_app)
 # app.wsgi_app = wrap_wsgi_app(app.wsgi_app)
+
+login_manager.init_app(app)
 
 
 @app.route("/log")
@@ -183,6 +199,19 @@ def loadScript(name, user=None):
         return name, "# Cannot find: '" + name + "'", "", user
 
 
+@app.route('/test_user')
+@jwt_authenticated
+def test_user():
+    return Response(f"uid: {request.uid}", mimetype='text/plain')
+
+
+@app.route('/login')
+def login():
+    template = JINJA_ENVIRONMENT.get_template('login.html')
+    html = template.render()
+    return Response(html, mimetype="text/html")
+
+
 @app.route('/show')
 def show():
     edit = request.args.get('edit') == 'true'
@@ -193,9 +222,9 @@ def show():
     viz = urllib.parse.unquote(request.args.get('viz', ''))
     name = request.args.get('name')
     url = 'https://pyalgoviz.appspot.com/show?name=%s' % name
-    user = users.get_current_user()
-    author = user
-    if user or visualize:
+
+    author = current_user
+    if current_user.is_authenticated or visualize:
         logout = users.create_logout_url("/")
         if name and not script and not viz:
             _, script, viz, author = loadScript(name, user)
@@ -209,12 +238,12 @@ def show():
         return Response(html, mimetype="text/html")
     else:
         template = JINJA_ENVIRONMENT.get_template('login.html')
-        next = '/show?edit=%s&name=%s' % (edit, name)
         if visualize:
             next = '/close'
-        login = users.create_login_url(next)
-        html = template.render(locals())
-        return Response(html, mimetype="text/html")
+        else:
+            next = '/show?edit=%s&name=%s' % (edit, name)
+
+        return redirect(login_url('/login',next_url=next))
 
 
 @app.route('/link')
