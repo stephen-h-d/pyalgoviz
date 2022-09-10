@@ -1,20 +1,20 @@
-from google.appengine.ext import ndb
+from google.cloud import ndb
 
 
 class Algorithm(ndb.Model):
     author = ndb.UserProperty()
     name = ndb.StringProperty()
-    category = ndb.StringProperty(indexed=False)
-    script = ndb.StringProperty(indexed=False)
-    viz = ndb.StringProperty(indexed=False)
+    category = ndb.StringProperty()
+    script = ndb.StringProperty()
+    viz = ndb.StringProperty()
     date = ndb.DateTimeProperty(auto_now=True)
     public = ndb.BooleanProperty()
-    events = ndb.StringProperty(indexed=False)
+    events = ndb.StringProperty()
 
 
 class Log(ndb.Model):
     author = ndb.UserProperty()
-    msg = ndb.StringProperty(indexed=False)
+    msg = ndb.StringProperty()
     date = ndb.DateTimeProperty(auto_now=True)
 
 

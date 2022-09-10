@@ -13,10 +13,11 @@ from functools import partial
 from io import StringIO
 from collections import defaultdict
 
-from google.appengine.ext import ndb
-from google.appengine.api import mail
+from google.cloud import ndb
+from google.cloud import datastore
+# from google.appengine.api import mail
 from google.appengine.api import users
-from google.appengine.api import wrap_wsgi_app
+# from google.appengine.api import wrap_wsgi_app
 from flask import Flask, request, Response
 
 from models import Log
@@ -31,8 +32,23 @@ OWNERS = [
     'test@example.com',
 ]
 
+
+PROJECT="pyalgoviz-361922"
+
+
+class NDBMiddleware:
+    def __init__(self, app):
+        self.app = app
+        self.client = ndb.Client(project=PROJECT)
+
+    def __call__(self, environ, start_response):
+        with self.client.context():
+            return self.app(environ, start_response)
+
+
 app = Flask(__name__)
-app.wsgi_app = wrap_wsgi_app(app.wsgi_app)
+app.wsgi_app = NDBMiddleware(app.wsgi_app)
+# app.wsgi_app = wrap_wsgi_app(app.wsgi_app)
 
 
 @app.route("/log")
@@ -404,6 +420,7 @@ def main_algorithms():
 
 @app.route('/')
 def main():
+    print("got to main()")
     template = JINJA_ENVIRONMENT.get_template('index.html')
     html = template.render({'algorithms': main_algorithms(), 'user': True})
     logging.info('Response: %d bytes' % len(html))
@@ -2916,6 +2933,12 @@ class NotImplementedError(Exception):
     def __init__(self, msg):
         info(msg)
         Exception.__init__(self, msg)
+
+
+
+
+
+
 
 
 
