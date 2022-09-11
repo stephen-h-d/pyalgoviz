@@ -5,7 +5,7 @@ class User(ndb.Model):
     firebase_user_id = ndb.StringProperty()
     email = ndb.StringProperty()
 
-    # The following four properties are necessary for use in conjunction with
+    # The following three properties and method are necessary for use in conjunction with
     # the flask-login library
     @property
     def is_authenticated(self) -> bool:
@@ -19,7 +19,6 @@ class User(ndb.Model):
     def is_anonymous(self) -> bool:
         return True
 
-    @property
     def get_id(self) -> bool:
         return self.firebase_user_id
 

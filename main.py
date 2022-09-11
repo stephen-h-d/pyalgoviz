@@ -61,6 +61,7 @@ class NDBMiddleware:
 
 
 app = Flask(__name__)
+app.secret_key = SECRET_KEY
 app.wsgi_app = NDBMiddleware(app.wsgi_app)
 # app.wsgi_app = wrap_wsgi_app(app.wsgi_app)
 
@@ -213,6 +214,7 @@ def login():
 
 
 @app.route('/show')
+@jwt_authenticated(required=False)
 def show():
     edit = request.args.get('edit') == 'true'
     tabs = request.args.get('tabs') == 'true'
@@ -224,8 +226,10 @@ def show():
     url = 'https://pyalgoviz.appspot.com/show?name=%s' % name
 
     author = current_user
+    print(f"current_user {current_user}")
+    print(f".is_authenticated {current_user.is_authenticated}")
+    print(f"visualize {visualize}")
     if current_user.is_authenticated or visualize:
-        logout = users.create_logout_url("/")
         if name and not script and not viz:
             _, script, viz, author = loadScript(name, user)
         editor_width = 1150 if tabs else 600
@@ -449,7 +453,6 @@ def main_algorithms():
 
 @app.route('/')
 def main():
-    print("got to main()")
     template = JINJA_ENVIRONMENT.get_template('index.html')
     html = template.render({'algorithms': main_algorithms(), 'user': True})
     logging.info('Response: %d bytes' % len(html))
