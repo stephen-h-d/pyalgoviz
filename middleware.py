@@ -28,15 +28,14 @@ a = TypeVar("a")
 default_app = firebase_admin.initialize_app()
 
 
-def jwt_authenticated(required: bool = True):
+def _jwt_authenticated(required: bool = True):
     # This middleware function was adapted from a google app engine docs sample.
     # I'm not sure why it's annotated as returning `int` but I'm leaving it for now.
-    def _jwt_authenticated(func: Callable[..., int]) -> Callable[..., int]:
+    def inner_jwt_authenticated(func: Callable[..., int]) -> Callable[..., int]:
         @wraps(func)
         def decorated_function(*args: a, **kwargs: a) -> a:
             if current_user.is_authenticated:
-                print("current user already authenticated")
-                return
+                return func(*args, **kwargs)
 
             id_token = request.cookies.get("token")
             print(f"id_token {id_token}")
@@ -71,4 +70,8 @@ def jwt_authenticated(required: bool = True):
 
         return decorated_function
 
-    return _jwt_authenticated
+    return inner_jwt_authenticated
+
+
+jwt_authenticated = _jwt_authenticated(required=True)
+jwt_authenticated_optional = _jwt_authenticated(required=False)

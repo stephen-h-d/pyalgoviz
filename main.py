@@ -20,9 +20,9 @@ from google.cloud import datastore
 # from google.appengine.api import mail
 # from google.appengine.api import users
 # from google.appengine.api import wrap_wsgi_app
-from flask import Flask, request, Response, redirect, url_for
+from flask import Flask, request, Response, redirect, url_for, jsonify
 
-from middleware import jwt_authenticated
+from middleware import jwt_authenticated, jwt_authenticated_optional
 from models import Log
 from models import Algorithm
 from models import User
@@ -214,7 +214,7 @@ def login():
 
 
 @app.route('/show')
-@jwt_authenticated(required=False)
+@jwt_authenticated_optional
 def show():
     edit = request.args.get('edit') == 'true'
     tabs = request.args.get('tabs') == 'true'
@@ -264,10 +264,11 @@ def link():
 
 
 @app.route('/run', methods=["POST"])
+@jwt_authenticated
 def run():
-    name = request.args.get('name')
-    script = request.args.get('script')
-    viz = request.args.get('viz')
+    name = request.form.get('name')
+    script = request.form.get('script')
+    viz = request.form.get('viz')
     if script == 'none':
         algo = Algorithm.query(ancestor=ndb.Key('Python Algorithms', 'scrap')) \
             .filter(Algorithm.name == name) \
@@ -278,14 +279,15 @@ def run():
             viz = algo.viz
     result = Executor(
         script, viz,
-        request.args.get('showVizErrors') == 'true',
+        request.form.get('showVizErrors') == 'true',
     )
-    author = users.get_current_user()
+    author = current_user
     info('Ran %s "%s":\n%s' % (author, name, script))
-    return {
+    result = {
         'error': result.error,
         'events': result.events,
     }
+    return result
 
 
 def loadfile(name):
@@ -2803,7 +2805,6 @@ class Executor(object):
         }
         sandbox = Sandbox(script)
         try:
-            sys.exc_clear()
             with sandbox:
                 with self:
                     exec(script, self.vars)
@@ -2941,7 +2942,8 @@ class Sandbox():
         SCRIPT = script
         ERROR = ""
 
-    def __enter__():
+    def __enter__(self):
+        ...
         ERROR = ''
         builtins.getattr = builtin_getattr
         StaticChecker().visit(ast.parse(SCRIPT))
@@ -2952,6 +2954,7 @@ class Sandbox():
             setattr(__builtin__, name, replacement)
 
     def __exit__(self, *args):
+        ...
         builtins.getattr = GETATTR
         for name in NOT_IMPLEMENTED:
             setattr(__builtin__, name, ORIGINAL[name])
