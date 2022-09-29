@@ -2944,20 +2944,20 @@ class Sandbox():
 
     def __enter__(self):
         ...
-        ERROR = ''
-        builtins.getattr = builtin_getattr
-        StaticChecker().visit(ast.parse(SCRIPT))
-        for name in NOT_IMPLEMENTED:
-            ORIGINAL[name] = getattr(__builtin__, name)
-            replacement = __import__ if name == "__import__" else partial(notimplemented,
-                                                                          name)
-            setattr(__builtin__, name, replacement)
+        # ERROR = ''
+        # builtins.getattr = builtin_getattr
+        # StaticChecker().visit(ast.parse(SCRIPT))
+        # for name in NOT_IMPLEMENTED:
+        #     ORIGINAL[name] = getattr(__builtin__, name)
+        #     replacement = __import__ if name == "__import__" else partial(notimplemented,
+        #                                                                   name)
+        #     setattr(__builtin__, name, replacement)
 
     def __exit__(self, *args):
         ...
-        builtins.getattr = GETATTR
-        for name in NOT_IMPLEMENTED:
-            setattr(__builtin__, name, ORIGINAL[name])
+        # builtins.getattr = GETATTR
+        # for name in NOT_IMPLEMENTED:
+        #     setattr(__builtin__, name, ORIGINAL[name])
 
 
 class TimeoutError(Exception):

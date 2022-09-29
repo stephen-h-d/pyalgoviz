@@ -36323,6 +36323,8 @@ function doRunScript() {
         viz: vizEditor.getValue(),
         showVizErrors: showVizErrors
     }
+    // TODO use params as a context to put into a call to `asyncRun()`.
+
     d3.json("/run", function(data) {
         $('*').css('cursor','auto');
         $("#runButton").removeAttr("disabled");

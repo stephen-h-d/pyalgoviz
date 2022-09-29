@@ -154,12 +154,8 @@
                 {% endfor %}
             }
 
-            setTimeout(function() {
-                var element = document.createElement("script");
-                element.setAttribute("type","text/javascript")
-                element.setAttribute("src", "all.js")
-                document.body.appendChild(element);
-            }, 100)
+            
         </script>
+        <script type="module" src="all.js"></script>
     </body>
 </html>
