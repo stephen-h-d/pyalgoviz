@@ -36324,6 +36324,12 @@ function doRunScript() {
         showVizErrors: showVizErrors
     }
     // TODO use params as a context to put into a call to `asyncRun()`.
+    // e.g.:
+
+
+
+
+
 
     d3.json("/run", function(data) {
         $('*').css('cursor','auto');
@@ -36698,3 +36704,8 @@ window.onbeforeunload = function () {
 if (scriptEditor.getValue()) {
     doRunScript();
 }
+
+console.log("!!got here!!");
+
+runButton = document.getElementById("runButton");
+runButton.addEventListener("click", doRunScript);
