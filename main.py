@@ -307,7 +307,6 @@ def source():
                 'main.py', 'models.py',
                 'index.html', 'edit.html', 'source.html',
                 'all.css', 'pyalgoviz.css',
-                'all.html',
             ]
         ]
         source = loadfile(name)
@@ -522,7 +521,8 @@ img { margin-top:25px; margin-bottom: 25px; }
 DEMO_HTML_HEADER = "<html><head><style>" + loadfile("all.css") + "</style>" + \
                    "<style>%s</style></head><body><div id=main>" % DEMO_HTML_CSS
 
-DEMO_HTML_FOOTER = loadfile("all.html") + "</div></body></html>"
+DEMO_HTML_FOOTER = '<script type="module" src="static/js/all.js"></script>'
+DEMO_HTML_FOOTER += "</div></body></html>"
 
 FRAME_WIDTH = 1920 if HD else 1200
 FRAME_HEIGHT = 975 if HD else 700
@@ -2617,12 +2617,8 @@ def oscon():
         ]),
 
         TUTORIAL_SCRIPT,
-        JINJA_ENVIRONMENT.get_template('all.html').render({
-            'editor_width': 800,
-            'name': request.args.get('name'),
-            'editor_height': 800,
-            'jstabs': False,
-        }) + "</div></body></html>"
+        '<script type="module" src="static/js/all.js"></script>',
+        "</div></body></html>"
     ])
     return Response(html, mimetype="text/html")
 
