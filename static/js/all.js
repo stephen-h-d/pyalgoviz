@@ -36327,7 +36327,7 @@ function doRunScript() {
     $('*').css('cursor','wait');
     $("#runButton").attr("disabled", "disabled");
     $('#stopButton span').html('Stop');
-    params = {
+    const params = {
         name: $('#name').val(),
         script: scriptEditor.getValue(),
         viz: vizEditor.getValue(),
@@ -36341,7 +36341,7 @@ function doRunScript() {
             setTimeout(doRunScript, error_delay);
             return;
         }
-        error = data['error'];
+        const error = data['error'];
         events = data['events'];
         outputArea.setValue(error.msg);
         $('#slider').slider({
@@ -36356,7 +36356,7 @@ function doRunScript() {
             lastError = error.msg
             scriptEditor.setSelection({line:error.lineno-1,ch:0}, {line:error.lineno,ch:0});
         }
-        currentEvent = 0;
+        let currentEvent = 0;
         $('#stopButton span').html('Stop');        
         animate();
     }).header("Content-Type","application/x-www-form-urlencoded").send("POST",$.param(params));
@@ -36473,18 +36473,25 @@ const DELAY = {
     'Molasses': 1000,
 }
 
-function animate() {
-    speed = $('#speed').val() || 'MediumSlow'
-    last = events.length - 1;
-    step = Math.max(1, Math.round(Math.random() * events.length/STEPS[speed]));
+var timerId = null;
+
+function doAnimationStep() {
+    const speed = $('#speed').val() || 'MediumSlow';
+    const last = events.length - 1;
+    const step = Math.max(1, Math.round(Math.random() * events.length/STEPS[speed]));
     if (currentEvent < last) {
         currentEvent = Math.min(currentEvent + step, last);
         showEvent();
-        setTimeout(arguments.callee, DELAY[speed])
     }
     else {
-        $('#stopButton span').html('Play');        
+        clearInterval(timerId);
+        $('#stopButton span').html('Play');
     }
+}
+
+function animate() {
+    const speed = $('#speed').val() || 'MediumSlow';
+    timerId = setInterval(doAnimationStep, DELAY[speed]);
 }
 
 // TODO determine why this was declared twice with two different impls
@@ -36598,10 +36605,12 @@ const RENDERING_SCALE = 1.0;
 const EDITOR_WIDTH = 600; // {{editor_width}}; // this used to be templated -- hard-coding for now
 const EDITOR_HEIGHT = 450; // {{editor_height}}; // this used to be templated -- hard-coding for now
 
+var canvas;
+
 function showRendering(script, div, w, h) {
     if (script) {
         $(div).html('')
-        svg = d3.select(div)
+        const svg = d3.select(div)
             .append("svg")
             .attr("width", w)
             .attr("height", h)
@@ -36623,7 +36632,7 @@ function showEvent() {
 // TODO decide whether to remove this next line.  This is left over
 // from when this was rendered as a jinja template.
 //    if ({{jstabs}}) { RENDERING_SCALE = 1.3; }
-    e = events[currentEvent];
+    const e = events[currentEvent];
     try {
         scriptEditor.setSelection({line:e[0]-1,ch:0}, {line:e[0],ch:0});
         progress.innerText = 'Step ' + (currentEvent+1) + ' of ' + events.length
@@ -36635,7 +36644,7 @@ function showEvent() {
         if (output) {
             outputArea.setValue(output + lastError);
         }
-    } catch(e) {
+    } catch(exc) {
     }
     showRendering(e[1], "#rendering", EDITOR_WIDTH, EDITOR_HEIGHT-5);
     lastEvent = currentEvent
@@ -36764,3 +36773,9 @@ $("ul.tabs li").click(function() {
     return false;
 });
 
+function handleRunButtonClicked(event) {
+    doRunScript();
+}
+
+const runButton = document.getElementById("runButton");
+runButton.addEventListener("click", handleRunButtonClicked);
