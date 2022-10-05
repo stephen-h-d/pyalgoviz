@@ -36773,9 +36773,30 @@ $("ul.tabs li").click(function() {
     return false;
 });
 
-function handleRunButtonClicked(event) {
+async function handleRunButtonClicked(event) {
     doRunScript();
+}
+
+async function handlePreviousButtonClicked(event) {
+    doPreviousStep();
+}
+
+async function handleNextButtonClicked(event) {
+    doNextStep();
+}
+
+async function handleStopButtonClicked(event) {
+    doStop();
 }
 
 const runButton = document.getElementById("runButton");
 runButton.addEventListener("click", handleRunButtonClicked);
+
+const previousButton = document.getElementById("previousButton");
+previousButton.addEventListener("click", handlePreviousButtonClicked);
+
+const nextButton = document.getElementById("nextButton");
+nextButton.addEventListener("click", handleNextButtonClicked);
+
+const stopButton = document.getElementById("stopButton");
+stopButton.addEventListener("click", handleStopButtonClicked);
