@@ -36322,6 +36322,11 @@ function B(freq, duration) {
 
 var error_delay = 1000;
 
+function handleSlide( event, ui ) {
+    currentEvent=ui.value;
+    showEvent();
+}
+
 function doRunScript() {
     outputArea.setValue('Running...');
     $('*').css('cursor','wait');
@@ -36349,7 +36354,7 @@ function doRunScript() {
             step: 1,
             min: 0,
             max: events.length-1,
-            slide: function( event, ui ) { currentEvent=ui.value; showEvent() }
+            slide: handleSlide,
         });
         lastError = ''
         if (error.lineno > 0) {

@@ -18,6 +18,7 @@ from typing import Callable, Dict, TypeVar
 
 import firebase_admin
 from firebase_admin import auth  # noqa: F401
+from firebase_admin.auth import InvalidIdTokenError
 from flask import request, Response, redirect, url_for
 from flask_login import login_user, current_user
 
@@ -38,7 +39,6 @@ def _jwt_authenticated(required: bool = True):
                 return func(*args, **kwargs)
 
             id_token = request.cookies.get("token")
-            print(f"id_token {id_token}")
             if id_token:
                 try:
                     decoded_token = firebase_admin.auth.verify_id_token(id_token)
@@ -56,7 +56,10 @@ def _jwt_authenticated(required: bool = True):
                     print(f"user {user}")
 
                     login_user(user)
-
+                except InvalidIdTokenError as e:
+                    # TODO figure out how to indicate to the client that the token is
+                    # invalid
+                    return redirect(url_for('login'))
                 except ValueError as exc:
                     # This will be raised if the token is expired or any other
                     # verification checks fail.
