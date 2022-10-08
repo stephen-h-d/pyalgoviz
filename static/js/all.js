@@ -1,3 +1,7 @@
+import { asyncRun } from "./py-worker.js";
+import { executorScript } from "./run_py.js";
+
+
    function initPyAlgoViz() {
     }
 // d3.min.js
@@ -36327,28 +36331,38 @@ function handleSlide( event, ui ) {
     showEvent();
 }
 
-function doRunScript() {
+async function doRunScript() {
     outputArea.setValue('Running...');
     $('*').css('cursor','wait');
     $("#runButton").attr("disabled", "disabled");
     $('#stopButton span').html('Stop');
-    const params = {
-        name: $('#name').val(),
+
+    const context = {
         script: scriptEditor.getValue(),
         viz: vizEditor.getValue(),
-        showVizErrors: showVizErrors
-    }
-    console.log('run the script for ' + document.location);
-    d3.json("/run", function(data) {
-        $('*').css('cursor','auto');
-        $("#runButton").removeAttr("disabled");
-        if (!data) {
-            setTimeout(doRunScript, error_delay);
-            return;
-        }
-        const error = data['error'];
-        events = data['events'];
-        outputArea.setValue(error.msg);
+        showVizErrors: true,
+    };
+
+    try {
+      const { results, error } = await asyncRun(executorScript, context);
+
+      $('*').css('cursor','auto');
+      $("#runButton").removeAttr("disabled");
+
+      // TODO decide if this is necessary and where/when to run this
+      // if (!data) { // used to be "data", now check for "error"?
+      //    setTimeout(doRunScript, error_delay);
+      //    return;
+      // }
+
+      if (results) {
+        console.log("pyodideWorker return results: ", results);
+
+        const py_error = results.get('py_error');
+        events = results.get('events');
+        const py_error_msg = py_error.get('msg');
+        const py_error_lineno = py_error.get('lineno');
+        outputArea.setValue(py_error_msg);
         $('#slider').slider({
             value: 1,
             step: 1,
@@ -36357,14 +36371,29 @@ function doRunScript() {
             slide: handleSlide,
         });
         lastError = ''
-        if (error.lineno > 0) {
-            lastError = error.msg
-            scriptEditor.setSelection({line:error.lineno-1,ch:0}, {line:error.lineno,ch:0});
+        if (py_error_lineno > 0) {
+            lastError = py_error_msg
+            scriptEditor.setSelection({line:py_error_lineno-1,ch:0}, {line:py_error_lineno,ch:0});
         }
         let currentEvent = 0;
-        $('#stopButton span').html('Stop');        
+        $('#stopButton span').html('Stop');
         animate();
-    }).header("Content-Type","application/x-www-form-urlencoded").send("POST",$.param(params));
+
+
+      } else if (error) {
+        console.log("pyodideWorker error: ", error);
+      } else {
+        console.log("pyodideWorker appeared to return null");
+      }
+    } catch (e) {
+      debugger;
+      console.log(
+      `Error in pyodideWorker: ${e}`
+//        `Error in pyodideWorker at ${e.filename}, Line: ${e.lineno}, ${e.message}`
+      );
+    }
+
+
 }
 
 function getUrlVars() {
