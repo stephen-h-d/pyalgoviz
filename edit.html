@@ -21,7 +21,7 @@
                 <span class="title moveup">vim:</span>
                 <input onchange="doToggleVimMode()" type="checkbox" name="vim"/>
                 <button onclick="doDelete()" id="deleteButton" class="button moveup">Delete</button>
-                <a href={{logout}} class="logout moveup">logout</a>
+                <button id="sign-out" hidden=true>Sign Out</button>
                 <a href="javascript:load_tabs()" class="logout moveup">tabs</a>
             </div>
             <div class="script">
@@ -35,9 +35,9 @@
       <td id="td2" class='block'>
         <div id="tab3">
             <table style="margin: 3px 0 0 3px"><tr><td>
-              <button onclick="doRunScript()" id="runButton" class='button'>Run</button>
+              <button id="runButton" class='button'>Run</button>
             </td><td>
-              <button onclick="doPreviousStep()" id="previousButton" class='button'>&lt;</button>
+              <button id="previousButton" class='button'>&lt;</button>
             </td><td>
               <select id="speed" class="speed">
               <option>Fast</option>
@@ -51,9 +51,9 @@
             </td><td>
               <div id="progress" class="progress moveup">Loading...</div>
             </td><td>
-              <button onclick="doNextStep()" id="nextButton" class='button'>&gt;</button>
+              <button id="nextButton" class='button'>&gt;</button>
             </td><td>
-              <button onclick="doStop()" id="stopButton" class='button'>Play</button>
+              <button id="stopButton" class='button'>Play</button>
             </td></tr><tr><td colspan=7>
               <div id="rendering" class="rendering"></div>
             </td></tr></table>
@@ -219,7 +219,7 @@
         }
     </script>
 
-    {% include "all.html" %}
+    <script type="module" src="static/js/all.js"></script>
 
 </body>
 </html>

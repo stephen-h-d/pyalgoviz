@@ -1,6 +1,8 @@
-runtime: python27
+runtime: python310
+version: 1
 api_version: 1
 threadsafe: false
+service: default
 
 handlers:
 - url: /icon-home.png
@@ -40,37 +42,36 @@ handlers:
   upload: static/html/privacy.html
 
 - url: /user
-  script: main.application
+  script: auto
   login: required
 
 - url: /save
-  script: main.application
+  script: auto
   login: required
 
 - url: /delete
-  script: main.application
+  script: auto
   login: required
 
 - url: /share
-  script: main.application
+  script: auto
   login: required
 
 - url: /show
-  script: main.application
+  script: auto
 
 - url: /run
-  script: main.application
+  script: auto
 
 - url: /all.js
   static_files: static/js/all.js
   upload: static/js/all.js
 
 - url: /.*
-  script: main.application
+  script: auto
 
 
-libraries:
-- name: webapp2
-  version: latest
-- name: jinja2
-  version: latest
+app_engine_apis: true
+
+env_variables:
+  GOOGLE_CLOUD_PROJECT: "pyalgoviz-361922"
