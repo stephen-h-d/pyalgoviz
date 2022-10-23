@@ -1,0 +1,65 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+exclude: 'telescope_lang/gen'
+repos:
+-   repo: https://github.com/psf/black
+    rev: 22.1.0
+    hooks:
+    -   id: black
+        stages: [commit]
+-   repo: https://github.com/MarcoGorelli/absolufy-imports
+    rev: v0.3.1
+    hooks:
+    -   id: absolufy-imports
+        name: "absolufy imports"
+-   repo: https://github.com/asottile/reorder_python_imports
+    rev: v3.0.1
+    hooks:
+    -   id: reorder-python-imports
+        name: "reorder python imports"
+-   repo: local
+    hooks:
+    -   id: mypy
+        name: mypy
+        files: (\.py|\.pyi)$
+        stages: [commit]
+        language: python
+        entry: 'mypy'
+        pass_filenames: false
+-   repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.1.13
+    hooks:
+    -   id: forbid-tabs
+        name: "forbid tabs"
+        stages: [commit]
+    -   id: remove-tabs
+        name: "remove tabs"
+        stages: [commit]
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.1.0
+    hooks:
+    -   id: trailing-whitespace
+        stages: [commit]
+    -   id: end-of-file-fixer
+        stages: [commit]
+    -   id: check-yaml
+        stages: [commit]
+    -   id: check-added-large-files
+        stages: [commit]
+    -   id: check-merge-conflict
+        stages: [commit]
+-   repo: https://github.com/myint/autoflake
+    rev: v1.4
+    hooks:
+    -   id: autoflake
+        name: autoflake
+        args: ["--in-place", "--remove-unused-variables", "--remove-all-unused-imports"]
+        language: python
+        files: \.py$
+        exclude: 'scratch'
+-   repo: https://gitlab.com/pycqa/flake8
+    rev: 3.9.2
+    hooks:
+    - id: flake8
+      stages: [commit]
+#      args: ["--config=.flake8"]
