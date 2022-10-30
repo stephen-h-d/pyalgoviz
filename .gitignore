@@ -1,6 +1,6 @@
 .idea/
 __pycache__/
 login.html
-app/node_modules
-app/dist
-app/package-lock.json
+node_modules
+dist
+package-lock.json
