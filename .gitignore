@@ -1,6 +1,5 @@
 .idea/
 __pycache__/
-login.html
 node_modules
 dist
 package-lock.json
