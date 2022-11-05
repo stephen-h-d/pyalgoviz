@@ -1,2 +1,8 @@
+# Note: This is currently not working with `pip-compile` because `google-cloud-ndb` is incompatible with itself.
 Flask
 pre-commit
+google-cloud-core
+google-cloud-datastore
+google-cloud-ndb
+firebase-admin
+Flask-Login
