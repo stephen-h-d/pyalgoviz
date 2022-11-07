@@ -1,16 +1,19 @@
-import attrs
-
 from datetime import datetime
 
-from server.db.models import User, Algorithm, UserId
+import attrs
+
+from server.db.models import Algorithm
+from server.db.models import User
+from server.db.models import UserId
 from server.db.protocol import DatabaseProtocol
 
 
 @attrs.define
 class MemoryDatabase(DatabaseProtocol):
     """A database based on Google DataStore."""
-    users: dict[UserId, User] = attrs.field(factory=dict,init=False)
-    algos: dict[str, Algorithm] = attrs.field(factory=dict,init=False)
+
+    users: dict[UserId, User] = attrs.field(factory=dict, init=False)
+    algos: dict[str, Algorithm] = attrs.field(factory=dict, init=False)
 
     def get_user(self, user_id: UserId) -> User | None:
         return self.users.get(user_id)

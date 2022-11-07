@@ -13,14 +13,17 @@
 # limitations under the License.
 import os
 from functools import wraps
-from typing import Callable, TypeVar
+from typing import Callable
+from typing import TypeVar
 
 import attrs
 import firebase_admin
 from firebase_admin import auth  # noqa: F401
 from firebase_admin.auth import InvalidIdTokenError
-from flask import request, Response, redirect, url_for
-from flask_login import login_user, current_user
+from flask import request
+from flask import Response
+from flask_login import current_user
+from flask_login import login_user
 from google.cloud import datastore
 
 from server.db.models import User
@@ -52,25 +55,31 @@ class JWTAuthenticator:
                     uid = decoded_token["uid"]
                     user = self.db.get_user(uid)
                     if user is None:
-                        user = User(firebase_user_id=uid,email=decoded_token["email"])
+                        user = User(firebase_user_id=uid, email=decoded_token["email"])
                         self.db.save_user(user)
 
                     login_user(user)
-                except InvalidIdTokenError as e:
+                except InvalidIdTokenError:
                     # TODO figure out how to indicate to the client that the token is
                     # invalid.  It might not be that big a deal, though, if all the
                     # Python code is just an API.
                     # However, there might be some pages that we don't want to load if
                     # the user is not logged in.  Not sure yet.
-                    return Response(status=403,response="Not allowed without logging in first")
+                    return Response(
+                        status=403, response="Not allowed without logging in first"
+                    )
                 except ValueError as exc:
                     # This will be raised if the token is expired or any other
                     # verification checks fail.
                     error_message = str(exc)
-                    return Response(status=403,
-                                    response=f"Error with authentication: {error_message}")
+                    return Response(
+                        status=403,
+                        response=f"Error with authentication: {error_message}",
+                    )
             else:
-                return Response(status=403,response="Not allowed without logging in first")
+                return Response(
+                    status=403, response="Not allowed without logging in first"
+                )
 
             return func(*args, **kwargs)
 

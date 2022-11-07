@@ -38,7 +38,7 @@ function setup() {
         doc: "",
         extensions: minimalSetup,
         parent: scriptEditorDiv
-        });    
+        });
 
     button.addEventListener("click", (event) => save(event, algoView, vizView));
 }

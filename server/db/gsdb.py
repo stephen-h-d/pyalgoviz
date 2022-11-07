@@ -1,14 +1,18 @@
+from datetime import datetime
 from enum import Enum
-from typing import TypeVar, Any
+from typing import Any
+from typing import TypeVar
 
 import attrs
-from google.cloud.datastore import Client, Entity, Key
-from datetime import datetime
+from google.cloud.datastore import Client
+from google.cloud.datastore import Entity
+from google.cloud.datastore import Key
 
-from server.db.protocol import DatabaseProtocol
-
-from server.db.models import UserId, User, Algorithm
 import server.db.models
+from server.db.models import Algorithm
+from server.db.models import User
+from server.db.models import UserId
+from server.db.protocol import DatabaseProtocol
 
 
 class EntityType(Enum):
@@ -31,6 +35,7 @@ T = TypeVar("T")
 @attrs.define
 class GoogleStoreDatabase(DatabaseProtocol):
     """A database based on Google DataStore."""
+
     _client: Client
 
     def _key_query(self, key: Key, attrs_class: type[T]) -> T | None:

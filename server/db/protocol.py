@@ -1,6 +1,8 @@
 from typing import Protocol
 
-from server.db.models import UserId, User, Algorithm
+from server.db.models import Algorithm
+from server.db.models import User
+from server.db.models import UserId
 
 
 class DatabaseProtocol(Protocol):

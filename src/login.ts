@@ -32,4 +32,3 @@ async function signInWithGoogle(event: MouseEvent) {
 if (button !== null) {
     button.addEventListener("click", signInWithGoogle);
 }
-
