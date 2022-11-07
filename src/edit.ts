@@ -1,43 +1,46 @@
 import {minimalSetup, EditorView} from "codemirror";
 
-function save(event: MouseEvent, view: EditorView) {
+function save(event: MouseEvent, algoView: EditorView, vizView: EditorView) {
     fetch("api/save", {
-     
-    // Adding method type
-    method: "POST",
-     
-    // Adding body or contents to send
-    body: JSON.stringify({
-        script: view.state.doc.toString()
-    }),
-     
-    // Adding headers to the request
-    headers: {
-        "Content-type": "application/json; charset=UTF-8"
-    }
-})
+        method: "POST",
+        body: JSON.stringify({
+            algo_script: algoView.state.doc.toString(),
+            viz_script: vizView.state.doc.toString(),
+        }),
+        headers: {
+            "Content-type": "application/json; charset=UTF-8"
+        }
+    })
     .then((result) => {
 
     }).catch((error) => {
+
     });
 }
 
 function setup() {
-    const editorDiv: HTMLElement | null = document.getElementById("editor");
+    const scriptEditorDiv: HTMLElement | null = document.getElementById("algo_editor");
+    const vizEditorDiv: HTMLElement | null = document.getElementById("viz_editor");
     const button: HTMLElement | null = document.getElementById("save");
 
-    if (editorDiv === null || button == null) {
-        console.error("Unable to get load elements.");
+    if (scriptEditorDiv === null || button === null || vizEditorDiv === null) {
+        console.error("Unable to load elements.");
         return;
     }
 
-    const view = new EditorView({
-        doc: "testing...",
+    const algoView = new EditorView({
+        doc: "",
         extensions: minimalSetup,
-        parent: editorDiv
+        parent: scriptEditorDiv
+        });
+
+    const vizView = new EditorView({
+        doc: "",
+        extensions: minimalSetup,
+        parent: scriptEditorDiv
         });    
 
-    button.addEventListener("click", (event) => save(event, view));
+    button.addEventListener("click", (event) => save(event, algoView, vizView));
 }
 
 setup();

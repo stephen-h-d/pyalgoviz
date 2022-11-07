@@ -10,7 +10,7 @@ class DatabaseProtocol(Protocol):
     def save_user(self, user: User) -> None:
         ...
 
-    def get_algo(self, author_id: UserId, name: str) -> Algorithm:
+    def get_algo(self, author_id: UserId, name: str) -> Algorithm | None:
         ...
 
     def save_algo(self, algo: Algorithm):

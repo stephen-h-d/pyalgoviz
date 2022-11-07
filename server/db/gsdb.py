@@ -65,12 +65,12 @@ class GoogleStoreDatabase(DatabaseProtocol):
         key_str = str(author_id) + ":" + algo_name
         return self._client.key(EntityType.ALGORITHM.value, key_str)
 
-    def get_algo(self, author_id: UserId, name: str) -> Algorithm:
+    def get_algo(self, author_id: UserId, name: str) -> Algorithm | None:
         algo_key = self._make_algo_key(author_id, name)
         return self._key_query(algo_key, Algorithm)
 
     def save_algo(self, algo: Algorithm):
-        algo_key = self._make_algo_key(algo.author, algo.name)
+        algo_key = self._make_algo_key(algo.author_id, algo.name)
         algo.last_updated = datetime.now()
         self._save_entity(algo_key, algo)
 

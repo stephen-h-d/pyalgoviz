@@ -23,21 +23,21 @@ class User:
     def is_anonymous(self) -> bool:
         return True
 
-    def get_id(self) -> bool:
+    def get_id(self) -> UserId:
         return self.firebase_user_id
 
 
-@attrs.define
+@attrs.define(kw_only=True)
 class Algorithm:
-    author: UserId
+    author_id: UserId
     name: str
     algo_script: str
     viz_script: str
-    last_updated: datetime
-    public: bool
+    public: bool = False
     # not sure, but I think `events` in the old model was a way to cache a run of the
     # script for the public "all" page.
-    cached_events: list[str]
+    cached_events: list[str] = []
+    last_updated: datetime | None = None
 
 
 @attrs.define
