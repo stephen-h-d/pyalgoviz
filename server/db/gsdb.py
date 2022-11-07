@@ -20,7 +20,7 @@ class EntityType(Enum):
     ALGORITHM = "Algorithm"
 
 
-def _kind_for(attrs_class: type[User] | type[Algorithm]) -> str:
+def _kind_for(attrs_class: type) -> str:
     match attrs_class:
         case server.db.models.User:
             return EntityType.USER.value
@@ -50,7 +50,7 @@ class GoogleStoreDatabase(DatabaseProtocol):
         else:
             return None
 
-    def _save_entity(self, key: Key, attrs_instance: Any):
+    def _save_entity(self, key: Key, attrs_instance: Any) -> None:
         entity = Entity(key)
         entity.update(attrs.asdict(attrs_instance))
         self._client.put(entity)
@@ -63,7 +63,7 @@ class GoogleStoreDatabase(DatabaseProtocol):
         user_key = self._client.key(EntityType.USER.value, user.firebase_user_id)
         self._save_entity(user_key, user)
 
-    def _make_algo_key(self, author_id: UserId, algo_name: str):
+    def _make_algo_key(self, author_id: UserId, algo_name: str) -> Key:
         # keys can be strings, and there can only be one key, so this is how we guarantee
         # uniqueness of the algorithm by name and author -- by combining the author ID and
         # the algorithm name.
@@ -74,7 +74,7 @@ class GoogleStoreDatabase(DatabaseProtocol):
         algo_key = self._make_algo_key(author_id, name)
         return self._key_query(algo_key, Algorithm)
 
-    def save_algo(self, algo: Algorithm):
+    def save_algo(self, algo: Algorithm) -> None:
         algo_key = self._make_algo_key(algo.author_id, algo.name)
         algo.last_updated = datetime.now()
         self._save_entity(algo_key, algo)

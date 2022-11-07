@@ -15,7 +15,7 @@ class DatabaseProtocol(Protocol):
     def get_algo(self, author_id: UserId, name: str) -> Algorithm | None:
         ...
 
-    def save_algo(self, algo: Algorithm):
+    def save_algo(self, algo: Algorithm) -> None:
         ...
 
     def get_algo_names_by(self, author_id: UserId) -> list[str]:

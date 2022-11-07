@@ -13,16 +13,17 @@
 # limitations under the License.
 import os
 from functools import wraps
+from typing import Any
 from typing import Callable
 from typing import TypeVar
 
 import attrs
-import firebase_admin
-from firebase_admin import auth  # noqa: F401
-from firebase_admin.auth import InvalidIdTokenError
+import firebase_admin  # type: ignore[import]
+from firebase_admin import auth  # noqa: F401  # type: ignore[import]
+from firebase_admin.auth import InvalidIdTokenError  # type: ignore[import]
 from flask import request
 from flask import Response
-from flask_login import current_user
+from flask_login import current_user  # type: ignore[import]
 from flask_login import login_user
 from google.cloud import datastore
 
@@ -44,7 +45,7 @@ class JWTAuthenticator:
     # I'm not sure why it's annotated as returning `int` but I'm leaving it for now.
     def authenticated(self, func: Callable[..., int]) -> Callable[..., int]:
         @wraps(func)
-        def decorated_function(*args: a, **kwargs: a) -> a:
+        def decorated_function(*args: Any, **kwargs: Any) -> Any:
             if current_user.is_authenticated:
                 return func(*args, **kwargs)
 
