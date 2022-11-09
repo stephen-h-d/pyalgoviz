@@ -1,6 +1,5 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
-exclude: 'telescope_lang/gen'
 repos:
 -   repo: https://github.com/psf/black
     rev: 22.1.0
