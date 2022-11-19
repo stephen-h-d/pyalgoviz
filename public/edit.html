@@ -7,7 +7,36 @@
 <body>
 <div id="algo_editor"></div>
 <div id="viz_editor"></div>
-<button id="save">Save</button>
+<div id="text_output"></div>
+<button id="save_button">Save</button>
+
+<table style="margin: 3px 0 0 3px"><tr><td>
+  <button id="run_button" class='button'>Run</button>
+</td><td>
+  <button id="previous_button" class='button'>&lt;</button>
+</td><td>
+  <select id="speed" class="speed">
+  <option>Fast</option>
+  <option selected>Medium</option>
+  <option>Slow</option>
+  <option>Snail</option>
+  <option>Molasses</option>
+  </select>
+</td><td>
+  <div id="slider" class='slider'></div>
+</td><td>
+  <div id="progress" class="progress moveup">Loading...</div>
+</td><td>
+  <button id="next_button" class='button'>&gt;</button>
+</td><td>
+  <button id="play_pause_button" class='button'>Play</button>
+</td></tr><tr><td colspan=7>
+  <div id="rendering" class="rendering"></div>
+</td></tr>
+</table>
+
+<div id="render_area" class="rendering"></div>
+
 <script type="module" src="/src/edit.ts"></script>
 </body>
 </html>
