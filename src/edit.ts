@@ -210,7 +210,9 @@ class Visualizer {
   public animate() {
     // const speed = $("#speed").val() || "MediumSlow";
     const speed = "MediumSlow";  // TODO actually get speed from slider
-    this.timerId = window.setInterval(this.doAnimationStep, DELAY[speed]);
+
+
+    this.timerId = window.setInterval(() => this.doAnimationStep(), DELAY[speed]);
   }
 
   private setOutputAreaText(text: string) {
@@ -226,6 +228,7 @@ class Visualizer {
   }
 
   public async doRun() {
+    // debugger;
     this.setOutputAreaText("Running...");
 
     // $('*').css('cursor','wait'); // TODO change the cursors somehow?
@@ -240,7 +243,7 @@ class Visualizer {
 
     try {
       // TODO make this a bona fide results object so TS / VSCode doesn't complain
-      const { results, error } = await asyncRun(executorScript, context);
+      const { py_error, events } = await asyncRun(executorScript, context);
 
     //   $("*").css("cursor", "auto");  // TODO change the cursors somehow?
       this.runButton.disabled = false;
@@ -251,39 +254,34 @@ class Visualizer {
       //    return;
       // }
 
-      if (results) {
-        console.log("pyodideWorker return results: ", results);
-
-        const py_error = results.get("py_error");
-        this.events = results.get("events");
-        const py_error_msg = py_error.get("msg");
-        const py_error_lineno = py_error.get("lineno");
-        this.setOutputAreaText(py_error_msg);
-        // $("#slider").slider({ // TODO actually set up slider
-        //   value: 1,
-        //   step: 1,
-        //   min: 0,
-        //   max: this.events.length - 1,
-        //   slide: handleSlide,
-        // });
-        this.lastError = "";
-        if (py_error_lineno > 0) {
+      this.events = events;
+      const py_error_msg = py_error.get("msg");
+      const py_error_lineno = py_error.get("lineno");
+      this.setOutputAreaText(py_error_msg);
+      // $("#slider").slider({ // TODO actually set up slider
+      //   value: 1,
+      //   step: 1,
+      //   min: 0,
+      //   max: this.events.length - 1,
+      //   slide: handleSlide,
+      // });
+      this.lastError = "";
+      if (py_error_lineno > 0) {
           this.lastError = py_error_msg;
-        //   this.scriptEditor.setSelection( // TODO do error highlighting here with lineHighlighter
-        //     { line: py_error_lineno - 1, ch: 0 },
-        //     { line: py_error_lineno, ch: 0 }
-        //   );
-        }
+      //   this.scriptEditor.setSelection( // TODO do error highlighting here with lineHighlighter
+      //     { line: py_error_lineno - 1, ch: 0 },
+      //     { line: py_error_lineno, ch: 0 }
+      //   );
+      }
+
+      if (this.events !== undefined) {
         this.currentEvent = 0;
         this.playPauseButton.innerText = "Pause";
         this.animate();
-      } else if (error) {
-        console.log("pyodideWorker error: ", error);
       } else {
-        console.log("pyodideWorker appeared to return null");
+        console.error("events undefined after calling asyncRun");
       }
     } catch (e) {
-      debugger;
       console.log(
         `Error in pyodideWorker: ${e}`
         //        `Error in pyodideWorker at ${e.filename}, Line: ${e.lineno}, ${e.message}`
@@ -331,13 +329,80 @@ function setup() {
   const playPauseButton = get_button_element("play_pause_button");
 
   const algoView = new EditorView({
-    doc: "",
+    doc: `
+A = [
+    [2, 1, -1],
+    [-3, -1, 2],
+    [-2, 1, 2]
+]
+
+b = [8, -11, -3]
+
+
+
+def reduce(A, b, i):
+    if i == len(A):
+        return
+    if A[i][i] == 0:
+        #swap as need non zero pivot
+        for j in range(i + 1, len(A)):
+            if A[j][i] != 0:
+                A[i], A[j] = A[j], A[i]
+                break
+    if A[i][i] == 0:
+        #no pivots
+        reduce(A, b, i + 1)
+
+    pivot = float(A[i][i])
+    A[i] = [v/pivot for v in A[i]]
+    b[i] = b[i]/pivot
+
+    for j in range(i + 1, len(A)):
+        to_zero = A[j][i]
+        A[j] = [v_row - to_zero * v_pivot for v_row, v_pivot in zip(A[j], A[i])]
+        b[j] = b[j] - to_zero * b[i]
+
+    reduce(A, b, i + 1)
+
+reduce(A, b, 0)
+    `,
     extensions: minimalSetup,
     parent: scriptEditorDiv,
   });
 
   const vizView = new EditorView({
-    doc: "",
+    doc: `
+s = 100
+indent = 50
+
+def draw_system(pivot):
+    for i, row in enumerate(A):
+        bi = b[i]
+        rect(3 * s + s, indent + s*i, s, s, fill='white', border='blue')
+        text(3 * s + s + s/2 - 10, indent + s * i + s/2 + 10, bi, size=23, font='Arial', color='black')
+        text(3 * s + s - s/3, indent + s * i + s/2 + 10, "=", size=23, font='Arial', color='black')
+        for j, v in enumerate(row):
+            fill = 'white'
+            if i <= pivot and j >= i:
+                fill = 'pink'
+                if i == j:
+                    fill = 'yellow'
+            rect(indent + s*j, indent + s * i, s, s, fill=fill, border='black')
+            txt = str(v) + " " + "XYZ"[j]
+            text(indent + s*j + s/2 - 26, indent + s * i + s/2 + 10, txt, size=23, font='Arial', color='black')
+
+#diag = indent + s * (i + 0.5)
+pivot = i
+draw_system(pivot)
+
+
+
+if pivot >= 2:
+    rect(260, 265, 220, 66, fill='none', border='red')
+    text(20, 410, "Z = -1 so we can now find Y = 3 etc", size=32)
+else:
+    text(20, 410, "Gaussian Elimination", size=32)
+`,
     extensions: minimalSetup,
     parent: vizEditorDiv,
   });
@@ -352,7 +417,7 @@ function setup() {
   const editorsMgr = new EditorsMgr(algoView, vizView);
 
   saveButton.addEventListener("click", editorsMgr.save);
-  runButton.addEventListener("click", visualizer.doRun);
+  runButton.addEventListener("click", async (event) => await visualizer.doRun());
   previousButton.addEventListener("click", visualizer.doPreviousStep);
   nextButton.addEventListener("click", visualizer.doNextStep);
   playPauseButton.addEventListener("click", visualizer.doPlayPause);
