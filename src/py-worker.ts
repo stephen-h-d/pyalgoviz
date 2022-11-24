@@ -1,4 +1,4 @@
-const pyodideWorker = new Worker("webworker.js");
+const pyodideWorker = new Worker("pyodide-0.21.3/webworker.js");
 
 const callbacks = new Map();
 
@@ -23,7 +23,7 @@ const asyncRun = (() => {
     // the id could be generated more carefully
     id = (id + 1) % Number.MAX_SAFE_INTEGER;
 
-    return new Promise((onSuccess) =>  {
+    return new Promise((onSuccess) =>  { // TODO add onError / reject here?
       callbacks.set(id, onSuccess);
       pyodideWorker.postMessage({
         ...context,

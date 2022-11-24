@@ -330,41 +330,9 @@ function setup() {
 
   const algoView = new EditorView({
     doc: `
-A = [
-    [2, 1, -1],
-    [-3, -1, 2],
-    [-2, 1, 2]
-]
-
-b = [8, -11, -3]
-
-
-
-def reduce(A, b, i):
-    if i == len(A):
-        return
-    if A[i][i] == 0:
-        #swap as need non zero pivot
-        for j in range(i + 1, len(A)):
-            if A[j][i] != 0:
-                A[i], A[j] = A[j], A[i]
-                break
-    if A[i][i] == 0:
-        #no pivots
-        reduce(A, b, i + 1)
-
-    pivot = float(A[i][i])
-    A[i] = [v/pivot for v in A[i]]
-    b[i] = b[i]/pivot
-
-    for j in range(i + 1, len(A)):
-        to_zero = A[j][i]
-        A[j] = [v_row - to_zero * v_pivot for v_row, v_pivot in zip(A[j], A[i])]
-        b[j] = b[j] - to_zero * b[i]
-
-    reduce(A, b, i + 1)
-
-reduce(A, b, 0)
+for x in range(50, 100, 50):
+    for y in range(50, 100, 50):
+        n = y / 50
     `,
     extensions: minimalSetup,
     parent: scriptEditorDiv,
@@ -372,37 +340,20 @@ reduce(A, b, 0)
 
   const vizView = new EditorView({
     doc: `
-s = 100
-indent = 50
+from math import pi
 
-def draw_system(pivot):
-    for i, row in enumerate(A):
-        bi = b[i]
-        rect(3 * s + s, indent + s*i, s, s, fill='white', border='blue')
-        text(3 * s + s + s/2 - 10, indent + s * i + s/2 + 10, bi, size=23, font='Arial', color='black')
-        text(3 * s + s - s/3, indent + s * i + s/2 + 10, "=", size=23, font='Arial', color='black')
-        for j, v in enumerate(row):
-            fill = 'white'
-            if i <= pivot and j >= i:
-                fill = 'pink'
-                if i == j:
-                    fill = 'yellow'
-            rect(indent + s*j, indent + s * i, s, s, fill=fill, border='black')
-            txt = str(v) + " " + "XYZ"[j]
-            text(indent + s*j + s/2 - 26, indent + s * i + s/2 + 10, txt, size=23, font='Arial', color='black')
-
-#diag = indent + s * (i + 0.5)
-pivot = i
-draw_system(pivot)
-
-
-
-if pivot >= 2:
-    rect(260, 265, 220, 66, fill='none', border='red')
-    text(20, 410, "Z = -1 so we can now find Y = 3 etc", size=32)
-else:
-    text(20, 410, "Gaussian Elimination", size=32)
-`,
+text(x, y, "x=%s y=%s n=%d" % (x, y, n), size=10 + n*3, font="Arial", color='red')
+rect(450, 50, 50 + n*10, 50 + n*10, fill="brown", border="lightyellow")
+line(50, 50, x, y, color="purple", width=6)
+circle(300, 200, n * 25, fill="transparent", border="green")
+arc(100,
+    325,
+    innerRadius=50,
+    outerRadius=100,
+    startAngle=(n - 1) * 2 * pi/7,
+    endAngle=n * 2 * pi/7,
+    color="orange")
+    `,
     extensions: minimalSetup,
     parent: vizEditorDiv,
   });
@@ -416,11 +367,11 @@ else:
   const visualizer = new Visualizer(algoView, outputArea, vizView, runButton, playPauseButton, renderAreaDiv);
   const editorsMgr = new EditorsMgr(algoView, vizView);
 
-  saveButton.addEventListener("click", editorsMgr.save);
+  saveButton.addEventListener("click", editorsMgr.save.bind(editorsMgr));
   runButton.addEventListener("click", async (event) => await visualizer.doRun());
-  previousButton.addEventListener("click", visualizer.doPreviousStep);
-  nextButton.addEventListener("click", visualizer.doNextStep);
-  playPauseButton.addEventListener("click", visualizer.doPlayPause);
+  previousButton.addEventListener("click", async (event) => visualizer.doPreviousStep());
+  nextButton.addEventListener("click", async (event) => visualizer.doNextStep());
+  playPauseButton.addEventListener("click", async (event) => visualizer.doPlayPause());
 }
 
 setup();

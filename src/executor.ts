@@ -121,7 +121,7 @@ class Executor(object):
                 exec(script, self.vars)
                 self.createEvent(self.lastLine)
             lastViz = self.events[-1][1]
-            msg = ';;Program finished.;;;;Hit F9 or Ctrl-Enter to run the script again.'
+            msg = '\\n\\nProgram finished.\\n\\nHit F9 or Ctrl-Enter to run the script again.'
             self.events.append((self.lastLine, lastViz, msg))
         except Exception as e:
             tb = sys.exc_info()[2]
@@ -129,9 +129,9 @@ class Executor(object):
             lines = [0] + [lineno for filename, lineno, fn, txt in stack if
                            filename == '<string>']
             msg = '=' * 70
-            msg += ';;Error at line %d: %s;;' % (lines[-1], ERROR or e)
+            msg += '\\n\\nError at line %d: %s\\n\\n' % (lines[-1], ERROR or e)
             msg += '-' * 70
-            msg += ';;%s;;' % ';;'.join(['%s = %r' % v for v in self.state])
+            msg += '\\n\\n%s\\n\\n' % '\\n\\n'.join(['%s = %r' % v for v in self.state])
             msg += '=' * 70
             self.error = dict(msg=msg, lineno=lines[-1])
         if '__builtins__' in self.vars:
@@ -139,9 +139,11 @@ class Executor(object):
 
     def __enter__(self):
         self.start = time.time()
-        self.stdout, self.stderr = sys.stdout, sys.stderr
-        sys.stdout = StringIO()
-        sys.stderr = StringIO()
+        # TODO remove this part.  It just doesn't work, I don't think, in Python 3, even though
+        # it did okay in Python 2.
+        # self.stdout, self.stderr = sys.stdout, sys.stderr
+        # sys.stdout = StringIO()
+        # sys.stderr = StringIO()
         sys.settrace(self.trace)
 
     def getVars(self, frame):
@@ -151,11 +153,11 @@ class Executor(object):
         now = time.time()
         if now - self.start > 10:
             self.events = self.events[-100:]
-            # TODO figure out how to use newlines instead of ;;
+            # TODO figure out how to use newlines instead of \\n\\n
             # (probably by putting this in an actual py file)
             raise TimeoutError(
-                ';;Script ran for more than 10 seconds and has been canceled.' +
-                ';;;;Showing just the last 100 events.')
+                '\\n\\nScript ran for more than 10 seconds and has been canceled.' +
+                '\\n\\nShowing just the last 100 events.')
         if frame.f_code.co_filename == '<string>' and self.lastLine != frame.f_lineno:
             state = self.getVars(frame)
             if event != 'exception':
@@ -172,20 +174,19 @@ class Executor(object):
                     tb = traceback.extract_tb(sys.exc_info()[2])
                     lines = [0] + [lineno for filename, lineno, fn, txt in tb if
                                    filename == '<string>']
-                    print('line %d: %s' % (lines[-1], e))
+                    self.vizError = f"line {lines[-1]}: {e}\\n"
             self.createEvent(frame.f_lineno)
             self.lastLine = frame.f_lineno
             return self.trace
 
     def createEvent(self, lineno):
-        output = sys.stdout.getvalue()
-        self.events.append((lineno, vizOutput, output))
-        sys.stdout.truncate(0)
+        # TODO use more than just vizError in output
+        # allow the user to do log or something
+        self.events.append((lineno, vizOutput, self.vizError))
+        self.vizError = ""
 
     def __exit__(self, *args):
         sys.settrace(None)
-        self.output = sys.stdout.getvalue()
-        sys.stdout, sys.stderr = self.stdout, self.stderr
 
 from js import script, viz, showVizErrors
 result = Executor(
@@ -196,7 +197,7 @@ author = "Unknown Author"
 # TODO figure out how to log -- there is likely a way to do
 # 'console.log' in pyodide, though originally this was putting
 # a log entry in the database
-# info('Ran %s "%s":;;%s' % (author, name, script))
+# info('Ran %s "%s":\\n\\n%s' % (author, name, script))
 
 {
    'py_error': result.error,
