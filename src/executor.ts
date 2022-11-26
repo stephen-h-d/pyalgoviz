@@ -43,7 +43,7 @@ def check(primitive, param, value, expected):
 #     check('beep', 'frequency', frequency, NUMBER)
 #     check('beep', 'duration', duration, NUMBER)
 #     global vizOutput
-#     vizOutput += 'B(this.canvas, %s,%s);' % (frequency, duration)
+#     vizOutput += 'B(canvas, %s,%s);' % (frequency, duration)
 
 
 def text(x, y, txt, size=13, font='Arial', color='black'):
@@ -53,12 +53,12 @@ def text(x, y, txt, size=13, font='Arial', color='black'):
     check('text', 'font', font, STRING)
     check('text', 'color', color, STRING)
     global vizOutput
-    vizOutput += 'T(this.canvas, %d,%d,%r,%d,%r,%r);' % (x, y, str(txt), size, font, color)
+    vizOutput += 'T(canvas, %d,%d,%r,%d,%r,%r);' % (x, y, str(txt), size, font, color)
 
 
 def line(x1, y1, x2, y2, color='black', width=1):
     global vizOutput
-    vizOutput += 'L(this.canvas, %s,%s,%s,%s,%r,%s);' % (x1, y1, x2, y2, color, width)
+    vizOutput += 'L(canvas, %s,%s,%s,%s,%r,%s);' % (x1, y1, x2, y2, color, width)
 
 
 def rect(x, y, w, h, fill='white', border='black'):
@@ -69,7 +69,7 @@ def rect(x, y, w, h, fill='white', border='black'):
     check('rect', 'fill', fill, STRING)
     check('rect', 'border', border, STRING)
     global vizOutput
-    vizOutput += 'R(this.canvas, %s,%s,%s,%s,%r,%r);' % (x, y, w, h, fill, border)
+    vizOutput += 'R(canvas, %s,%s,%s,%s,%r,%r);' % (x, y, w, h, fill, border)
 
 
 def circle(x, y, radius, fill='white', border='black'):
@@ -79,7 +79,7 @@ def circle(x, y, radius, fill='white', border='black'):
     check('circle', 'fill', fill, STRING)
     check('circle', 'border', border, STRING)
     global vizOutput
-    vizOutput += 'C(this.canvas, %s,%s,%s,%r,%r);' % (x, y, radius, fill, border)
+    vizOutput += 'C(canvas, %s,%s,%s,%r,%r);' % (x, y, radius, fill, border)
 
 
 def arc(cx, cy, innerRadius, outerRadius, startAngle, endAngle, color='black'):
@@ -91,7 +91,7 @@ def arc(cx, cy, innerRadius, outerRadius, startAngle, endAngle, color='black'):
     check('circle', 'endAngle', endAngle, NUMBER)
     check('circle', 'color', color, STRING)
     global vizOutput
-    vizOutput += 'A(this.canvas, %s,%s,%s,%s,%s,%s,%r);' % (
+    vizOutput += 'A(canvas, %s,%s,%s,%s,%s,%s,%r);' % (
         cx, cy, innerRadius, outerRadius, startAngle, endAngle, color
     )
 

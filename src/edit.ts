@@ -96,25 +96,26 @@ function A(canvas: any, x,y,r1,r2,start,end,color) {
         .attr('fill', color);
 }
 
-class Visualizer {
-  private events: Array<[number,string,string]> = [];
+class Animator {
+  private timerId: number;
   private currentEvent: number = 0;
-  private lastError: string = "";
-  // TODO canvas is a d3 Selection, but it requires 4 generic arguments.  figure out what they are
-  private canvas: any | null = null;
-  private timerId: number | null = null;
-  private paused: boolean = true;
+  private paused: boolean = false;
 
   public constructor(
-    private algoEditor: EditorView,
-    private outputArea: EditorView,
-    private vizEditor: EditorView,
-    private runButton: HTMLButtonElement,
-    private playPauseButton: HTMLButtonElement,
-    private speedSelect: HTMLSelectElement,
-    private renderAreaDiv: HTMLDivElement,
-    private progressDiv: HTMLDivElement,
+    private readonly outputArea: EditorView,
+    private readonly playPauseButton: HTMLButtonElement,
+    private readonly speedSelect: HTMLSelectElement,
+    private readonly progressDiv: HTMLDivElement,
+    private readonly renderAreaDiv: HTMLDivElement,
+    private readonly events: Array<[number,string,string]>,
+    private readonly lastError: string, // TODO figure out what readonly means
   ) {
+    this.timerId = this.play();
+  }
+
+  public pause() {
+    this.paused = true;
+    window.clearInterval(this.timerId);
   }
 
   public showRendering(script: string, w: number, h: number) {
@@ -124,16 +125,16 @@ class Visualizer {
         .append("svg")
         .attr("width", w)
         .attr("height", h);
-      this.canvas = svg
+      const canvas = svg
         .append("g")
         .attr("transform", "scale(" + RENDERING_SCALE + ")");
 
-      eval(script);
       try {
+        eval(script);
       } catch (e) {
-        T(this.canvas, 100, 100, "INTERNAL ERROR: ", 15, "Arial", "red");
-        T(this.canvas, 100, 120, "" + e, 15, "Arial", "red");
-        T(this.canvas, 100, 140, "" + script, 15, "Arial", "black");
+        T(canvas, 100, 100, "INTERNAL ERROR: ", 15, "Arial", "red");
+        T(canvas, 100, 120, "" + e, 15, "Arial", "red");
+        T(canvas, 100, 140, "" + script, 15, "Arial", "black");
       }
     }
   }
@@ -160,36 +161,34 @@ class Visualizer {
       }
     } catch (exc) {}
     this.showRendering(e[1], EDITOR_WIDTH, EDITOR_HEIGHT - 5);
-    // lastEvent = this.currentEvent;  TODO figure out if lastEvent is ever needed
   }
 
-  public doNextStep() {
+  public goToNextStep() {
+    this.pause();
     if (this.currentEvent < this.events.length - 1) {
       this.currentEvent += 1;
       this.showEvent();
     }
   }
 
-  public doPreviousStep() {
+  public goToPreviousStep() {
+    this.pause();
     if (this.currentEvent > 0) {
       this.currentEvent -= 1;
       this.showEvent();
     }
   }
 
-  public doPlayPause() {
-    if (this.playPauseButton.innerText == "Play") {
-        this.playPauseButton.innerText = "Pause";
-      if (this.currentEvent == this.events.length - 1) {
+  public togglePaused() {
+    if (this.paused) {
+      this.playPauseButton.innerText = "Pause";
+      if (this.currentEvent >= this.events.length - 1) {
         this.currentEvent = 0;
       }
-      this.animate();
+      this.play();
     } else {
       this.playPauseButton.innerText = "Play";
-      this.paused = true;
-      if (this.timerId !== null) {
-        window.clearInterval(this.timerId);
-      }
+      this.pause();
       setTimeout(this.showEvent, 1);
     }
   }
@@ -205,16 +204,47 @@ class Visualizer {
       this.currentEvent = Math.min(this.currentEvent + step, last);
       this.showEvent();
     } else {
-      if (this.timerId !== null) {
-        window.clearInterval(this.timerId);
-      }
+      this.pause();
       this.playPauseButton.innerText = "Play";
     }
   }
 
-  public animate() {
+  public play() {
+    this.paused = false;
     const speed = this.speedSelect.value || "MediumSlow";
+    this.showEvent();
     this.timerId = window.setInterval(() => this.doAnimationStep(), DELAY.get(speed) || 25);
+    return this.timerId;
+  }
+
+  private setOutputAreaText(text: string) {
+    // TODO figure out a way to reduce the duplication here... perhaps
+    // some functions that operate on `EditorView`s.
+    const transaction = this.outputArea.state.update({
+        changes: {
+          from: 0,
+          to: this.outputArea.state.doc.length,
+          insert: text,
+        },
+      });
+      const update = this.outputArea.state.update(transaction);
+      this.outputArea.update([update]);
+  }
+}
+
+class Visualizer {
+  private animator: Animator | null = null;
+
+  public constructor(
+    private readonly algoEditor: EditorView,
+    private readonly outputArea: EditorView,
+    private readonly vizEditor: EditorView,
+    private readonly runButton: HTMLButtonElement,
+    private readonly playPauseButton: HTMLButtonElement,
+    private readonly speedSelect: HTMLSelectElement,
+    private readonly renderAreaDiv: HTMLDivElement,
+    private readonly progressDiv: HTMLDivElement,
+  ) {
   }
 
   private setOutputAreaText(text: string) {
@@ -229,12 +259,36 @@ class Visualizer {
       this.outputArea.update([update]);
   }
 
+  public doPlayPause() {
+    if (this.animator !== null) {
+      this.animator.togglePaused();
+    } else {
+      console.error("Animator was unexpectedly null");
+    }
+  }
+
+  public doNextStep() {
+    if (this.animator !== null) {
+      this.animator.goToNextStep();
+    } else {
+      console.error("Animator was unexpectedly null");
+    }
+  }
+
+  public doPreviousStep() {
+    if (this.animator !== null) {
+      this.animator.goToPreviousStep();
+    } else {
+      console.error("Animator was unexpectedly null");
+    }
+  }
+
   public async doRun() {
     this.setOutputAreaText("Running...");
 
     // $('*').css('cursor','wait'); // TODO change the cursors somehow?
     this.runButton.disabled = true;
-    this.paused = false;
+    // TODO this is not quite right since play/pause is a different concept than run; fix it
     this.playPauseButton.innerText = "Pause";
 
     const context = {
@@ -256,7 +310,6 @@ class Visualizer {
       //    return;
       // }
 
-      this.events = events;
       const py_error_msg = py_error.get("msg");
       const py_error_lineno = py_error.get("lineno");
       this.setOutputAreaText(py_error_msg);
@@ -267,19 +320,22 @@ class Visualizer {
       //   max: this.events.length - 1,
       //   slide: handleSlide,
       // });
-      this.lastError = "";
+      let lastError = "";
       if (py_error_lineno > 0) {
-          this.lastError = py_error_msg;
+          lastError = py_error_msg;
       //   this.scriptEditor.setSelection( // TODO do error highlighting here with lineHighlighter
       //     { line: py_error_lineno - 1, ch: 0 },
       //     { line: py_error_lineno, ch: 0 }
       //   );
       }
 
-      if (this.events !== undefined) {
-        this.currentEvent = 0;
+      if (events !== undefined) {
         this.playPauseButton.innerText = "Pause";
-        this.animate();
+        if (this.animator !== null) {
+          this.animator.pause();
+        }
+
+        this.animator = new Animator(this.outputArea,this.playPauseButton,this.speedSelect,this.progressDiv,this.renderAreaDiv,events, lastError);
       } else {
         console.error("events undefined after calling asyncRun");
       }
