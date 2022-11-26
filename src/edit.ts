@@ -1,7 +1,8 @@
-import { minimalSetup, EditorView } from "codemirror";
+import { EditorView } from "codemirror";
 import { asyncRun } from "./py-worker";
 import { executorScript } from "./executor";
 import {select, arc} from "d3";
+import { setupEditorViews } from "./editorViews";
 // import {Selection} from "d3";
 
 const EDITOR_WIDTH = 600; // TODO make this more dynamic
@@ -114,7 +115,10 @@ class Animator {
   }
 
   public pause() {
+    this.speedSelect.disabled = false;
     this.paused = true;
+    // TODO this is not quite right since play/pause is a different concept than run; fix it
+    this.playPauseButton.innerText = "Play";
     window.clearInterval(this.timerId);
   }
 
@@ -181,15 +185,12 @@ class Animator {
 
   public togglePaused() {
     if (this.paused) {
-      this.playPauseButton.innerText = "Pause";
       if (this.currentEvent >= this.events.length - 1) {
         this.currentEvent = 0;
       }
       this.play();
     } else {
-      this.playPauseButton.innerText = "Play";
       this.pause();
-      setTimeout(this.showEvent, 1);
     }
   }
 
@@ -205,12 +206,13 @@ class Animator {
       this.showEvent();
     } else {
       this.pause();
-      this.playPauseButton.innerText = "Play";
     }
   }
 
   public play() {
     this.paused = false;
+    this.speedSelect.disabled = true;
+    this.playPauseButton.innerText = "Pause";
     const speed = this.speedSelect.value || "MediumSlow";
     this.showEvent();
     this.timerId = window.setInterval(() => this.doAnimationStep(), DELAY.get(speed) || 25);
@@ -288,8 +290,6 @@ class Visualizer {
 
     // $('*').css('cursor','wait'); // TODO change the cursors somehow?
     this.runButton.disabled = true;
-    // TODO this is not quite right since play/pause is a different concept than run; fix it
-    this.playPauseButton.innerText = "Pause";
 
     const context = {
       script: this.algoEditor.state.doc.toString(),
@@ -330,7 +330,6 @@ class Visualizer {
       }
 
       if (events !== undefined) {
-        this.playPauseButton.innerText = "Pause";
         if (this.animator !== null) {
           this.animator.pause();
         }
@@ -402,41 +401,7 @@ function setup() {
 
   const speedSelect = get_select_element("speed");
 
-  const algoView = new EditorView({
-    doc: `
-for x in range(50, 500, 50):
-    for y in range(50, 500, 50):
-        n = y / 50
-    `,
-    extensions: minimalSetup,
-    parent: scriptEditorDiv,
-  });
-
-  const vizView = new EditorView({
-    doc: `
-from math import pi
-
-text(x, y, "x=%s y=%s n=%d" % (x, y, n), size=10 + n*3, font="Arial", color='red')
-rect(450, 50, 50 + n*10, 50 + n*10, fill="brown", border="lightyellow")
-line(50, 50, x, y, color="purple", width=6)
-circle(300, 200, n * 25, fill="transparent", border="green")
-arc(100,
-    325,
-    innerRadius=50,
-    outerRadius=100,
-    startAngle=(n - 1) * 2 * pi/7,
-    endAngle=n * 2 * pi/7,
-    color="orange")
-    `,
-    extensions: minimalSetup,
-    parent: vizEditorDiv,
-  });
-
-  const outputArea = new EditorView({
-    doc: "",
-    extensions: minimalSetup,
-    parent: outputAreaDiv,
-  });
+  const { algoView, outputArea, vizView } = setupEditorViews(scriptEditorDiv, vizEditorDiv, outputAreaDiv);
 
   const visualizer = new Visualizer(algoView, outputArea, vizView, runButton, playPauseButton, speedSelect, renderAreaDiv, progressDiv);
   const editorsMgr = new EditorsMgr(algoView, vizView);

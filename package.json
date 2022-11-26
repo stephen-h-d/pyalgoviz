@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@codemirror/lang-python": "^6.1.0",
     "@types/d3": "^7.4.0",
     "typescript": "^4.6.4",
     "vite": "^3.2.0"
