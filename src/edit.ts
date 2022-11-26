@@ -8,23 +8,23 @@ const EDITOR_WIDTH = 600; // TODO make this more dynamic
 const EDITOR_HEIGHT = 450; // TODO make this more dynamic
 const RENDERING_SCALE = 1.0; // TODO make this more dynamic
 
-const DELAY = {
-    'Fast': 1,
-    'Medium': 10,
-    'MediumSlow': 25,
-    'Slow': 50,
-    'Snail': 200,
-    'Molasses': 1000,
-};
+const DELAY = new Map([
+    ['Fast', 1],
+    ['Medium', 10],
+    ['MediumSlow', 25],
+    ['Slow', 50],
+    ['Snail', 200],
+    ['Molasses', 1000],
+]);
 
-const STEPS = {
-    'Fast': 20,
-    'Medium': 100,
-    'MediumSlow': 150,
-    'Slow': 200,
-    'Snail': 400,
-    'Molasses': 800,
-};
+const STEPS = new Map([
+    ['Fast', 20],
+    ['Medium', 100],
+    ['MediumSlow', 150],
+    ['Slow', 200],
+    ['Snail', 400],
+    ['Molasses', 800],
+]);
 
 class EditorsMgr {
   public constructor(public algoView: EditorView, public vizView: EditorView) {}
@@ -103,14 +103,17 @@ class Visualizer {
   // TODO canvas is a d3 Selection, but it requires 4 generic arguments.  figure out what they are
   private canvas: any | null = null;
   private timerId: number | null = null;
+  private paused: boolean = true;
 
   public constructor(
-    public algoEditor: EditorView,
-    public outputArea: EditorView,
-    public vizEditor: EditorView,
-    public runButton: HTMLButtonElement,
-    public playPauseButton: HTMLButtonElement,
-    public renderAreaDiv: HTMLDivElement,
+    private algoEditor: EditorView,
+    private outputArea: EditorView,
+    private vizEditor: EditorView,
+    private runButton: HTMLButtonElement,
+    private playPauseButton: HTMLButtonElement,
+    private speedSelect: HTMLSelectElement,
+    private renderAreaDiv: HTMLDivElement,
+    private progressDiv: HTMLDivElement,
   ) {
   }
 
@@ -144,7 +147,7 @@ class Visualizer {
     //     { line: e[0], ch: 0 }
     //   );
 
-    //   progress.innerText = "Step " + (this.currentEvent + 1) + " of " + this.events.length; // TODO find/make `progress`
+    this.progressDiv.innerText = "Step " + (this.currentEvent + 1) + " of " + this.events.length;
 
     //   $("#slider").slider("value", this.currentEvent);  TODO make slider
 
@@ -182,19 +185,21 @@ class Visualizer {
       }
       this.animate();
     } else {
-      this.currentEvent = this.events.length - 1;
       this.playPauseButton.innerText = "Play";
+      this.paused = true;
+      if (this.timerId !== null) {
+        window.clearInterval(this.timerId);
+      }
       setTimeout(this.showEvent, 1);
     }
   }
 
   public doAnimationStep() {
-    // const speed = $("#speed").val() || "MediumSlow";
-    const speed = "MediumSlow"; // TODO actually get speed from slider
+    const speed = this.speedSelect.value || "MediumSlow";
     const last = this.events.length - 1;
     const step = Math.max(
       1,
-      Math.round((Math.random() * this.events.length) / STEPS[speed])
+      Math.round((Math.random() * this.events.length) / (STEPS.get(speed) || 25))
     );
     if (this.currentEvent < last) {
       this.currentEvent = Math.min(this.currentEvent + step, last);
@@ -208,11 +213,8 @@ class Visualizer {
   }
 
   public animate() {
-    // const speed = $("#speed").val() || "MediumSlow";
-    const speed = "MediumSlow";  // TODO actually get speed from slider
-
-
-    this.timerId = window.setInterval(() => this.doAnimationStep(), DELAY[speed]);
+    const speed = this.speedSelect.value || "MediumSlow";
+    this.timerId = window.setInterval(() => this.doAnimationStep(), DELAY.get(speed) || 25);
   }
 
   private setOutputAreaText(text: string) {
@@ -228,11 +230,11 @@ class Visualizer {
   }
 
   public async doRun() {
-    // debugger;
     this.setOutputAreaText("Running...");
 
     // $('*').css('cursor','wait'); // TODO change the cursors somehow?
     this.runButton.disabled = true;
+    this.paused = false;
     this.playPauseButton.innerText = "Pause";
 
     const context = {
@@ -316,11 +318,25 @@ function get_div_element(divId: string): HTMLDivElement {
   return element as HTMLDivElement;
 }
 
+function get_select_element(selectId: string): HTMLSelectElement {
+  const element = document.getElementById(selectId);
+  if (element === null) {
+    throw new Error("Setting up select element failed.");
+  }
+  if (element.nodeName !== "SELECT") {
+    const msg = `Expected nodeName of SELECT but got ${element.nodeName}`;
+    throw new Error(msg);
+  }
+
+  return element as HTMLSelectElement;
+}
+
 function setup() {
   const scriptEditorDiv = get_div_element("algo_editor");
   const vizEditorDiv = get_div_element("viz_editor");
   const outputAreaDiv = get_div_element("text_output");
   const renderAreaDiv = get_div_element("render_area");
+  const progressDiv = get_div_element("progress");
 
   const saveButton = get_button_element("save_button");
   const runButton = get_button_element("run_button");
@@ -328,10 +344,12 @@ function setup() {
   const nextButton = get_button_element("next_button");
   const playPauseButton = get_button_element("play_pause_button");
 
+  const speedSelect = get_select_element("speed");
+
   const algoView = new EditorView({
     doc: `
-for x in range(50, 100, 50):
-    for y in range(50, 100, 50):
+for x in range(50, 500, 50):
+    for y in range(50, 500, 50):
         n = y / 50
     `,
     extensions: minimalSetup,
@@ -364,7 +382,7 @@ arc(100,
     parent: outputAreaDiv,
   });
 
-  const visualizer = new Visualizer(algoView, outputArea, vizView, runButton, playPauseButton, renderAreaDiv);
+  const visualizer = new Visualizer(algoView, outputArea, vizView, runButton, playPauseButton, speedSelect, renderAreaDiv, progressDiv);
   const editorsMgr = new EditorsMgr(algoView, vizView);
 
   saveButton.addEventListener("click", editorsMgr.save.bind(editorsMgr));
