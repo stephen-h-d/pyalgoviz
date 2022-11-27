@@ -1,18 +1,24 @@
 import { minimalSetup, basicSetup, EditorView } from "codemirror";
 import { python } from '@codemirror/lang-python';
-import {EditorState} from "@codemirror/state";
-
+import { Editor } from "./LineHighlighter";
 
 export function setupEditorViews(scriptEditorDiv: HTMLDivElement, vizEditorDiv: HTMLDivElement, outputAreaDiv: HTMLDivElement) {
-  const algoView = new EditorView({
-    doc: `
+//   const algoView = new EditorView({
+//     doc: `
+// for x in range(50, 500, 50):
+//     for y in range(50, 500, 50):
+//         n = y / 50
+//     `,
+//     extensions: [basicSetup, python(), lineHighlighter(), lineToHighlightState.extension],
+//     parent: scriptEditorDiv,
+//   });
+  const algoEditor = new Editor(scriptEditorDiv, `
 for x in range(50, 500, 50):
     for y in range(50, 500, 50):
         n = y / 50
-    `,
-    extensions: [basicSetup, python()],
-    parent: scriptEditorDiv,
-  });
+        bob = sue
+      `);
+  algoEditor.setErrorLine(5);
 
   const vizView = new EditorView({
     doc: `
@@ -36,8 +42,9 @@ arc(100,
 
   const outputArea = new EditorView({
     doc: "",
-    extensions: [minimalSetup, EditorState.readOnly.of(true)],
+    // extensions: [minimalSetup, EditorState.readOnly.of(true)],
+    extensions: [minimalSetup],
     parent: outputAreaDiv,
   });
-  return { algoView, outputArea, vizView };
+  return { algoEditor, outputArea, vizView };
 }

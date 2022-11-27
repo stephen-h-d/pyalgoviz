@@ -3,6 +3,7 @@ import { asyncRun } from "./py-worker";
 import { executorScript } from "./executor";
 import {select, arc} from "d3";
 import { setupEditorViews } from "./editorViews";
+import { Editor } from "./LineHighlighter";
 // import {Selection} from "d3";
 
 const EDITOR_WIDTH = 600; // TODO make this more dynamic
@@ -28,13 +29,13 @@ const STEPS = new Map([
 ]);
 
 class EditorsMgr {
-  public constructor(public algoView: EditorView, public vizView: EditorView) {}
+  public constructor(public algoEditor: Editor, public vizView: EditorView) {}
 
   public save(event: MouseEvent) {
     fetch("api/save", {
       method: "POST",
       body: JSON.stringify({
-        algo_script: this.algoView.state.doc.toString(),
+        algo_script: this.algoEditor.editorView.state.doc.toString(),
         viz_script: this.vizView.state.doc.toString(),
       }),
       headers: {
@@ -238,7 +239,7 @@ class Visualizer {
   private animator: Animator | null = null;
 
   public constructor(
-    private readonly algoEditor: EditorView,
+    private readonly algoEditor: Editor,
     private readonly outputArea: EditorView,
     private readonly vizEditor: EditorView,
     private readonly runButton: HTMLButtonElement,
@@ -292,7 +293,7 @@ class Visualizer {
     this.runButton.disabled = true;
 
     const context = {
-      script: this.algoEditor.state.doc.toString(),
+      script: this.algoEditor.editorView.state.doc.toString(),
       viz: this.vizEditor.state.doc.toString(),
       showVizErrors: true,
     };
@@ -323,10 +324,7 @@ class Visualizer {
       let lastError = "";
       if (py_error_lineno > 0) {
           lastError = py_error_msg;
-      //   this.scriptEditor.setSelection( // TODO do error highlighting here with lineHighlighter
-      //     { line: py_error_lineno - 1, ch: 0 },
-      //     { line: py_error_lineno, ch: 0 }
-      //   );
+          this.algoEditor.setErrorLine(py_error_lineno);
       }
 
       if (events !== undefined) {
@@ -401,10 +399,10 @@ function setup() {
 
   const speedSelect = get_select_element("speed");
 
-  const { algoView, outputArea, vizView } = setupEditorViews(scriptEditorDiv, vizEditorDiv, outputAreaDiv);
+  const { algoEditor, outputArea, vizView } = setupEditorViews(scriptEditorDiv, vizEditorDiv, outputAreaDiv);
 
-  const visualizer = new Visualizer(algoView, outputArea, vizView, runButton, playPauseButton, speedSelect, renderAreaDiv, progressDiv);
-  const editorsMgr = new EditorsMgr(algoView, vizView);
+  const visualizer = new Visualizer(algoEditor, outputArea, vizView, runButton, playPauseButton, speedSelect, renderAreaDiv, progressDiv);
+  const editorsMgr = new EditorsMgr(algoEditor, vizView);
 
   saveButton.addEventListener("click", editorsMgr.save.bind(editorsMgr));
   runButton.addEventListener("click", async (event) => await visualizer.doRun());
