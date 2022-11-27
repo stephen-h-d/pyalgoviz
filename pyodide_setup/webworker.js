@@ -2,7 +2,7 @@ importScripts("pyodide.js");
 
 async function loadPyodideAndPackages() {
   self.pyodide = await loadPyodide();
-  await self.pyodide.loadPackage(["numpy", "pytz"]);
+  // await self.pyodide.loadPackage(["numpy", "pytz"]);  TODO figure out if any packages are needed
 }
 let pyodideReadyPromise = loadPyodideAndPackages();
 
