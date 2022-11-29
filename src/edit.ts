@@ -1,4 +1,3 @@
-import { EditorView } from "codemirror";
 import { setupEditorViews } from "./editorViews";
 import { Editor } from "./editor";
 import { Visualizer } from "./visualizer";
@@ -7,7 +6,7 @@ import { Visualizer } from "./visualizer";
 class EditorsMgr {
   public constructor(public algoEditor: Editor, public vizEditor: Editor) {}
 
-  public save(event: MouseEvent) {
+  public save(_event: MouseEvent) {
     fetch("api/save", {
       method: "POST",
       body: JSON.stringify({
@@ -18,8 +17,8 @@ class EditorsMgr {
         "Content-type": "application/json; charset=UTF-8",
       },
     })
-      .then((result) => {})
-      .catch((error) => {});
+      .then((_result) => {}) // TODO handle result
+      .catch((_error) => {}); // TODO handle error
   }
 }
 
@@ -83,10 +82,10 @@ function setup() {
   const editorsMgr = new EditorsMgr(algoEditor, vizEditor);
 
   saveButton.addEventListener("click", editorsMgr.save.bind(editorsMgr));
-  runButton.addEventListener("click", async (event) => await visualizer.doRun());
-  previousButton.addEventListener("click", async (event) => visualizer.doPreviousStep());
-  nextButton.addEventListener("click", async (event) => visualizer.doNextStep());
-  playPauseButton.addEventListener("click", async (event) => visualizer.doPlayPause());
+  runButton.addEventListener("click", async (_event) => await visualizer.doRun());
+  previousButton.addEventListener("click", async (_event) => visualizer.doPreviousStep());
+  nextButton.addEventListener("click", async (_event) => visualizer.doNextStep());
+  playPauseButton.addEventListener("click", async (_event) => visualizer.doPlayPause());
 }
 
 setup();

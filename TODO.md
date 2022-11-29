@@ -1,6 +1,7 @@
 ### Ready-to-implement TODOs
 
 0. Make HMR work with vanilla TS
+    * Possibly use https://github.com/OmarShehata/vite-hot-reload-example
 0. Make vite fail if TSC fails
 1. Finish up highlighting stuff
     1. For viz view, highlight with red when there's an error

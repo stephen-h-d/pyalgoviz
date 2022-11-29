@@ -1,7 +1,7 @@
 /* @refresh reload */
-import { minimalSetup, basicSetup, EditorView } from "codemirror";
+import { basicSetup, EditorView } from "codemirror";
 import { python } from '@codemirror/lang-python';
-import { RangeSetBuilder, Extension, StateField, Transaction, StateEffect, EditorState } from '@codemirror/state';
+import { RangeSetBuilder, StateField, Transaction, StateEffect, EditorState } from '@codemirror/state';
 import { Decoration, ViewPlugin, DecorationSet, ViewUpdate } from '@codemirror/view';
 
 const normalTheme = EditorView.baseTheme({
@@ -33,7 +33,7 @@ export class Editor {
     update: this.updateLinesToHighlight.bind(this),
   });
 
-  createLinesToHighlight (state: EditorState): LinesToHighlight {
+  createLinesToHighlight (_state: EditorState): LinesToHighlight {
     return new LinesToHighlight(-1, -1);
   }
 
