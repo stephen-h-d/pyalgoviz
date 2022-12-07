@@ -2,7 +2,8 @@
 
 0. Make HMR work with vanilla TS
     * Possibly use https://github.com/OmarShehata/vite-hot-reload-example
-0. Make vite fail if TSC fails
+    * This seems to work well / okay for what it does, but it requires doing things like what is done in `index.js` in the example that I'm not sure of
+1. Add output area for visualization errors.  (Later on maybe we'll make it hideable)
 1. Finish up highlighting stuff
     1. For viz view, highlight with red when there's an error
     2. When the doc changes, reset the line to highlight to -1.

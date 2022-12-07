@@ -1,7 +1,22 @@
 import { setupEditorViews } from "./editorViews";
 import { Editor } from "./editor";
 import { Visualizer } from "./visualizer";
-// import {Selection} from "d3";
+
+// Begin HMR Setup
+// I am not 100% sure if this section is necessary to make HMR work,
+// but it seems to ensure that it does.  The setup() function essentially
+// recreates the entire page every time this module is reloaded.
+// The only thing it doesn't do is reload
+// pyodide.  That is what is handy about it for us, since we don't often
+// need to reload pyodide, and it takes a while.
+function reloadModule(newModule: any) {
+    console.log("newModule: ", newModule, "reloading entire page");
+}
+
+if (import.meta.hot) {
+  import.meta.hot.accept(reloadModule)
+}
+// End HMR Setup.
 
 class EditorsMgr {
   public constructor(public algoEditor: Editor, public vizEditor: Editor) {}
@@ -22,19 +37,6 @@ class EditorsMgr {
   }
 }
 
-function get_button_element(buttonId: string): HTMLButtonElement {
-  const element = document.getElementById(buttonId);
-  if (element === null) {
-    throw new Error("Setting up button elements failed.");
-  }
-  if (element.nodeName !== "BUTTON") {
-    const msg = `Expected nodeName of BUTTON but got ${element.nodeName}`;
-    throw new Error(msg);
-  }
-
-  return element as HTMLButtonElement;
-}
-
 function get_div_element(divId: string): HTMLDivElement {
   const element = document.getElementById(divId);
   if (element === null) {
@@ -48,33 +50,59 @@ function get_div_element(divId: string): HTMLDivElement {
   return element as HTMLDivElement;
 }
 
-function get_select_element(selectId: string): HTMLSelectElement {
-  const element = document.getElementById(selectId);
-  if (element === null) {
-    throw new Error("Setting up select element failed.");
-  }
-  if (element.nodeName !== "SELECT") {
-    const msg = `Expected nodeName of SELECT but got ${element.nodeName}`;
-    throw new Error(msg);
-  }
-
-  return element as HTMLSelectElement;
-}
-
 function setup() {
-  const scriptEditorDiv = get_div_element("algo_editor");
-  const vizEditorDiv = get_div_element("viz_editor");
-  const outputAreaDiv = get_div_element("text_output");
-  const renderAreaDiv = get_div_element("render_area");
-  const progressDiv = get_div_element("progress");
 
-  const saveButton = get_button_element("save_button");
-  const runButton = get_button_element("run_button");
-  const previousButton = get_button_element("previous_button");
-  const nextButton = get_button_element("next_button");
-  const playPauseButton = get_button_element("play_pause_button");
+  const rootDiv = get_div_element("root");
+  rootDiv.textContent = '';
 
-  const speedSelect = get_select_element("speed");
+  const scriptEditorDiv = document.createElement("div");
+  const vizEditorDiv = document.createElement("div");
+  const outputAreaDiv = document.createElement("div");
+  const renderAreaDiv = document.createElement("div");
+  rootDiv.appendChild(scriptEditorDiv);
+  rootDiv.appendChild(vizEditorDiv);
+  rootDiv.appendChild(outputAreaDiv);
+  rootDiv.appendChild(renderAreaDiv);
+
+  const speedSelect = document.createElement("select");
+  rootDiv.appendChild(speedSelect);
+
+  const fastOption = document.createElement("option");
+  fastOption.textContent = "Fast";
+  const mediumOption = document.createElement("option");
+  mediumOption.textContent = "Medium7";
+  const slowOption = document.createElement("option");
+  slowOption.textContent = "Slow";
+  const snailOption = document.createElement("option");
+  snailOption.textContent = "Snail";
+  const molassesOption = document.createElement("option");
+  molassesOption.textContent = "Molasses";
+  speedSelect.appendChild(fastOption);
+  speedSelect.appendChild(mediumOption);
+  speedSelect.appendChild(slowOption);
+  speedSelect.appendChild(snailOption);
+  speedSelect.appendChild(molassesOption);
+
+  speedSelect.selectedIndex = 1;
+
+  const progressDiv = document.createElement("div");
+  progressDiv.className = "progress moveup";
+
+  const saveButton = document.createElement("button");
+  saveButton.textContent = "Save";
+  const runButton = document.createElement("button");
+  runButton.textContent = "Run";
+  const previousButton = document.createElement("button");
+  previousButton.textContent = "Prev";
+  const nextButton = document.createElement("button");
+  nextButton.textContent = "Next";
+  const playPauseButton = document.createElement("button");
+  playPauseButton.textContent = "Play";
+  rootDiv.appendChild(saveButton);
+  rootDiv.appendChild(runButton);
+  rootDiv.appendChild(previousButton);
+  rootDiv.appendChild(nextButton);
+  rootDiv.appendChild(playPauseButton);
 
   const { algoEditor, outputArea, vizEditor } = setupEditorViews(scriptEditorDiv, vizEditorDiv, outputAreaDiv);
 

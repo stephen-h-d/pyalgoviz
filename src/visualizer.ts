@@ -145,6 +145,8 @@ class Animator {
   }
 
   public showRendering(script: string, w: number, h: number) {
+    console.log("showRendering");
+
     if (script) {
       this.renderAreaDiv.innerHTML = '';
       const svg = select(this.renderAreaDiv)
