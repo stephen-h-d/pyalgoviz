@@ -1,4 +1,3 @@
-import { EditorView } from "codemirror";
 import { asyncRun } from "./py-worker";
 import { executorScript } from "./executor";
 import { Editor } from "./editor";
@@ -124,14 +123,14 @@ class Animator {
   private paused: boolean = false;
 
   public constructor(
-    private readonly outputArea: EditorView,
+    private readonly vizOutputArea: Editor,
     private readonly playPauseButton: HTMLButtonElement,
     private readonly speedSelect: HTMLSelectElement,
     private readonly progressDiv: HTMLDivElement,
     private readonly renderAreaDiv: HTMLDivElement,
-    private readonly events: Array<[number,string,string]>,
-    private readonly lastError: string,
+    private readonly events: Array<[number,string,Map<string,number|string>|null]>,
     private readonly setCurrentLine: (currentLine: number)=> void,
+    private readonly setVizErrorLine: (currentLine: number)=> void,
   ) {
     this.timerId = this.play();
   }
@@ -145,10 +144,8 @@ class Animator {
   }
 
   public showRendering(script: string, w: number, h: number) {
-    console.log("showRendering");
-
+    this.renderAreaDiv.textContent = '';
     if (script) {
-      this.renderAreaDiv.innerHTML = '';
       const svg = select(this.renderAreaDiv)
         .append("svg")
         .attr("width", w)
@@ -177,12 +174,19 @@ class Animator {
 
     //   $("#slider").slider("value", this.currentEvent);  TODO make slider
 
-      let output = "";
-      for (let n = 0; n <= this.currentEvent; n++) {
-        output += this.events[n][2];
-      }
-      if (output) {
-        this.setOutputAreaText(output + this.lastError);
+      // let output = "";
+      // for (let n = 0; n <= this.currentEvent; n++) {
+      //   output += this.events[n][2];
+      // }
+      // if (output) {
+      //   this.setOutputAreaText(output + this.lastError);
+      // }
+      if (e[2] !== null && e[2] !== undefined) {
+        this.setVizErrorLine(Number(e[2].get("line")));
+        this.vizOutputArea.setText(String(e[2].get("error")));
+      } else {
+        this.setVizErrorLine(-1);
+        this.vizOutputArea.setText("");
       }
     } catch (exc) {}
     this.showRendering(e[1], EDITOR_WIDTH, EDITOR_HEIGHT - 5);
@@ -239,20 +243,6 @@ class Animator {
     this.timerId = window.setInterval(() => this.doAnimationStep(), DELAY.get(speed) || 25);
     return this.timerId;
   }
-
-  private setOutputAreaText(text: string) {
-    // TODO figure out a way to reduce the duplication here... perhaps
-    // some functions that operate on `EditorView`s.
-    const transaction = this.outputArea.state.update({
-        changes: {
-          from: 0,
-          to: this.outputArea.state.doc.length,
-          insert: text,
-        },
-      });
-      const update = this.outputArea.state.update(transaction);
-      this.outputArea.update([update]);
-  }
 }
 
 export class Visualizer {
@@ -260,26 +250,15 @@ export class Visualizer {
 
   public constructor(
     private readonly algoEditor: Editor,
-    private readonly outputArea: EditorView,
+    private readonly outputArea: Editor,
     private readonly vizEditor: Editor,
+    private readonly vizOutputArea: Editor,
     private readonly runButton: HTMLButtonElement,
     private readonly playPauseButton: HTMLButtonElement,
     private readonly speedSelect: HTMLSelectElement,
     private readonly renderAreaDiv: HTMLDivElement,
     private readonly progressDiv: HTMLDivElement
   ) {
-  }
-
-  private setOutputAreaText(text: string) {
-    const transaction = this.outputArea.state.update({
-      changes: {
-        from: 0,
-        to: this.outputArea.state.doc.length,
-        insert: text,
-      },
-    });
-    const update = this.outputArea.state.update(transaction);
-    this.outputArea.update([update]);
   }
 
   public doPlayPause() {
@@ -307,7 +286,8 @@ export class Visualizer {
   }
 
   public async doRun() {
-    this.setOutputAreaText("Running...");
+    this.algoEditor.setErrorLine(-1);
+    this.outputArea.setText("Running...");
 
     this.runButton.disabled = true;
 
@@ -325,7 +305,7 @@ export class Visualizer {
 
       const py_error_msg = py_error.get("msg");
       const py_error_lineno = py_error.get("lineno");
-      this.setOutputAreaText(py_error_msg);
+      this.outputArea.setText(py_error_msg);
       // $("#slider").slider({ // TODO actually set up slider
       //   value: 1,
       //   step: 1,
@@ -333,9 +313,8 @@ export class Visualizer {
       //   max: this.events.length - 1,
       //   slide: handleSlide,
       // });
-      let lastError = "";
       if (py_error_lineno > 0) {
-        lastError = py_error_msg;
+        // TODO figure out what to do with py_error_msg.
         this.algoEditor.setErrorLine(py_error_lineno);
       }
 
@@ -344,7 +323,12 @@ export class Visualizer {
           this.animator.pause();
         }
 
-        this.animator = new Animator(this.outputArea, this.playPauseButton, this.speedSelect, this.progressDiv, this.renderAreaDiv, events, lastError, this.algoEditor.setHighlightLine.bind(this.algoEditor));
+        this.animator = new Animator(
+          this.vizOutputArea,
+          this.playPauseButton, this.speedSelect, this.progressDiv,
+          this.renderAreaDiv, events,
+          this.algoEditor.setHighlightLine.bind(this.algoEditor),
+          this.vizEditor.setErrorLine.bind(this.vizEditor));
       } else {
         console.error("events undefined after calling asyncRun");
       }

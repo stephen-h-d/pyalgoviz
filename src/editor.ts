@@ -1,7 +1,5 @@
-/* @refresh reload */
-import { basicSetup, EditorView } from "codemirror";
-import { python } from '@codemirror/lang-python';
-import { RangeSetBuilder, StateField, Transaction, StateEffect, EditorState } from '@codemirror/state';
+import { EditorView } from "codemirror";
+import { RangeSetBuilder, StateField, Transaction, StateEffect, EditorState, Extension } from '@codemirror/state';
 import { Decoration, ViewPlugin, DecorationSet, ViewUpdate } from '@codemirror/view';
 
 const normalTheme = EditorView.baseTheme({
@@ -46,7 +44,7 @@ export class Editor {
     return val;
   }
 
-  highlightLinePlugin: any; // ViewPlugin<?>
+  highlightLinePlugin: Extension; // ViewPlugin<?>
 
   stripeDeco (view: EditorView) {
     const toHighlight = view.state.field(this.linesToHighlightState);
@@ -68,7 +66,7 @@ export class Editor {
 
   private linesToHighlight: LinesToHighlight = new LinesToHighlight(-1, -1);
 
-  public constructor(parentDiv: HTMLDivElement, initialContents: string){
+  public constructor(parentDiv: HTMLDivElement, initialContents: string, extensions: Array<Extension>){
     const boundStripeDeco = this.stripeDeco.bind(this);
 
     this.highlightLinePlugin = ViewPlugin.fromClass(class {
@@ -85,9 +83,10 @@ export class Editor {
       decorations: v => v.decorations
     });
 
+    extensions = extensions.concat([normalTheme, errorTheme, this.highlightLinePlugin, this.linesToHighlightState.extension]);
     this.editorView = new EditorView({
       doc: initialContents,
-      extensions: [basicSetup, python(), [normalTheme, errorTheme, this.highlightLinePlugin], this.linesToHighlightState.extension],
+      extensions: extensions,
       parent: parentDiv,
     });
   }
@@ -104,5 +103,19 @@ export class Editor {
 
   public currentValue(): string {
     return this.editorView.state.doc.toString();
+  }
+
+  public setText(text: string) {
+    // TODO figure out a way to reduce the duplication here... perhaps
+    // some functions that operate on `EditorView`s.
+    const transaction = this.editorView.state.update({
+        changes: {
+          from: 0,
+          to: this.editorView.state.doc.length,
+          insert: text,
+        },
+      });
+      const update = this.editorView.state.update(transaction);
+      this.editorView.update([update]);
   }
 }

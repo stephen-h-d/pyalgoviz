@@ -174,7 +174,7 @@ class Executor(object):
                     tb = traceback.extract_tb(sys.exc_info()[2])
                     lines = [0] + [lineno for filename, lineno, fn, txt in tb if
                                    filename == '<string>']
-                    self.vizError = f"line {lines[-1]}: {e}\\n"
+                    self.vizError = {"line": lines[-1], "error": str(e)}
             self.createEvent(frame.f_lineno)
             self.lastLine = frame.f_lineno
             return self.trace
@@ -183,7 +183,7 @@ class Executor(object):
         # TODO use more than just vizError in output
         # allow the user to do log or something
         self.events.append((lineno, vizOutput, self.vizError))
-        self.vizError = ""
+        self.vizError = None
 
     def __exit__(self, *args):
         sys.settrace(None)

@@ -1,4 +1,6 @@
-import { minimalSetup, EditorView } from "codemirror";
+import { minimalSetup, basicSetup } from "codemirror";
+import { EditorState} from '@codemirror/state';
+import { python } from '@codemirror/lang-python';
 import { Editor } from "./editor";
 
 export function setupEditorViews(scriptEditorDiv: HTMLDivElement, vizEditorDiv: HTMLDivElement, outputAreaDiv: HTMLDivElement) {
@@ -6,7 +8,7 @@ export function setupEditorViews(scriptEditorDiv: HTMLDivElement, vizEditorDiv: 
 for x in range(50, 500, 50):
     for y in range(50, 500, 50):
         n = y / 50
-      `);
+      `, [basicSetup, python()]);
 
   const vizEditor = new Editor(vizEditorDiv, `
 from math import pi
@@ -22,13 +24,10 @@ arc(100,
     startAngle=(n - 1) * 2 * pi/7,
     endAngle=n * 2 * pi/7,
     color="orange")
-      `);
+      `, [basicSetup, python()]);
 
-  const outputArea = new EditorView({
-    doc: "",
-    // extensions: [minimalSetup, EditorState.readOnly.of(true)],
-    extensions: [minimalSetup],
-    parent: outputAreaDiv,
-  });
-  return { algoEditor, outputArea, vizEditor };
+  const outputArea = new Editor(outputAreaDiv, "", [minimalSetup, EditorState.readOnly.of(true)]);
+  const scriptOutputArea = new Editor(outputAreaDiv, "", [minimalSetup, EditorState.readOnly.of(true)]);
+
+  return { algoEditor, outputArea, vizEditor, scriptOutputArea };
 }

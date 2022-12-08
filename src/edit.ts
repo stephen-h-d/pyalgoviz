@@ -55,15 +55,6 @@ function setup() {
   const rootDiv = get_div_element("root");
   rootDiv.textContent = '';
 
-  const scriptEditorDiv = document.createElement("div");
-  const vizEditorDiv = document.createElement("div");
-  const outputAreaDiv = document.createElement("div");
-  const renderAreaDiv = document.createElement("div");
-  rootDiv.appendChild(scriptEditorDiv);
-  rootDiv.appendChild(vizEditorDiv);
-  rootDiv.appendChild(outputAreaDiv);
-  rootDiv.appendChild(renderAreaDiv);
-
   const speedSelect = document.createElement("select");
   rootDiv.appendChild(speedSelect);
 
@@ -104,9 +95,20 @@ function setup() {
   rootDiv.appendChild(nextButton);
   rootDiv.appendChild(playPauseButton);
 
-  const { algoEditor, outputArea, vizEditor } = setupEditorViews(scriptEditorDiv, vizEditorDiv, outputAreaDiv);
+  const scriptEditorDiv = document.createElement("div");
+  const vizEditorDiv = document.createElement("div");
+  const scriptOutputAreaDiv = document.createElement("div");
+  const vizOutputAreaDiv = document.createElement("div");
+  const renderAreaDiv = document.createElement("div");
+  rootDiv.appendChild(scriptEditorDiv);
+  rootDiv.appendChild(vizEditorDiv);
+  rootDiv.appendChild(scriptOutputAreaDiv);
+  rootDiv.appendChild(vizOutputAreaDiv);
+  rootDiv.appendChild(renderAreaDiv);
 
-  const visualizer = new Visualizer(algoEditor, outputArea, vizEditor, runButton, playPauseButton, speedSelect, renderAreaDiv, progressDiv);
+  const { algoEditor, outputArea, vizEditor, scriptOutputArea } = setupEditorViews(scriptEditorDiv, vizEditorDiv, scriptOutputAreaDiv);
+
+  const visualizer = new Visualizer(algoEditor, outputArea, vizEditor, scriptOutputArea, runButton, playPauseButton, speedSelect, renderAreaDiv, progressDiv);
   const editorsMgr = new EditorsMgr(algoEditor, vizEditor);
 
   saveButton.addEventListener("click", editorsMgr.save.bind(editorsMgr));
