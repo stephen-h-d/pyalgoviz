@@ -83,6 +83,14 @@ export class Visualizer {
     }
   }
 
+  public handleRangeChanged(value: number) {
+    if (this.animator !== null) {
+      this.animator.goToPercentage(value);
+    } else {
+      console.error("Animator was unexpectedly null");
+    }
+  }
+
   public doPreviousStep() {
     if (this.animator !== null) {
       this.animator.goToPreviousStep();

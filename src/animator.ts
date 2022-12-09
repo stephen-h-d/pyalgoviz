@@ -170,6 +170,13 @@ export class Animator {
     }
   }
 
+  public goToPercentage(value: number) {
+    const fraction = value / 100;
+    const numSteps = this.events.length;
+    this.currentEvent = Math.floor(fraction * numSteps);
+    this.showEvent();
+  }
+
   public togglePaused() {
     if (this.paused) {
       if (this.currentEvent >= this.events.length - 1) {

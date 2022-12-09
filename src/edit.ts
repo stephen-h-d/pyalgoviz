@@ -89,11 +89,18 @@ function setup() {
   nextButton.textContent = "Next";
   const playPauseButton = document.createElement("button");
   playPauseButton.textContent = "Play";
+  const rangeSlider = document.createElement("input");
+  rangeSlider.type = "range";
+  // TODO likely need to set min and max dynamically after each run
+  rangeSlider.min = "1";
+  rangeSlider.max = "100";
+  rangeSlider.value = "1";
   rootDiv.appendChild(saveButton);
   rootDiv.appendChild(runButton);
   rootDiv.appendChild(previousButton);
   rootDiv.appendChild(nextButton);
   rootDiv.appendChild(playPauseButton);
+  rootDiv.appendChild(rangeSlider);
 
   const scriptEditorDiv = document.createElement("div");
   const vizEditorDiv = document.createElement("div");
@@ -116,6 +123,7 @@ function setup() {
   previousButton.addEventListener("click", async (_event) => visualizer.doPreviousStep());
   nextButton.addEventListener("click", async (_event) => visualizer.doNextStep());
   playPauseButton.addEventListener("click", async (_event) => visualizer.doPlayPause());
+  rangeSlider.addEventListener("change", async (_event) => visualizer.handleRangeChanged(Number(rangeSlider.value)))
 }
 
 setup();
