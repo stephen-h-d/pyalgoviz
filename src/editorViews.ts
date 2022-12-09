@@ -1,5 +1,4 @@
 import { minimalSetup, basicSetup } from "codemirror";
-import { EditorState} from '@codemirror/state';
 import { python } from '@codemirror/lang-python';
 import { Editor } from "./editor";
 
@@ -26,8 +25,10 @@ arc(100,
     color="orange")
       `, [basicSetup, python()]);
 
-  const outputArea = new Editor(outputAreaDiv, "", [minimalSetup, EditorState.readOnly.of(true)]);
-  const scriptOutputArea = new Editor(outputAreaDiv, "", [minimalSetup, EditorState.readOnly.of(true)]);
+  const outputArea = new Editor(outputAreaDiv, "", [minimalSetup]);
+  outputArea.setReadOnly(true);
+  const scriptOutputArea = new Editor(outputAreaDiv, "", [minimalSetup]);
+  scriptOutputArea.setReadOnly(true);
 
   return { algoEditor, outputArea, vizEditor, scriptOutputArea };
 }

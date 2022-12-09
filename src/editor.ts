@@ -1,5 +1,5 @@
 import { EditorView } from "codemirror";
-import { RangeSetBuilder, StateField, Transaction, StateEffect, EditorState, Extension } from '@codemirror/state';
+import { RangeSetBuilder, StateField, Transaction, StateEffect, EditorState, Extension, Compartment } from '@codemirror/state';
 import { Decoration, ViewPlugin, DecorationSet, ViewUpdate } from '@codemirror/view';
 
 const normalTheme = EditorView.baseTheme({
@@ -23,19 +23,21 @@ class LinesToHighlight {
 }
 
 export class Editor {
-  editorView: EditorView;
+  private editorView: EditorView;
+  private docChangedSubscribers: Array<{ (): void; }>;
+  private readOnly: Compartment;
 
-  linesToHighlightEffect = StateEffect.define<LinesToHighlight>();
-  linesToHighlightState = StateField.define<LinesToHighlight>({
+  private linesToHighlightEffect = StateEffect.define<LinesToHighlight>();
+  private linesToHighlightState = StateField.define<LinesToHighlight>({
     create: this.createLinesToHighlight.bind(this),
     update: this.updateLinesToHighlight.bind(this),
   });
 
-  createLinesToHighlight (_state: EditorState): LinesToHighlight {
+  private createLinesToHighlight (_state: EditorState): LinesToHighlight {
     return new LinesToHighlight(-1, -1);
   }
 
-  updateLinesToHighlight (val: LinesToHighlight, tr: Transaction): LinesToHighlight {
+  private updateLinesToHighlight (val: LinesToHighlight, tr: Transaction): LinesToHighlight {
     for (const effect of tr.effects) {
       if (effect.is(this.linesToHighlightEffect)) {
         return effect.value
@@ -44,9 +46,9 @@ export class Editor {
     return val;
   }
 
-  highlightLinePlugin: Extension; // ViewPlugin<?>
+  private highlightLinePlugin: Extension; // ViewPlugin<?>
 
-  stripeDeco (view: EditorView) {
+  private stripeDeco (view: EditorView) {
     const toHighlight = view.state.field(this.linesToHighlightState);
     const builder = new RangeSetBuilder<Decoration>()
     for (const { from, to } of view.visibleRanges) {
@@ -67,6 +69,8 @@ export class Editor {
   private linesToHighlight: LinesToHighlight = new LinesToHighlight(-1, -1);
 
   public constructor(parentDiv: HTMLDivElement, initialContents: string, extensions: Array<Extension>){
+    this.readOnly = new Compartment();
+    this.docChangedSubscribers = [];
     const boundStripeDeco = this.stripeDeco.bind(this);
 
     this.highlightLinePlugin = ViewPlugin.fromClass(class {
@@ -84,19 +88,39 @@ export class Editor {
     });
 
     extensions = extensions.concat([normalTheme, errorTheme, this.highlightLinePlugin, this.linesToHighlightState.extension]);
+    extensions.push(EditorView.updateListener.of((v:ViewUpdate) => {
+      if (v.docChanged) {
+        for (const subscriber of this.docChangedSubscribers) {
+          subscriber();
+        }
+      }
+  }));
+    extensions.push(this.readOnly.of(EditorState.readOnly.of(false)));
+
     this.editorView = new EditorView({
       doc: initialContents,
       extensions: extensions,
       parent: parentDiv,
     });
+
   }
 
-  setErrorLine(errorLine: number) {
+  public setReadOnly(value: boolean) {
+    this.editorView.dispatch({
+      effects: this.readOnly.reconfigure(EditorState.readOnly.of(value)),
+    });
+  }
+
+  public addDocChangedSubscriber(subscriber: { (): void; }) {
+    this.docChangedSubscribers.push(subscriber);
+  }
+
+  public setErrorLine(errorLine: number) {
     this.linesToHighlight = new LinesToHighlight(this.linesToHighlight.normalLine, errorLine);
     this.editorView.dispatch({ effects: [this.linesToHighlightEffect.of(this.linesToHighlight)] });
   }
 
-  setHighlightLine(normalLine: number) {
+  public setHighlightLine(normalLine: number) {
     this.linesToHighlight = new LinesToHighlight(normalLine, this.linesToHighlight.errorLine);
     this.editorView.dispatch({ effects: [this.linesToHighlightEffect.of(this.linesToHighlight)] });
   }
