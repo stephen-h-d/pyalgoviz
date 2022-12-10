@@ -9,16 +9,18 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "@codemirror/lang-python": "^6.1.0",
     "@types/d3": "^7.4.0",
     "typescript": "^4.6.4",
     "vite": "^3.2.0"
   },
   "dependencies": {
+    "@codemirror/lang-python": "^6.1.0",
     "@codemirror/state": "^6.1.4",
     "@codemirror/view": "^6.7.0",
+    "@types/node": "^18.11.12",
     "codemirror": "^6.0.1",
     "d3": "^7.6.1",
-    "firebase": "^9.13.0"
+    "firebase": "^9.13.0",
+    "node-fetch": "^3.3.0"
   }
 }
