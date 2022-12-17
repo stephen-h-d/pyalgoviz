@@ -1,46 +1,129 @@
-import {minimalSetup, EditorView} from "codemirror";
+import { setupEditorViews } from "./editorViews";
+import { Editor } from "./editor";
+import { Visualizer } from "./visualizer";
 
-function save(event: MouseEvent, algoView: EditorView, vizView: EditorView) {
+// Begin HMR Setup
+// I am not 100% sure if this section is necessary to make HMR work,
+// but it seems to ensure that it does.  The setup() function essentially
+// recreates the entire page every time this module is reloaded.
+// The only thing it doesn't do is reload
+// pyodide.  That is what is handy about it for us, since we don't often
+// need to reload pyodide, and it takes a while.
+function reloadModule(newModule: any) {
+    console.log("newModule: ", newModule, "reloading entire page");
+}
+
+if (import.meta.hot) {
+  import.meta.hot.accept(reloadModule)
+}
+// End HMR Setup.
+
+class EditorsMgr {
+  public constructor(public algoEditor: Editor, public vizEditor: Editor) {}
+
+  public save(_event: MouseEvent) {
     fetch("api/save", {
-        method: "POST",
-        body: JSON.stringify({
-            algo_script: algoView.state.doc.toString(),
-            viz_script: vizView.state.doc.toString(),
-        }),
-        headers: {
-            "Content-type": "application/json; charset=UTF-8"
-        }
+      method: "POST",
+      body: JSON.stringify({
+        algo_script: this.algoEditor.currentValue(),
+        viz_script: this.vizEditor.currentValue(),
+      }),
+      headers: {
+        "Content-type": "application/json; charset=UTF-8",
+      },
     })
-    .then((result) => {
+      .then((_result) => {}) // TODO handle result
+      .catch((_error) => {}); // TODO handle error
+  }
+}
 
-    }).catch((error) => {
+function get_div_element(divId: string): HTMLDivElement {
+  const element = document.getElementById(divId);
+  if (element === null) {
+    throw new Error("Setting up div elements failed.");
+  }
+  if (element.nodeName !== "DIV") {
+    const msg = `Expected nodeName of DIV but got ${element.nodeName}`;
+    throw new Error(msg);
+  }
 
-    });
+  return element as HTMLDivElement;
 }
 
 function setup() {
-    const scriptEditorDiv: HTMLElement | null = document.getElementById("algo_editor");
-    const vizEditorDiv: HTMLElement | null = document.getElementById("viz_editor");
-    const button: HTMLElement | null = document.getElementById("save");
 
-    if (scriptEditorDiv === null || button === null || vizEditorDiv === null) {
-        console.error("Unable to load elements.");
-        return;
-    }
+  const rootDiv = get_div_element("root");
+  rootDiv.textContent = '';
 
-    const algoView = new EditorView({
-        doc: "",
-        extensions: minimalSetup,
-        parent: scriptEditorDiv
-        });
+  const speedSelect = document.createElement("select");
+  rootDiv.appendChild(speedSelect);
 
-    const vizView = new EditorView({
-        doc: "",
-        extensions: minimalSetup,
-        parent: scriptEditorDiv
-        });
+  const fastOption = document.createElement("option");
+  fastOption.textContent = "Fast";
+  const mediumOption = document.createElement("option");
+  mediumOption.textContent = "Medium7";
+  const slowOption = document.createElement("option");
+  slowOption.textContent = "Slow";
+  const snailOption = document.createElement("option");
+  snailOption.textContent = "Snail";
+  const molassesOption = document.createElement("option");
+  molassesOption.textContent = "Molasses";
+  speedSelect.appendChild(fastOption);
+  speedSelect.appendChild(mediumOption);
+  speedSelect.appendChild(slowOption);
+  speedSelect.appendChild(snailOption);
+  speedSelect.appendChild(molassesOption);
 
-    button.addEventListener("click", (event) => save(event, algoView, vizView));
+  speedSelect.selectedIndex = 1;
+
+  const progressDiv = document.createElement("div");
+  progressDiv.className = "progress moveup";
+
+  const saveButton = document.createElement("button");
+  saveButton.textContent = "Save";
+  const runButton = document.createElement("button");
+  runButton.textContent = "Run";
+  const previousButton = document.createElement("button");
+  previousButton.textContent = "Prev";
+  const nextButton = document.createElement("button");
+  nextButton.textContent = "Next";
+  const playPauseButton = document.createElement("button");
+  playPauseButton.textContent = "Play";
+  const rangeSlider = document.createElement("input");
+  rangeSlider.type = "range";
+  // TODO likely need to set min and max dynamically after each run
+  rangeSlider.min = "1";
+  rangeSlider.max = "100";
+  rangeSlider.value = "1";
+  rootDiv.appendChild(saveButton);
+  rootDiv.appendChild(runButton);
+  rootDiv.appendChild(previousButton);
+  rootDiv.appendChild(nextButton);
+  rootDiv.appendChild(playPauseButton);
+  rootDiv.appendChild(rangeSlider);
+
+  const scriptEditorDiv = document.createElement("div");
+  const vizEditorDiv = document.createElement("div");
+  const scriptOutputAreaDiv = document.createElement("div");
+  const vizOutputAreaDiv = document.createElement("div");
+  const renderAreaDiv = document.createElement("div");
+  rootDiv.appendChild(scriptEditorDiv);
+  rootDiv.appendChild(vizEditorDiv);
+  rootDiv.appendChild(scriptOutputAreaDiv);
+  rootDiv.appendChild(vizOutputAreaDiv);
+  rootDiv.appendChild(renderAreaDiv);
+
+  const { algoEditor, outputArea, vizEditor, scriptOutputArea } = setupEditorViews(scriptEditorDiv, vizEditorDiv, scriptOutputAreaDiv);
+
+  const visualizer = new Visualizer(algoEditor, outputArea, vizEditor, scriptOutputArea, runButton, playPauseButton, speedSelect, renderAreaDiv, progressDiv);
+  const editorsMgr = new EditorsMgr(algoEditor, vizEditor);
+
+  saveButton.addEventListener("click", editorsMgr.save.bind(editorsMgr));
+  runButton.addEventListener("click", async (_event) => await visualizer.doRun());
+  previousButton.addEventListener("click", async (_event) => visualizer.doPreviousStep());
+  nextButton.addEventListener("click", async (_event) => visualizer.doNextStep());
+  playPauseButton.addEventListener("click", async (_event) => visualizer.doPlayPause());
+  rangeSlider.addEventListener("change", async (_event) => visualizer.handleRangeChanged(Number(rangeSlider.value)))
 }
 
 setup();
