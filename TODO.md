@@ -5,7 +5,6 @@
 5. Support caching the results (once running server-side is implemented)
 6. Make a landing page with running algorithms.  (This will likely depend on the cache)
 7. Prevent user from saving/loading, but not running, when they are not logged in.
-8. Support the slider
 10. Tell the user when Pyodide is loading, when it is done loading, when the code is running, and when it is done running.
 12. Disable all the buttons when:
     * pyodide is not loaded
@@ -19,5 +18,6 @@
 ### Planning TODOs
 1. Make a plan for the layout.
 2. Decide which other login ID providers to support and make TODO items for those.
-3. Make unit tests?
-4. Make integration tests?
+3. Make unit tests?  with vite-test?
+4. Make integration tests?  with Selenium?
+5. Make a plan to improve the slider functionality
