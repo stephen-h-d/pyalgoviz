@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import { vanillaExtractPlugin } from '@vanilla-extract/vite-plugin';
 
 export default defineConfig({
   server: {
@@ -15,4 +16,5 @@ export default defineConfig({
   build: {
     target: 'esnext',
   },
+  plugins: [vanillaExtractPlugin()],
 });

@@ -15,6 +15,7 @@
 14. Allow the user to cancel a running script
     * See https://pyodide.org/en/stable/usage/keyboard-interrupts.html -- seems straightforward enough
 15. Pare down the number of arguments by making an `Editors` class (possibly replacing `EditorsMgr`) and whatever else comes to mind.
+16. Switch to using vanilla extract
 
 ### Planning TODOs
 1. Make a plan for the layout.

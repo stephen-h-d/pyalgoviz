@@ -1,6 +1,10 @@
 import { setupEditorViews } from "./editorViews";
 import { Editor } from "./editor";
 import { Visualizer } from "./visualizer";
+import { top_resize_edge, bottom_resize_edge, left_resize_edge, right_resize_edge } from './ide.css.js';
+import { top_left_cell, bottom_left_cell, top_right_cell, bottom_right_cell } from './ide.css.js';
+import { ide } from './ide.css.js';
+import './style.css';
 
 // Begin HMR Setup
 // I am not 100% sure if this section is necessary to make HMR work,
@@ -17,6 +21,21 @@ if (import.meta.hot) {
   import.meta.hot.accept(reloadModule)
 }
 // End HMR Setup.
+
+function div(classNames: string[] = [], parent?: HTMLDivElement) {
+  const result = document.createElement("div");
+  for (const className of classNames) {
+    for (const sub of className.split(" ")) {
+      result.classList.add(sub);
+    }
+  }
+
+  if (parent !== undefined) {
+    parent.appendChild(result);
+  }
+
+  return result;
+}
 
 class EditorsMgr {
   public constructor(public algoEditor: Editor, public vizEditor: Editor) {}
@@ -50,13 +69,38 @@ function get_div_element(divId: string): HTMLDivElement {
   return element as HTMLDivElement;
 }
 
+type IDERow = [HTMLDivElement, HTMLDivElement];
+
+class IDE {
+  public readonly ideDiv: HTMLDivElement;
+  public readonly rows: [IDERow, IDERow];
+
+  private static cell(className: string): HTMLDivElement {
+    const result = div([className]);
+    div([left_resize_edge], result);
+    div([right_resize_edge], result);
+    div([top_resize_edge], result);
+    div([bottom_resize_edge], result);
+    return result;
+  }
+
+  public constructor(){
+    this.ideDiv = div([ide]);
+    this.rows = [[IDE.cell(top_left_cell), IDE.cell(top_right_cell)],[IDE.cell(bottom_left_cell), IDE.cell(bottom_right_cell)]];
+    for (const row of this.rows) {
+      for (const cell of row) {
+        this.ideDiv.appendChild(cell);
+      }
+    }
+  }
+}
+
 function setup() {
 
   const rootDiv = get_div_element("root");
   rootDiv.textContent = '';
 
   const speedSelect = document.createElement("select");
-  rootDiv.appendChild(speedSelect);
 
   const fastOption = document.createElement("option");
   fastOption.textContent = "Fast";
@@ -76,7 +120,7 @@ function setup() {
 
   speedSelect.selectedIndex = 1;
 
-  const progressDiv = document.createElement("div");
+  const progressDiv = div();
   progressDiv.className = "progress moveup";
 
   const saveButton = document.createElement("button");
@@ -95,23 +139,26 @@ function setup() {
   rangeSlider.min = "1";
   rangeSlider.max = "100";
   rangeSlider.value = "1";
-  rootDiv.appendChild(saveButton);
-  rootDiv.appendChild(runButton);
-  rootDiv.appendChild(previousButton);
-  rootDiv.appendChild(nextButton);
-  rootDiv.appendChild(playPauseButton);
-  rootDiv.appendChild(rangeSlider);
 
-  const scriptEditorDiv = document.createElement("div");
-  const vizEditorDiv = document.createElement("div");
-  const scriptOutputAreaDiv = document.createElement("div");
-  const vizOutputAreaDiv = document.createElement("div");
-  const renderAreaDiv = document.createElement("div");
-  rootDiv.appendChild(scriptEditorDiv);
-  rootDiv.appendChild(vizEditorDiv);
-  rootDiv.appendChild(scriptOutputAreaDiv);
-  rootDiv.appendChild(vizOutputAreaDiv);
-  rootDiv.appendChild(renderAreaDiv);
+  const ide = new IDE();
+  rootDiv.appendChild(ide.ideDiv);
+
+  const scriptEditorDiv = div();
+  const vizEditorDiv = div();
+  const scriptOutputAreaDiv = div();
+  const vizOutputAreaDiv = div();
+  const renderAreaDiv = div();
+  ide.rows[0][0].appendChild(scriptEditorDiv);
+  ide.rows[0][0].appendChild(saveButton);
+  ide.rows[0][0].appendChild(runButton);
+  ide.rows[0][0].appendChild(speedSelect);
+  ide.rows[0][0].appendChild(previousButton);
+  ide.rows[0][0].appendChild(nextButton);
+  ide.rows[0][0].appendChild(playPauseButton);
+  ide.rows[0][0].appendChild(rangeSlider);
+  ide.rows[0][1].appendChild(renderAreaDiv);
+  ide.rows[1][0].appendChild(vizEditorDiv);
+  ide.rows[1][1].appendChild(vizOutputAreaDiv);
 
   const { algoEditor, outputArea, vizEditor, scriptOutputArea } = setupEditorViews(scriptEditorDiv, vizEditorDiv, scriptOutputAreaDiv);
 
