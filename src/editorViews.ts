@@ -1,13 +1,23 @@
-import { minimalSetup, basicSetup } from "codemirror";
+import { minimalSetup, basicSetup, EditorView } from "codemirror";
 import { python } from '@codemirror/lang-python';
 import { Editor } from "./editor";
 
 export function setupEditorViews(scriptEditorDiv: HTMLDivElement, vizEditorDiv: HTMLDivElement, outputAreaDiv: HTMLDivElement) {
+  const fixedHeightEditor = EditorView.theme({
+    "&": {height: "calc(100% - 2.5em)"},
+    ".cm-scroller": {overflow: "auto"}
+  });
+
   const algoEditor = new Editor(scriptEditorDiv, `
 for x in range(50, 500, 50):
     for y in range(50, 500, 50):
         n = y / 50
-      `, [basicSetup, python()]);
+      `, [basicSetup, fixedHeightEditor, python()]);
+
+  const fixedHeightVizEditor = EditorView.theme({
+    "&": {height: "100%"},
+    ".cm-scroller": {overflow: "auto"}
+  });
 
   const vizEditor = new Editor(vizEditorDiv, `
 from math import pi
@@ -23,7 +33,7 @@ arc(100,
     startAngle=(n - 1) * 2 * pi/7,
     endAngle=n * 2 * pi/7,
     color="orange")
-      `, [basicSetup, python()]);
+      `, [basicSetup, python(), fixedHeightVizEditor]);
 
   const outputArea = new Editor(outputAreaDiv, "", [minimalSetup]);
   outputArea.setReadOnly(true);

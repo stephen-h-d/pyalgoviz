@@ -1,10 +1,11 @@
 import { setupEditorViews } from "./editorViews";
 import { Editor } from "./editor";
 import { Visualizer } from "./visualizer";
-import { top_resize_edge, bottom_resize_edge, left_resize_edge, right_resize_edge } from './ide.css.js';
-import { top_left_cell, bottom_left_cell, top_right_cell, bottom_right_cell } from './ide.css.js';
-import { ide } from './ide.css.js';
-import './style.css';
+import { top_resize_edge, bottom_resize_edge, left_resize_edge, right_resize_edge, runInputs } from './edit.css.js';
+import { top_left_cell, bottom_left_cell, top_right_cell, bottom_right_cell } from './edit.css.js';
+import { ide, scriptEditor, scriptEditorWrapper } from './edit.css.js';
+import { body, root } from './edit.css.js';
+import {firstRowHeight, secondRowHeight} from './edit.css.js';
 
 // Begin HMR Setup
 // I am not 100% sure if this section is necessary to make HMR work,
@@ -97,8 +98,13 @@ class IDE {
 
 function setup() {
 
+  document.body.className = body;
+
   const rootDiv = get_div_element("root");
   rootDiv.textContent = '';
+  rootDiv.classList.add(root);
+  console.log(firstRowHeight);
+  console.log(secondRowHeight);
 
   const speedSelect = document.createElement("select");
 
@@ -143,24 +149,28 @@ function setup() {
   const ide = new IDE();
   rootDiv.appendChild(ide.ideDiv);
 
-  const scriptEditorDiv = div();
-  const vizEditorDiv = div();
+  const algoEditorWrapperDiv = div([scriptEditorWrapper]);
+  const algoEditorDiv = div([scriptEditor], algoEditorWrapperDiv);
+  const vizEditorWrapperDiv = div([scriptEditorWrapper]);
+  const vizEditorDiv = div([scriptEditor], vizEditorWrapperDiv);
   const scriptOutputAreaDiv = div();
   const vizOutputAreaDiv = div();
   const renderAreaDiv = div();
-  ide.rows[0][0].appendChild(scriptEditorDiv);
-  ide.rows[0][0].appendChild(saveButton);
-  ide.rows[0][0].appendChild(runButton);
-  ide.rows[0][0].appendChild(speedSelect);
-  ide.rows[0][0].appendChild(previousButton);
-  ide.rows[0][0].appendChild(nextButton);
-  ide.rows[0][0].appendChild(playPauseButton);
-  ide.rows[0][0].appendChild(rangeSlider);
+  const runInputsDiv = div([runInputs]);
+  ide.rows[0][0].appendChild(algoEditorWrapperDiv);
+  ide.rows[0][0].appendChild(runInputsDiv);
+  runInputsDiv.appendChild(saveButton);
+  runInputsDiv.appendChild(runButton);
+  runInputsDiv.appendChild(speedSelect);
+  runInputsDiv.appendChild(previousButton);
+  runInputsDiv.appendChild(nextButton);
+  runInputsDiv.appendChild(playPauseButton);
+  runInputsDiv.appendChild(rangeSlider);
   ide.rows[0][1].appendChild(renderAreaDiv);
   ide.rows[1][0].appendChild(vizEditorDiv);
   ide.rows[1][1].appendChild(vizOutputAreaDiv);
 
-  const { algoEditor, outputArea, vizEditor, scriptOutputArea } = setupEditorViews(scriptEditorDiv, vizEditorDiv, scriptOutputAreaDiv);
+  const { algoEditor, outputArea, vizEditor, scriptOutputArea } = setupEditorViews(algoEditorDiv, vizEditorDiv, scriptOutputAreaDiv);
 
   const visualizer = new Visualizer(algoEditor, outputArea, vizEditor, scriptOutputArea, runButton, playPauseButton, speedSelect, renderAreaDiv, progressDiv);
   const editorsMgr = new EditorsMgr(algoEditor, vizEditor);
