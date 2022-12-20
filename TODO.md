@@ -1,6 +1,5 @@
 ### Ready-to-implement TODOs
 
-1. run tsc --noEmit in precommit
 2. Support loading and saving all of the user's scripts
 4. Support running server-side in a sandboxed manner
 5. Support caching the results (once running server-side is implemented)
