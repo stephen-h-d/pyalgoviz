@@ -9,7 +9,7 @@ export const firstRowHeight = createVar();
 export const secondRowHeight = createVar();
 
 export const top_resize_edge = style([horizontal_edge, {top: 0}]);
-export const bottom_resize_edge = style([horizontal_edge, {bottom: 0, margin: 0, padding: 0, backgroundColor: "red"}]);
+export const bottom_resize_edge = style([horizontal_edge, {bottom: 0, backgroundColor: "red"}]);
 
 export const left_resize_edge = style([vertical_edge, {left: 0}]);
 export const right_resize_edge = style([vertical_edge, {right: 0}]);
@@ -22,7 +22,10 @@ export const top_right_cell = style([grid_cell, {gridRow: 1, gridColumn: 2}]);
 export const bottom_right_cell = style([grid_cell, {gridRow: 2, gridColumn: 2}]);
 
 export const ide = style({display: "grid", flexGrow: 1,
-    gridTemplateRows: `${firstRowHeight} ${secondRowHeight}`});
+    gridTemplateRows: `${firstRowHeight} ${secondRowHeight}`,     vars: {
+      [firstRowHeight]: '50%',
+      [secondRowHeight]: '50%',
+    },});
 
 export const scriptEditor = style({position: "absolute", top: 0, bottom: 0, left: 0, right: 0});
 export const scriptEditorWrapper = style({flexGrow: 1});
@@ -31,10 +34,7 @@ export const runInputs = style({height: "2.5em", zIndex: 1});
 export const body = style({width: "100%", backgroundColor: "lightgray", display: "flex", flexDirection: "column", height:"100vh"});
 
 export const root = style({
-    vars: {
-        [firstRowHeight]: '50%',
-        [secondRowHeight]: '50%',
-      },
+
     display: "flex",
     height:"100vh",
   });
