@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<style>
+    html,
+    body {
+    height: 100%;
+    margin: 0;
+    }
+
+    .box {
+    display: flex;
+    flex-flow: column;
+    height: 100%;
+    }
+
+    .box .row {
+    border: 1px dotted grey;
+    }
+
+    .box .row.header {
+    flex: 0 1 auto;
+    /* The above is shorthand for:
+    flex-grow: 0,
+    flex-shrink: 1,
+    flex-basis: auto
+    */
+    }
+
+    .box .row.content {
+    flex: 1 1 auto;
+    }
+
+    .box .row.footer {
+    flex: 0 1 40px;
+    }
+
+    .ide {
+
+    }
+</style>
+
+<div class="box">
+    <div class="row header">
+      <p><b>header</b>
+        <br />
+        <br />(sized to content)</p>
+    </div>
+    <div class="row content">
+      <div class="ide"></div>
+    </div>
+    <div class="row footer">
+      <p><b>footer</b> (fixed height)</p>
+    </div>
+  </div>
+
+</body>
+</html>

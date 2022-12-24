@@ -22,10 +22,15 @@ export const top_right_cell = style([grid_cell, {gridRow: 1, gridColumn: 2}]);
 export const bottom_right_cell = style([grid_cell, {gridRow: 2, gridColumn: 2}]);
 
 export const ide = style({display: "grid", flexGrow: 1,
-    gridTemplateRows: `${firstRowHeight} ${secondRowHeight}`,     vars: {
+    gridTemplateColumns: `${firstRowHeight} ${secondRowHeight}`,     vars: {
       [firstRowHeight]: '50%',
       [secondRowHeight]: '50%',
     },});
+
+
+export const page = [
+
+];
 
 export const scriptEditor = style({position: "absolute", top: 0, bottom: 0, left: 0, right: 0});
 export const scriptEditorWrapper = style({flexGrow: 1});
@@ -34,7 +39,6 @@ export const runInputs = style({height: "2.5em", zIndex: 1});
 export const body = style({width: "100%", backgroundColor: "lightgray", display: "flex", flexDirection: "column", height:"100vh"});
 
 export const root = style({
-
     display: "flex",
     height:"100vh",
-  });
+  });0

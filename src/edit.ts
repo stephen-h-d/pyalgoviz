@@ -78,18 +78,9 @@ class IDE {
   public readonly ideDiv: HTMLDivElement;
   public readonly rows: [IDERow, IDERow];
 
-  private setup_edge(edge: HTMLDivElement, row: number, col: number, vertical: boolean) {
+  private setup_edge(edge: HTMLDivElement, vertical: boolean) {
     edge.addEventListener("mousedown", (ev: MouseEvent) => {
       ev.preventDefault();
-      const original_mouse_x = ev.pageX;
-      const original_mouse_y = ev.pageY;
-      const other_row = (row + 1) % 2;
-      const other_cell = this.rows[other_row][col];
-      const cell = this.rows[row][col];
-      const original_height = Number(getComputedStyle(cell, null).getPropertyValue('y').replace('px', ''));
-      const original_other_height = Number(getComputedStyle(other_cell, null).getPropertyValue('ysdfsdf').replace('px', ''));
-      const original_rect = cell.getBoundingClientRect();
-      const original_other_rect = other_cell.getBoundingClientRect();
       const original_ide_rect = this.ideDiv.getBoundingClientRect();
       const total_height = original_ide_rect.height;
       const top_y = this.ideDiv.getBoundingClientRect().y;
@@ -111,7 +102,7 @@ class IDE {
 
       if (vertical) { // is horizontal edge, i.e. the edges move vertically
         function mouse_moved(ev: MouseEvent) {
-          const newTopRowPct = (ev.pageY - top_y) / total_height * 100;
+          const newTopRowPct = Math.min(Math.max((ev.pageY - top_y) / total_height * 100,5),95);
           const newBottomRowPct = 100 - newTopRowPct;
           console.log("newTopRowPct", newTopRowPct);
           console.log("secondRowHeightName var", secondRowHeightName);
@@ -121,7 +112,7 @@ class IDE {
         }
 
         document.addEventListener("mousemove", mouse_moved); // TODO debounce this
-        document.addEventListener("mouseup", (ev: MouseEvent) => {
+        document.addEventListener("mouseup", (_ev: MouseEvent) => {
           document.removeEventListener("mousemove",mouse_moved);
         });
 
@@ -139,17 +130,17 @@ class IDE {
     });
   }
 
-  private cell(className: string, edges: string, row: number, col: number): HTMLDivElement {
+  private cell(className: string, edges: string, ): HTMLDivElement {
     const result = div([className]);
     for (const edge of edges) {
       switch (edge) {
         case 't':
           const top_edge = div([top_resize_edge], result);
-          this.setup_edge(top_edge, row, col, true);
+          this.setup_edge(top_edge, true);
           break;
         case 'b':
           const bottom_edge = div([bottom_resize_edge], result);
-          this.setup_edge(bottom_edge, row, col, true);
+          this.setup_edge(bottom_edge, true);
           break;
         case 'l':
           div([left_resize_edge], result);
@@ -166,8 +157,8 @@ class IDE {
 
   public constructor(){
     this.ideDiv = div([ide]);
-    this.rows = [[this.cell(top_left_cell, "br", 0, 0), this.cell(top_right_cell, "bl", 0, 1)],
-                 [this.cell(bottom_left_cell, "tr", 1, 0), this.cell(bottom_right_cell, "tl", 1, 1)]];
+    this.rows = [[this.cell(top_left_cell, "br"), this.cell(top_right_cell, "bl")],
+                 [this.cell(bottom_left_cell, "tr"), this.cell(bottom_right_cell, "tl")]];
     for (const row of this.rows) {
       for (const cell of row) {
         this.ideDiv.appendChild(cell);
