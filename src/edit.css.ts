@@ -41,4 +41,7 @@ export const body = style({width: "100%", backgroundColor: "lightgray", display:
 export const root = style({
     display: "flex",
     height:"100vh",
+    vars: {
+      ["--row-11-height"]: "50%",
+    }
   });0

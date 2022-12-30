@@ -85,19 +85,6 @@ class IDE {
       const total_height = original_ide_rect.height;
       const top_y = this.ideDiv.getBoundingClientRect().y;
 
-      // console.log(original_height);
-      // console.log(original_other_height);
-      // console.log(ev.target);
-      // console.log("other", original_other_rect);
-      // console.log("cell", original_rect);
-      // console.log("other row", other_row);
-      // console.log("other top",other_cell.clientTop);
-      // console.log("top",cell.clientTop);
-      // console.log("other bottom",other_cell.clientTop + other_cell.clientHeight);
-      // console.log("bottom",cell.clientTop + cell.clientHeight);
-      // console.log("pageY",ev.pageY);
-
-      // (mouse_y - top_y) / original_total_height
       const ideDiv = this.ideDiv;
 
       if (vertical) { // is horizontal edge, i.e. the edges move vertically
@@ -106,7 +93,6 @@ class IDE {
           const newBottomRowPct = 100 - newTopRowPct;
           console.log("newTopRowPct", newTopRowPct);
           console.log("secondRowHeightName var", secondRowHeightName);
-          // debugger;
           ideDiv.style.setProperty(firstRowHeightName, `${newTopRowPct}%`);
           ideDiv.style.setProperty(secondRowHeightName, `${newBottomRowPct}%`);
         }
@@ -115,17 +101,6 @@ class IDE {
         document.addEventListener("mouseup", (_ev: MouseEvent) => {
           document.removeEventListener("mousemove",mouse_moved);
         });
-
-        // if (row == 0) {
-        //   const other = this.rows[1][col];
-        //   console.log(other.clientHeight);
-        // } else if (row == 1) {
-        //   const other = this.rows[0][col];
-        //   console.log(other.clientHeight);
-
-        // } else {
-        //   throw new Error(`unexpected row ${row}`);
-        // }
       }
     });
   }

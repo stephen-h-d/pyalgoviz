@@ -20,7 +20,8 @@ function build_vanilla_page_decl(page_object: PageDeclObject): VanillaPageDecl {
 
 export const header_style = style({});
 
-export const cell_style = style({border: "solid lightgray"});
+// export const cell_style = style({border: "solid lightgray"});
+export const cell_style = style({});
 
 export const edit_page_vanilla_decl = build_vanilla_page_decl(page_object);
 
