@@ -27,11 +27,11 @@ function build_page_decl_object(page_decl: PageDecl): PageDeclObject {
 }
 
 const page: PageDecl =
-["div", "app", {display: "flex", flexFlow: "column"}, [
+["div", "app", {display: "flex", flexFlow: "column", height: "100%"}, [
     ["div", "header", {flex: "0 1 auto"}, []],
-    ["div", "content", {flex: "1 1 auto"}, [
+    ["div", "content", {flex: "1 1 auto", backgroundColor: "turquoise"}, [
         // TODO make this a var one or the other
-        ["div","ide",{display:"grid", gridTemplateColumns: "25% 75%"},[
+        ["div","ide",{display:"grid", gridTemplateColumns: "25% 75%", backgroundColor: "lightgoldenrodyellow", height: "100%"},[
             // TODO determine if this is doable or if another child is needed
             ["div","left_col",{gridColumn: 1, display: "grid", gridTemplateRows: "70% 30%"},[
                 ["div", "top_left_cell", {gridRow: 1},[]],

@@ -7,3 +7,4 @@ src/firebaseConfig.ts
 public/pyodide-0.21.3/
 pnpm-lock.yaml
 src/generated/*.ts
+generator/ts-out
