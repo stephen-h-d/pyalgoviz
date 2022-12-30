@@ -2,7 +2,7 @@ import type * as CSS from 'csstype';
 
 type PageDecl = [string, string, CSS.Properties, PageDecl[]];
 export interface PageDeclObject {
-    el: string,
+    tagName: string,
     id: string,
     style: CSS.Properties,
     children: PageDeclObject[],
@@ -15,7 +15,7 @@ export const CHILDREN = 3;
 
 function build_page_decl_object(page_decl: PageDecl): PageDeclObject {
     const result: Partial<PageDeclObject> = {};
-    result["el"] = page_decl[EL];
+    result["tagName"] = page_decl[EL];
     result["id"] = page_decl[ID];
     result["style"] = page_decl[STYLE];
     result["children"] = [];
@@ -26,20 +26,8 @@ function build_page_decl_object(page_decl: PageDecl): PageDeclObject {
     return result as PageDeclObject;
 }
 
-// export const page: PageDecl = [
-//     ["div", "root", ({position: "absolute"}), [
-//         ["div", "child_one", ({position: "relative"})],
-//         ["div", "child_two", "child_two_style"],
-//         ["div", "child_three",
-//             ({position: "absolute"}),
-//             [
-//                 ["div", "grandchild", "grandchild_style"]
-//         ]],
-//     ]]
-// ];
-
 const page: PageDecl =
-["div", "root", {display: "flex", flexFlow: "column"}, [
+["div", "app", {display: "flex", flexFlow: "column"}, [
     ["div", "header", {flex: "0 1 auto"}, []],
     ["div", "content", {flex: "1 1 auto"}, [
         // TODO make this a var one or the other
@@ -49,7 +37,7 @@ const page: PageDecl =
                 ["div", "top_left_cell", {gridRow: 1},[]],
                 ["div", "bottom_left_cell", {gridRow: 2},[]],
             ]],
-            ["div","right_col",{gridColumn: 2},[
+            ["div","right_col",{gridColumn: 2, display: "grid", gridTemplateRows: "30% 70%"},[
                 ["div", "top_right_cell", {gridRow: 1},[]],
                 ["div", "bottom_right_cell", {gridRow: 2},[]],
             ]],
