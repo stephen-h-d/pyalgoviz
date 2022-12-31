@@ -67,7 +67,12 @@ function genClass(page_decl: PageDeclObject) {
     const generated_ts_class_name = `TS_${page_decl.id}_Container`;
     ids_to_class.set(page_decl.id, generated_ts_class_name);
     const el_ts_class_name = tag_name_to_class.get(page_decl.tagName);
-    const constructor_arg = `public readonly el: ${el_ts_class_name}`;
+
+    let modifier = "public";
+    if (page_decl.owner) {
+        modifier = "protected";
+    }
+    const constructor_arg = `${modifier} readonly el: ${el_ts_class_name}`;
     const member_declarations: string[] = [];
     const child_instantiations: string[] = [];
 
@@ -77,7 +82,7 @@ function genClass(page_decl: PageDeclObject) {
 
     for (const child of page_decl.children) {
         const child_ts_class_name = genClass(child);
-        const child_declaration = `public readonly ${child.id}: ${child_ts_class_name};`;
+        const child_declaration = `${modifier} readonly ${child.id}: ${child_ts_class_name};`;
         member_declarations.push(child_declaration);
 
         const temp_child_name = `child_${child.id}`;

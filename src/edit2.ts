@@ -1,5 +1,8 @@
 import * as styles from "./edit_page.css";
-import { class_registry, TS_app_Container, TS_ide_Container, TS_left_col_Container, TS_right_col_Container } from "./generated/classes";
+import { python } from "@codemirror/lang-python";
+import { basicSetup, EditorView } from "codemirror";
+import { Editor } from "./editor";
+import { class_registry, TS_app_Container, TS_ide_Container, TS_left_col_Container, TS_right_col_Container, TS_top_left_cell_contents_Container } from "./generated/classes";
 
 // Begin HMR Setup
 // I am not 100% sure if this section is necessary to make HMR work,
@@ -17,9 +20,8 @@ if (import.meta.hot) {
 }
 // End HMR Setup.
 
-// function assignStyles(children: VanillaPageDecl[], containers: object[]){
+console.log(styles); // this is currently necessary to force vanilla extract to work
 
-// }
 
 function create_resize_row_listener(el: HTMLDivElement, firstRowVar: string, secondRowVar: string){
   return (ev: MouseEvent) => {
@@ -63,8 +65,8 @@ function create_resize_col_listener(el: HTMLDivElement, firstColVar: string, sec
   };
 }
 
-class TS_left_col_Container_spec extends TS_left_col_Container {
-  public constructor(public readonly el: HTMLDivElement) {
+class LeftColumn extends TS_left_col_Container {
+  public constructor(readonly el: HTMLDivElement) {
     super(el);
 
     const left_rows_md_listener = create_resize_row_listener(el, "--row-11-height", "--row-12-height");
@@ -74,8 +76,8 @@ class TS_left_col_Container_spec extends TS_left_col_Container {
   }
 }
 
-class TS_right_col_Container_spec extends TS_right_col_Container {
-  public constructor(public readonly el: HTMLDivElement) {
+class RightColumn extends TS_right_col_Container {
+  public constructor(readonly el: HTMLDivElement) {
     super(el);
 
     const right_rows_md_listener = create_resize_row_listener(el, "--row-21-height", "--row-22-height");
@@ -85,14 +87,38 @@ class TS_right_col_Container_spec extends TS_right_col_Container {
   }
 }
 
-class TS_ide_Container_spec extends TS_ide_Container {
-  public constructor(public readonly el: HTMLDivElement) {
+class IDE extends TS_ide_Container {
+  public constructor(readonly el: HTMLDivElement) {
     super(el);
 
     const resize_cols_listener = create_resize_col_listener(el, "--col-1-width", "--col-2-width");
     this.left_col.right_edge.el.addEventListener("mousedown", resize_cols_listener);
     this.right_col.left_edge.el.addEventListener("mousedown", resize_cols_listener);
   }
+}
+
+class AlgoEditorArea extends TS_top_left_cell_contents_Container {
+  //@ts-ignore
+  private algoEditor: Editor;
+
+  public constructor(readonly el: HTMLDivElement) {
+    super(el);
+    console.log("setting this algo editor up");
+    this.inputs.el.innerHTML = "inputs content here<br/>and here";
+
+    const fixedHeightEditor = EditorView.theme({
+      "&": {height: "100%"},
+      ".cm-scroller": {overflow: "auto"}
+    });
+
+    this.algoEditor = new Editor(this.algo_editor_wrapper.algo_editor.el, `
+    for x in range(50, 500, 50):
+        for y in range(50, 500, 50):
+            n = y / 50
+          `, [basicSetup, fixedHeightEditor, python()]);
+  }
+
+
 }
 
 function setup() {
@@ -102,24 +128,20 @@ function setup() {
   }
   top_el.textContent = "";
 
-  class_registry.left_col_cls = TS_left_col_Container_spec;
-  class_registry.right_col_cls = TS_right_col_Container_spec;
-  class_registry.ide_cls = TS_ide_Container_spec;
+  class_registry.left_col_cls = LeftColumn;
+  class_registry.right_col_cls = RightColumn;
+  class_registry.ide_cls = IDE;
+  class_registry.top_left_cell_contents_cls = AlgoEditorArea;
 
+  //@ts-ignore
   const root_container = new TS_app_Container(top_el as HTMLDivElement);
 
-  root_container.header.el.textContent = "PyAlgoViz 2.0";
-  root_container.header.el.classList.add(styles.header_style);
 
-  root_container.content.ide.left_col.top_left_cell.el.classList.add(styles.cell_style);
-  root_container.content.ide.left_col.bottom_left_cell.el.classList.add(styles.cell_style);
-  root_container.content.ide.right_col.top_right_cell.el.classList.add(styles.cell_style);
-  root_container.content.ide.right_col.bottom_right_cell.el.classList.add(styles.cell_style);
-
-  // root_container.content.ide.left_col.top_left_cell.el.textContent = "top left";
-  // root_container.content.ide.left_col.bottom_left_cell.el.textContent = "bottom left";
-  // root_container.content.ide.right_col.top_right_cell.el.textContent = "top right";
-  // root_container.content.ide.right_col.bottom_right_cell.el.textContent = "bottom right";
+  // these lines fail (and should)
+  // root_container.content.ide.left_col.right_edge;
+  // let ide = root_container.content.ide;
+  // ide.el.textContent = "foo";
+  // root_container.content.ide.left_col.top_left_cell.top_left_cell_contents.el.textContent = "foo";
 }
 
 setup();
