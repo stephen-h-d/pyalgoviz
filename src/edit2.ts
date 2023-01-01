@@ -2,7 +2,7 @@ import * as styles from "./edit_page.css";
 import { python } from "@codemirror/lang-python";
 import { basicSetup, EditorView } from "codemirror";
 import { Editor } from "./editor";
-import { class_registry, TS_app_Container, TS_ide_Container, TS_left_col_Container, TS_right_col_Container, TS_top_left_cell_contents_Container } from "./generated/classes";
+import { class_registry, TS_app_Container, TS_ide_Container, TS_top_left_cell_contents_Container } from "./generated/classes";
 
 // Begin HMR Setup
 // I am not 100% sure if this section is necessary to make HMR work,
@@ -65,28 +65,6 @@ function create_resize_col_listener(el: HTMLDivElement, firstColVar: string, sec
   };
 }
 
-class LeftColumn extends TS_left_col_Container {
-  public constructor(readonly el: HTMLDivElement) {
-    super(el);
-
-    const left_rows_md_listener = create_resize_row_listener(el, "--row-11-height", "--row-12-height");
-    this.bottom_left_cell.left_top_edge.el.addEventListener("mousedown", left_rows_md_listener);
-    this.top_left_cell.left_bottom_edge.el.addEventListener("mousedown", left_rows_md_listener);
-
-  }
-}
-
-class RightColumn extends TS_right_col_Container {
-  public constructor(readonly el: HTMLDivElement) {
-    super(el);
-
-    const right_rows_md_listener = create_resize_row_listener(el, "--row-21-height", "--row-22-height");
-    this.bottom_right_cell.right_top_edge.el.addEventListener("mousedown", right_rows_md_listener);
-    this.top_right_cell.right_bottom_edge.el.addEventListener("mousedown", right_rows_md_listener);
-
-  }
-}
-
 class IDE extends TS_ide_Container {
   public constructor(readonly el: HTMLDivElement) {
     super(el);
@@ -94,6 +72,14 @@ class IDE extends TS_ide_Container {
     const resize_cols_listener = create_resize_col_listener(el, "--col-1-width", "--col-2-width");
     this.left_col.right_edge.el.addEventListener("mousedown", resize_cols_listener);
     this.right_col.left_edge.el.addEventListener("mousedown", resize_cols_listener);
+
+    const left_rows_md_listener = create_resize_row_listener(el, "--row-11-height", "--row-12-height");
+    this.left_col.bottom_left_cell.left_top_edge.el.addEventListener("mousedown", left_rows_md_listener);
+    this.left_col.top_left_cell.left_bottom_edge.el.addEventListener("mousedown", left_rows_md_listener);
+
+    const right_rows_md_listener = create_resize_row_listener(el, "--row-21-height", "--row-22-height");
+    this.right_col.bottom_right_cell.right_top_edge.el.addEventListener("mousedown", right_rows_md_listener);
+    this.right_col.top_right_cell.right_bottom_edge.el.addEventListener("mousedown", right_rows_md_listener);
   }
 }
 
@@ -128,8 +114,6 @@ function setup() {
   }
   top_el.textContent = "";
 
-  class_registry.left_col_cls = LeftColumn;
-  class_registry.right_col_cls = RightColumn;
   class_registry.ide_cls = IDE;
   class_registry.top_left_cell_contents_cls = AlgoEditorArea;
 
