@@ -2,23 +2,16 @@ const pyodideWorker = new Worker("pyodide-0.21.3/webworker.js");
 
 const callbacks = new Map();
 
-class RunResult {
-  // TODO figure out the actual type of result and error
-  public constructor(public py_error: any, public events: any) {
-  }
-}
-
 pyodideWorker.onmessage = (event) => {
-  const { id, ...data } = event.data;
+  const { id, result } = event.data;
   const onSuccess = callbacks.get(id);
   callbacks.delete(id);
-  const results = data["results"];
-  onSuccess(new RunResult(results.get("py_error"), results.get("events")));
+  onSuccess(result);
 };
 
 const asyncRun = (() => {
   let id = 0; // identify a Promise
-  return (script: string, context: object): Promise<RunResult> => {
+  return (script: string, context: object): Promise<any> => {
 
     // the id could be generated more carefully
     id = (id + 1) % Number.MAX_SAFE_INTEGER;

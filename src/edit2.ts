@@ -2,7 +2,8 @@ import * as styles from "./edit_page.css";
 import { python } from "@codemirror/lang-python";
 import { basicSetup, EditorView } from "codemirror";
 import { Editor } from "./editor";
-import { class_registry, TS_app_Container, TS_ide_Container, TS_top_left_cell_contents_Container } from "./generated/classes";
+import { class_registry, TS_app_Container, TS_bottom_left_cell_contents_Container, TS_ide_Container, TS_inputs_Container, TS_top_left_cell_contents_Container } from "./generated/classes";
+import { fromEvent, map, Observable } from "rxjs";
 
 // Begin HMR Setup
 // I am not 100% sure if this section is necessary to make HMR work,
@@ -69,6 +70,8 @@ class IDE extends TS_ide_Container {
   public constructor(readonly el: HTMLDivElement) {
     super(el);
 
+    this.el.classList.add(styles.ide_style);
+
     const resize_cols_listener = create_resize_col_listener(el, "--col-1-width", "--col-2-width");
     this.left_col.right_edge.el.addEventListener("mousedown", resize_cols_listener);
     this.right_col.left_edge.el.addEventListener("mousedown", resize_cols_listener);
@@ -80,6 +83,8 @@ class IDE extends TS_ide_Container {
     const right_rows_md_listener = create_resize_row_listener(el, "--row-21-height", "--row-22-height");
     this.right_col.bottom_right_cell.right_top_edge.el.addEventListener("mousedown", right_rows_md_listener);
     this.right_col.top_right_cell.right_bottom_edge.el.addEventListener("mousedown", right_rows_md_listener);
+
+    this.left_col.top_left_cell.top_left_cell_contents
   }
 }
 
@@ -89,8 +94,6 @@ class AlgoEditorArea extends TS_top_left_cell_contents_Container {
 
   public constructor(readonly el: HTMLDivElement) {
     super(el);
-    console.log("setting this algo editor up");
-    this.inputs.el.innerHTML = "inputs content here<br/>and here";
 
     const fixedHeightEditor = EditorView.theme({
       "&": {height: "100%"},
@@ -103,7 +106,95 @@ class AlgoEditorArea extends TS_top_left_cell_contents_Container {
             n = y / 50
           `, [basicSetup, fixedHeightEditor, python()]);
   }
+}
 
+class VizEditorArea extends TS_bottom_left_cell_contents_Container {
+  //@ts-ignore
+  private vizEditor: Editor;
+
+  public constructor(readonly el: HTMLDivElement) {
+    super(el);
+
+    const fixedHeightEditor = EditorView.theme({
+      "&": {height: "100%"},
+      ".cm-scroller": {overflow: "auto"}
+    });
+
+    this.vizEditor = new Editor(this.viz_editor_wrapper.viz_editor.el, `
+    from math import pi
+    
+    text(x, y, "x=%s y=%s n=%d" % (x, y, n), size=10 + n*3, font="Arial", color='red')
+    rect(450, 50, 50 + n*10, 50 + n*10, fill="brown", border="lightyellow")
+    line(50, 50, x, y, color="purple", width=6)
+    circle(300, 200, n * 25, fill="transparent", border="green")
+    arc(100,
+        325,
+        innerRadius=50,
+        outerRadius=100,
+        startAngle=(n - 1) * 2 * pi/7,
+        endAngle=n * 2 * pi/7,
+        color="orange")
+          `, [basicSetup, fixedHeightEditor, python()]);
+  }
+}
+
+function eventHappened(el: HTMLElement, event_name: string): Observable<null> {
+  return fromEvent(el, event_name).pipe(map((_ev: Event) => { return null; }));
+}
+
+class Inputs extends TS_inputs_Container {
+
+  private _saveClicked: Observable<null>;
+  private _runClicked: Observable<null>;
+  private _prevClicked: Observable<null>;
+  private _nextClicked: Observable<null>;
+  private _playClicked: Observable<null>;
+
+  public constructor(readonly el: HTMLDivElement) {
+    super(el);
+    this.speed.very_fast.el.textContent = "Very Fast";
+    this.speed.fast.el.textContent = "Fast";
+    this.speed.medium.el.textContent = "Medium";
+    this.speed.slow.el.textContent = "Slow";
+    this.speed.very_slow.el.textContent = "Very Slow";
+    this.speed.el.selectedIndex = 2;
+
+    this.save.el.textContent = "Save";
+    this.run.el.textContent = "Run";
+    this.prev.el.textContent = "Previous";
+    this.next.el.textContent = "Next";
+    this.play.el.textContent = "Play";
+
+    this._saveClicked = eventHappened(this.save.el, "click");
+    this._runClicked = eventHappened(this.run.el, "click");
+    this._prevClicked = eventHappened(this.prev.el, "click");
+    this._nextClicked = eventHappened(this.next.el, "click");
+    this._playClicked = eventHappened(this.play.el, "click");
+
+    for (const input of [this.speed,this.save,this.run,this.prev,this.next,this.play]){
+      input.el.disabled = true;
+    }
+  }
+
+  public saveClicked(): Observable<null> {
+    return this._saveClicked;
+  }
+
+  public runClicked(): Observable<null> {
+    return this._runClicked;
+  }
+
+  public prevClicked(): Observable<null> {
+    return this._prevClicked;
+  }
+
+  public nextClicked(): Observable<null> {
+    return this._nextClicked;
+  }
+
+  public playClicked(): Observable<null> {
+    return this._playClicked;
+  }
 
 }
 
@@ -116,6 +207,8 @@ function setup() {
 
   class_registry.ide_cls = IDE;
   class_registry.top_left_cell_contents_cls = AlgoEditorArea;
+  class_registry.bottom_left_cell_contents_cls = VizEditorArea;
+  class_registry.inputs_cls = Inputs;
 
   //@ts-ignore
   const root_container = new TS_app_Container(top_el as HTMLDivElement);

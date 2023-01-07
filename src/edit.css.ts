@@ -36,7 +36,7 @@ export const scriptEditor = style({position: "absolute", top: 0, bottom: 0, left
 export const scriptEditorWrapper = style({flexGrow: 1});
 export const runInputs = style({height: "2.5em", zIndex: 1});
 
-export const body = style({width: "100%", backgroundColor: "lightgray", display: "flex", flexDirection: "column", height:"100vh"});
+export const body = style({width: "100%", backgroundColor: "blue", display: "flex", flexDirection: "column", height:"100vh"});
 
 export const root = style({
     display: "flex",

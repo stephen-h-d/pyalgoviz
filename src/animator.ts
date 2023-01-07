@@ -95,6 +95,7 @@ export class Animator {
     private readonly setCurrentLine: (currentLine: number) => void,
     private readonly setVizErrorLine: (currentLine: number) => void
   ) {
+    console.log("num events", events.length);
     this.timerId = this.play();
   }
 
