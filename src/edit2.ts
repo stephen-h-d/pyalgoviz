@@ -84,7 +84,7 @@ class IDE extends TS_ide_Container {
     this.right_col.bottom_right_cell.right_top_edge.el.addEventListener("mousedown", right_rows_md_listener);
     this.right_col.top_right_cell.right_bottom_edge.el.addEventListener("mousedown", right_rows_md_listener);
 
-    this.left_col.top_left_cell.top_left_cell_contents
+    (this.left_col.top_left_cell.top_left_cell_contents as AlgoEditorArea).getInputs()
   }
 }
 
@@ -106,6 +106,11 @@ class AlgoEditorArea extends TS_top_left_cell_contents_Container {
             n = y / 50
           `, [basicSetup, fixedHeightEditor, python()]);
   }
+
+  public getInputs(): Inputs{
+    // TODO figure out if there is a better way to do this. Also start using it
+    return this.inputs as Inputs;
+  }
 }
 
 class VizEditorArea extends TS_bottom_left_cell_contents_Container {
@@ -122,7 +127,7 @@ class VizEditorArea extends TS_bottom_left_cell_contents_Container {
 
     this.vizEditor = new Editor(this.viz_editor_wrapper.viz_editor.el, `
     from math import pi
-    
+
     text(x, y, "x=%s y=%s n=%d" % (x, y, n), size=10 + n*3, font="Arial", color='red')
     rect(450, 50, 50 + n*10, 50 + n*10, fill="brown", border="lightyellow")
     line(50, 50, x, y, color="purple", width=6)
@@ -198,6 +203,62 @@ class Inputs extends TS_inputs_Container {
 
 }
 
+
+interface BaseSchema {
+  readonly id: string;
+}
+
+class BaseSchemaImpl {
+  public constructor(public id: string){}
+}
+
+interface Req2 {
+  readonly req: string;
+}
+
+class ReqImpl {
+  public constructor(public req: string){}
+}
+
+class ReqImpl2 {
+  public constructor(public req: string){}
+}
+
+interface OtherSchema {
+  readonly id: string;
+  readonly other_id: string;
+}
+
+class Model<GenericSchema extends BaseSchema = BaseSchemaImpl, Req extends Req2 = ReqImpl> {
+  public constructor(public what: GenericSchema){}
+}
+
+class Mugh<GenericSchema2 extends BaseSchema> extends Model<GenericSchema2> {
+
+}
+
+class Wugh extends Mugh<OtherSchema> {
+
+}
+
+const m = new Model("foo");
+
+class A{}
+
+class B{}
+
+
+class Foo<T extends A, U extends A>{
+  public constructor(public bob: T, public sue: U){}
+}
+
+class FooNum extends Foo<B, B>{
+
+}
+
+const foo_num:Foo<A, B> = new FooNum(1.2, "sdf");
+
+
 function setup() {
   const top_el = document.getElementById("app");
   if (top_el === null) {
@@ -209,6 +270,7 @@ function setup() {
   class_registry.top_left_cell_contents_cls = AlgoEditorArea;
   class_registry.bottom_left_cell_contents_cls = VizEditorArea;
   class_registry.inputs_cls = Inputs;
+  // TODO extend
 
   //@ts-ignore
   const root_container = new TS_app_Container(top_el as HTMLDivElement);
