@@ -75,8 +75,8 @@ const page: PageDecl =
                 ["div", "right_edge", right_edge],
                 ["div", "top_left_cell", {gridRow: 1, position: "relative"},false,[
                     ["div", "left_bottom_edge", bottom_edge],
-                    ["div", "top_left_cell_contents", {height: "100%", width: "100%", display: "flex", flexFlow: "column", }, true, [
-                        ["div", "algo_editor_wrapper", {position: "relative", flex: "1 1 auto"},false, [
+                    ["div", "top_left_cell_contents", {height: "100%", width: "100%", display: "flex", flexFlow: "column", }, false, [
+                        ["div", "algo_editor_wrapper", {position: "relative", flex: "1 1 auto"},true, [
                             ["div", "algo_editor", {height: "100%", position: "absolute", top: 0, bottom: 0, left: 0, right: 0}],
                         ]],
                         ["div", "inputs", {flex: "0 1 auto"}, true, inputs],

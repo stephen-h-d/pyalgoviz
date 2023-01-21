@@ -1,15 +1,23 @@
+import { Subject } from "rxjs";
+
 const pyodideWorker = new Worker("pyodide-0.21.3/webworker.js");
 
 const callbacks = new Map();
+export const pyodide_ready: Subject<boolean> = new Subject();
 
 pyodideWorker.onmessage = (event) => {
+  if (event.data.pyodide_ready !== undefined) {
+    pyodide_ready.next(true);
+    return;
+  }
+
   const { id, result } = event.data;
   const onSuccess = callbacks.get(id);
   callbacks.delete(id);
   onSuccess(result);
 };
 
-const asyncRun = (() => {
+export const asyncRun = (() => {
   let id = 0; // identify a Promise
   return (script: string, context: object): Promise<any> => {
 
@@ -28,5 +36,3 @@ const asyncRun = (() => {
   };
 
 })();
-
-export { asyncRun };

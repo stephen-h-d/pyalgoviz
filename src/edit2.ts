@@ -6,6 +6,7 @@ import { Editor } from "./editor";
 import { build_app } from "./generated/classes";
 import * as clses from "./generated/classes";
 import { fromEvent, map, Observable } from "rxjs";
+import { pyodide_ready } from "./py-worker";
 
 // Begin HMR Setup
 // I am not 100% sure if this section is necessary to make HMR work,
@@ -69,10 +70,11 @@ function create_resize_col_listener(el: HTMLDivElement, firstColVar: string, sec
 }
 
 class IDE extends clses.TS_ide_Container {
-  public constructor(protected readonly el: HTMLDivElement, protected readonly left_col: HTMLDivElement, protected readonly right_edge: HTMLDivElement, protected readonly top_left_cell: HTMLDivElement, protected readonly left_bottom_edge: HTMLDivElement, protected readonly top_left_cell_contents: clses.TS_top_left_cell_contents_Container, protected readonly bottom_left_cell: HTMLDivElement, protected readonly left_top_edge: HTMLDivElement, protected readonly bottom_left_cell_contents: clses.TS_bottom_left_cell_contents_Container, protected readonly right_col: HTMLDivElement, protected readonly left_edge: HTMLDivElement, protected readonly top_right_cell: HTMLDivElement, protected readonly right_bottom_edge: HTMLDivElement, protected readonly top_right_cell_contents: clses.TS_top_right_cell_contents_Container, protected readonly bottom_right_cell: HTMLDivElement, protected readonly right_top_edge: HTMLDivElement, protected readonly bottom_right_cell_contents: clses.TS_bottom_right_cell_contents_Container) {
-    super(el, left_col, right_edge, top_left_cell, left_bottom_edge, top_left_cell_contents,
-      bottom_left_cell, left_top_edge, bottom_left_cell_contents, right_col,
-       left_edge, top_right_cell, right_bottom_edge, top_right_cell_contents, bottom_right_cell, right_top_edge, bottom_right_cell_contents);
+  public constructor(protected readonly el: HTMLDivElement, protected readonly left_col: HTMLDivElement, protected readonly right_edge: HTMLDivElement, protected readonly top_left_cell: HTMLDivElement, protected readonly left_bottom_edge: HTMLDivElement, protected readonly top_left_cell_contents: HTMLDivElement, protected readonly algo_editor_wrapper: clses.TS_algo_editor_wrapper_Container, protected readonly inputs: Inputs, protected readonly bottom_left_cell: HTMLDivElement, protected readonly left_top_edge: HTMLDivElement, protected readonly bottom_left_cell_contents: clses.TS_bottom_left_cell_contents_Container, protected readonly right_col: HTMLDivElement, protected readonly left_edge: HTMLDivElement, protected readonly top_right_cell: HTMLDivElement, protected readonly right_bottom_edge: HTMLDivElement, protected readonly top_right_cell_contents: clses.TS_top_right_cell_contents_Container, protected readonly bottom_right_cell: HTMLDivElement, protected readonly right_top_edge: HTMLDivElement, protected readonly bottom_right_cell_contents: clses.TS_bottom_right_cell_contents_Container) {
+    // super(el, left_col, right_edge, top_left_cell, left_bottom_edge, top_left_cell_contents,
+    //   bottom_left_cell, left_top_edge, bottom_left_cell_contents, right_col,
+    //    left_edge, top_right_cell, right_bottom_edge, top_right_cell_contents, bottom_right_cell, right_top_edge, bottom_right_cell_contents);
+    super(el, left_col, right_edge, top_left_cell, left_bottom_edge, top_left_cell_contents, algo_editor_wrapper,inputs,bottom_left_cell,left_top_edge,bottom_left_cell_contents,right_col,left_edge,top_right_cell,right_bottom_edge,top_right_cell_contents,bottom_right_cell,right_top_edge,bottom_right_cell_contents);
 
     this.el.classList.add(styles.ide_style);
 
@@ -88,19 +90,16 @@ class IDE extends clses.TS_ide_Container {
     this.right_top_edge.addEventListener("mousedown", right_rows_md_listener);
     this.right_bottom_edge.addEventListener("mousedown", right_rows_md_listener);
 
-    // (this.left_col.top_left_cell.top_left_cell_contents as AlgoEditorArea).getInputs()
+    this.inputs.addPyodideAvailable(pyodide_ready);
   }
 }
 
-class AlgoEditorArea extends clses.TS_top_left_cell_contents_Container {
+class AlgoEditor extends clses.TS_algo_editor_wrapper_Container {
   //@ts-ignore
   private algoEditor: Editor;
 
-  public constructor(protected readonly el: HTMLDivElement,
-    protected readonly algo_editor_wrapper: HTMLDivElement,
-    protected readonly algo_editor: HTMLDivElement,
-    protected readonly inputs: Inputs) {
-    super(el, algo_editor_wrapper, algo_editor, inputs);
+  public constructor(protected readonly el: HTMLDivElement, protected readonly algo_editor: HTMLDivElement) {
+    super(el, algo_editor);
 
     const fixedHeightEditor = EditorView.theme({
       "&": {height: "100%"},
@@ -113,42 +112,44 @@ class AlgoEditorArea extends clses.TS_top_left_cell_contents_Container {
             n = y / 50
           `, [basicSetup, fixedHeightEditor, python()]);
   }
+}
 
-  public getInputs(): Inputs{
-    // TODO figure out if there is a better way to do this. Also start using it
-    return this.inputs;
+class VizEditorArea extends clses.TS_bottom_left_cell_contents_Container {
+  //@ts-ignore
+  private vizEditor: Editor;
+
+  public constructor(protected readonly el: HTMLDivElement, protected readonly viz_editor_wrapper: HTMLDivElement, protected readonly viz_editor: HTMLDivElement) {
+    super(el, viz_editor_wrapper, viz_editor);
+
+    const fixedHeightEditor = EditorView.theme({
+      "&": {height: "100%"},
+      ".cm-scroller": {overflow: "auto"}
+    });
+
+    this.vizEditor = new Editor(this.viz_editor, `
+    from math import pi
+
+    text(x, y, "x=%s y=%s n=%d" % (x, y, n), size=10 + n*3, font="Arial", color='red')
+    rect(450, 50, 50 + n*10, 50 + n*10, fill="brown", border="lightyellow")
+    line(50, 50, x, y, color="purple", width=6)
+    circle(300, 200, n * 25, fill="transparent", border="green")
+    arc(100,
+        325,
+        innerRadius=50,
+        outerRadius=100,
+        startAngle=(n - 1) * 2 * pi/7,
+        endAngle=n * 2 * pi/7,
+        color="orange")
+          `, [basicSetup, fixedHeightEditor, python()]);
   }
 }
 
-// class VizEditorArea extends TS_bottom_left_cell_contents_Container {
-//   //@ts-ignore
-//   private vizEditor: Editor;
-
-//   public constructor(readonly el: HTMLDivElement) {
-//     super(el);
-
-//     const fixedHeightEditor = EditorView.theme({
-//       "&": {height: "100%"},
-//       ".cm-scroller": {overflow: "auto"}
-//     });
-
-//     this.vizEditor = new Editor(this.viz_editor_wrapper.viz_editor.el, `
-//     from math import pi
-
-//     text(x, y, "x=%s y=%s n=%d" % (x, y, n), size=10 + n*3, font="Arial", color='red')
-//     rect(450, 50, 50 + n*10, 50 + n*10, fill="brown", border="lightyellow")
-//     line(50, 50, x, y, color="purple", width=6)
-//     circle(300, 200, n * 25, fill="transparent", border="green")
-//     arc(100,
-//         325,
-//         innerRadius=50,
-//         outerRadius=100,
-//         startAngle=(n - 1) * 2 * pi/7,
-//         endAngle=n * 2 * pi/7,
-//         color="orange")
-//           `, [basicSetup, fixedHeightEditor, python()]);
-//   }
-// }
+class VizOutput extends clses.TS_top_right_cell_contents_Container {
+  public constructor(protected readonly el: HTMLDivElement){
+    super(el);
+    el.textContent = "viz goes here";
+  }
+}
 
 function eventHappened(el: HTMLElement, event_name: string): Observable<null> {
   return fromEvent(el, event_name).pipe(map((_ev: Event) => { return null; }));
@@ -188,6 +189,12 @@ class Inputs extends clses.TS_inputs_Container {
     }
   }
 
+  public addPyodideAvailable(pyodide_available: Observable<boolean>){
+    pyodide_available.subscribe(avail => {
+      this.run.disabled = !avail;
+    });
+  }
+
   public saveClicked(): Observable<null> {
     return this._saveClicked;
   }
@@ -213,24 +220,16 @@ class Inputs extends clses.TS_inputs_Container {
 
 function setup() {
   const top_el = document.getElementById("app");
-  if (top_el === null || top_el.tagName != "div") {
-    throw Error(`Unable to find div element with id "app"`);
+  if (top_el === null || top_el.tagName.toLowerCase() != "div") {
+    throw Error(`Unable to find div element with id "app": ${top_el}`);
   }
   top_el.textContent = "";
 
-  // class_registry.ide_cls = IDE;
-  // class_registry.top_left_cell_contents_cls = AlgoEditorArea;
-  // class_registry.bottom_left_cell_contents_cls = VizEditorArea;
-  // class_registry.inputs_cls = Inputs;
-  // TODO extend
-
-  //@ts-ignore
-  // const root_container = new TS_app_Container(top_el as HTMLDivElement);
   const app = build_app({
     TS_inputs_Container_cls: Inputs,
-    TS_top_left_cell_contents_Container_cls: AlgoEditorArea,
-    TS_bottom_left_cell_contents_Container_cls: clses.TS_bottom_left_cell_contents_Container,
-    TS_top_right_cell_contents_Container_cls: clses.TS_top_right_cell_contents_Container,
+    TS_algo_editor_wrapper_Container_cls: AlgoEditor,
+    TS_bottom_left_cell_contents_Container_cls: VizEditorArea,
+    TS_top_right_cell_contents_Container_cls: VizOutput,
     TS_bottom_right_cell_contents_Container_cls: clses.TS_bottom_right_cell_contents_Container,
     TS_ide_Container_cls: IDE,
     TS_content_Container_cls: clses.TS_content_Container,
@@ -238,13 +237,6 @@ function setup() {
   });
 
   app.replaceEl(top_el as HTMLDivElement);
-
-
-  // these lines fail (and should)
-  // root_container.content.ide.left_col.right_edge;
-  // let ide = root_container.content.ide;
-  // ide.el.textContent = "foo";
-  // root_container.content.ide.left_col.top_left_cell.top_left_cell_contents.el.textContent = "foo";
 }
 
 setup();

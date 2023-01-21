@@ -3,8 +3,9 @@ importScripts("pyodide.js");
 async function loadPyodideAndPackages() {
   self.pyodide = await loadPyodide();
   // await self.pyodide.loadPackage(["numpy", "pytz"]);  TODO figure out if any packages are needed
+  self.postMessage({pyodide_ready: true});
 }
-let pyodideReadyPromise = loadPyodideAndPackages();
+pyodideReadyPromise = loadPyodideAndPackages();
 
 self.onmessage = async (event) => {
   // make sure loading is done
@@ -14,7 +15,7 @@ self.onmessage = async (event) => {
   for (const key of Object.keys(context)) {
     self[key] = context[key];
   }
-  
+
   try {
     await self.pyodide.loadPackagesFromImports(python);
     let result = await self.pyodide.runPythonAsync(python);
