@@ -2,7 +2,9 @@ import * as styles from "./edit_page.css";
 import { python } from "@codemirror/lang-python";
 import { basicSetup, EditorView } from "codemirror";
 import { Editor } from "./editor";
-import { class_registry, TS_app_Container, TS_bottom_left_cell_contents_Container, TS_ide_Container, TS_inputs_Container, TS_top_left_cell_contents_Container } from "./generated/classes";
+// import { build_top, TS_app_Container, TS_bottom_left_cell_contents_Container, TS_ide_Container, TS_inputs_Container, TS_top_left_cell_contents_Container } from "./generated/classes";
+import { build_app } from "./generated/classes";
+import * as clses from "./generated/classes";
 import { fromEvent, map, Observable } from "rxjs";
 
 // Begin HMR Setup
@@ -66,41 +68,46 @@ function create_resize_col_listener(el: HTMLDivElement, firstColVar: string, sec
   };
 }
 
-class IDE extends TS_ide_Container {
-  public constructor(readonly el: HTMLDivElement) {
-    super(el);
+class IDE extends clses.TS_ide_Container {
+  public constructor(protected readonly el: HTMLDivElement, protected readonly left_col: HTMLDivElement, protected readonly right_edge: HTMLDivElement, protected readonly top_left_cell: HTMLDivElement, protected readonly left_bottom_edge: HTMLDivElement, protected readonly top_left_cell_contents: clses.TS_top_left_cell_contents_Container, protected readonly bottom_left_cell: HTMLDivElement, protected readonly left_top_edge: HTMLDivElement, protected readonly bottom_left_cell_contents: clses.TS_bottom_left_cell_contents_Container, protected readonly right_col: HTMLDivElement, protected readonly left_edge: HTMLDivElement, protected readonly top_right_cell: HTMLDivElement, protected readonly right_bottom_edge: HTMLDivElement, protected readonly top_right_cell_contents: clses.TS_top_right_cell_contents_Container, protected readonly bottom_right_cell: HTMLDivElement, protected readonly right_top_edge: HTMLDivElement, protected readonly bottom_right_cell_contents: clses.TS_bottom_right_cell_contents_Container) {
+    super(el, left_col, right_edge, top_left_cell, left_bottom_edge, top_left_cell_contents,
+      bottom_left_cell, left_top_edge, bottom_left_cell_contents, right_col,
+       left_edge, top_right_cell, right_bottom_edge, top_right_cell_contents, bottom_right_cell, right_top_edge, bottom_right_cell_contents);
 
     this.el.classList.add(styles.ide_style);
 
     const resize_cols_listener = create_resize_col_listener(el, "--col-1-width", "--col-2-width");
-    this.left_col.right_edge.el.addEventListener("mousedown", resize_cols_listener);
-    this.right_col.left_edge.el.addEventListener("mousedown", resize_cols_listener);
+    this.right_edge.addEventListener("mousedown", resize_cols_listener);
+    this.left_edge.addEventListener("mousedown", resize_cols_listener);
 
     const left_rows_md_listener = create_resize_row_listener(el, "--row-11-height", "--row-12-height");
-    this.left_col.bottom_left_cell.left_top_edge.el.addEventListener("mousedown", left_rows_md_listener);
-    this.left_col.top_left_cell.left_bottom_edge.el.addEventListener("mousedown", left_rows_md_listener);
+    this.left_top_edge.addEventListener("mousedown", left_rows_md_listener);
+    this.left_bottom_edge.addEventListener("mousedown", left_rows_md_listener);
 
     const right_rows_md_listener = create_resize_row_listener(el, "--row-21-height", "--row-22-height");
-    this.right_col.bottom_right_cell.right_top_edge.el.addEventListener("mousedown", right_rows_md_listener);
-    this.right_col.top_right_cell.right_bottom_edge.el.addEventListener("mousedown", right_rows_md_listener);
+    this.right_top_edge.addEventListener("mousedown", right_rows_md_listener);
+    this.right_bottom_edge.addEventListener("mousedown", right_rows_md_listener);
 
-    (this.left_col.top_left_cell.top_left_cell_contents as AlgoEditorArea).getInputs()
+    // (this.left_col.top_left_cell.top_left_cell_contents as AlgoEditorArea).getInputs()
   }
 }
 
-class AlgoEditorArea extends TS_top_left_cell_contents_Container {
+class AlgoEditorArea extends clses.TS_top_left_cell_contents_Container {
   //@ts-ignore
   private algoEditor: Editor;
 
-  public constructor(readonly el: HTMLDivElement) {
-    super(el);
+  public constructor(protected readonly el: HTMLDivElement,
+    protected readonly algo_editor_wrapper: HTMLDivElement,
+    protected readonly algo_editor: HTMLDivElement,
+    protected readonly inputs: Inputs) {
+    super(el, algo_editor_wrapper, algo_editor, inputs);
 
     const fixedHeightEditor = EditorView.theme({
       "&": {height: "100%"},
       ".cm-scroller": {overflow: "auto"}
     });
 
-    this.algoEditor = new Editor(this.algo_editor_wrapper.algo_editor.el, `
+    this.algoEditor = new Editor(this.algo_editor, `
     for x in range(50, 500, 50):
         for y in range(50, 500, 50):
             n = y / 50
@@ -109,45 +116,45 @@ class AlgoEditorArea extends TS_top_left_cell_contents_Container {
 
   public getInputs(): Inputs{
     // TODO figure out if there is a better way to do this. Also start using it
-    return this.inputs as Inputs;
+    return this.inputs;
   }
 }
 
-class VizEditorArea extends TS_bottom_left_cell_contents_Container {
-  //@ts-ignore
-  private vizEditor: Editor;
+// class VizEditorArea extends TS_bottom_left_cell_contents_Container {
+//   //@ts-ignore
+//   private vizEditor: Editor;
 
-  public constructor(readonly el: HTMLDivElement) {
-    super(el);
+//   public constructor(readonly el: HTMLDivElement) {
+//     super(el);
 
-    const fixedHeightEditor = EditorView.theme({
-      "&": {height: "100%"},
-      ".cm-scroller": {overflow: "auto"}
-    });
+//     const fixedHeightEditor = EditorView.theme({
+//       "&": {height: "100%"},
+//       ".cm-scroller": {overflow: "auto"}
+//     });
 
-    this.vizEditor = new Editor(this.viz_editor_wrapper.viz_editor.el, `
-    from math import pi
+//     this.vizEditor = new Editor(this.viz_editor_wrapper.viz_editor.el, `
+//     from math import pi
 
-    text(x, y, "x=%s y=%s n=%d" % (x, y, n), size=10 + n*3, font="Arial", color='red')
-    rect(450, 50, 50 + n*10, 50 + n*10, fill="brown", border="lightyellow")
-    line(50, 50, x, y, color="purple", width=6)
-    circle(300, 200, n * 25, fill="transparent", border="green")
-    arc(100,
-        325,
-        innerRadius=50,
-        outerRadius=100,
-        startAngle=(n - 1) * 2 * pi/7,
-        endAngle=n * 2 * pi/7,
-        color="orange")
-          `, [basicSetup, fixedHeightEditor, python()]);
-  }
-}
+//     text(x, y, "x=%s y=%s n=%d" % (x, y, n), size=10 + n*3, font="Arial", color='red')
+//     rect(450, 50, 50 + n*10, 50 + n*10, fill="brown", border="lightyellow")
+//     line(50, 50, x, y, color="purple", width=6)
+//     circle(300, 200, n * 25, fill="transparent", border="green")
+//     arc(100,
+//         325,
+//         innerRadius=50,
+//         outerRadius=100,
+//         startAngle=(n - 1) * 2 * pi/7,
+//         endAngle=n * 2 * pi/7,
+//         color="orange")
+//           `, [basicSetup, fixedHeightEditor, python()]);
+//   }
+// }
 
 function eventHappened(el: HTMLElement, event_name: string): Observable<null> {
   return fromEvent(el, event_name).pipe(map((_ev: Event) => { return null; }));
 }
 
-class Inputs extends TS_inputs_Container {
+class Inputs extends clses.TS_inputs_Container {
 
   private _saveClicked: Observable<null>;
   private _runClicked: Observable<null>;
@@ -155,29 +162,29 @@ class Inputs extends TS_inputs_Container {
   private _nextClicked: Observable<null>;
   private _playClicked: Observable<null>;
 
-  public constructor(readonly el: HTMLDivElement) {
-    super(el);
-    this.speed.very_fast.el.textContent = "Very Fast";
-    this.speed.fast.el.textContent = "Fast";
-    this.speed.medium.el.textContent = "Medium";
-    this.speed.slow.el.textContent = "Slow";
-    this.speed.very_slow.el.textContent = "Very Slow";
-    this.speed.el.selectedIndex = 2;
+  public constructor(protected readonly el: HTMLDivElement, protected readonly speed: HTMLSelectElement, protected readonly very_fast: HTMLOptionElement, protected readonly fast: HTMLOptionElement, protected readonly medium: HTMLOptionElement, protected readonly slow: HTMLOptionElement, protected readonly very_slow: HTMLOptionElement, protected readonly save: HTMLButtonElement, protected readonly run: HTMLButtonElement, protected readonly play: HTMLButtonElement, protected readonly prev: HTMLButtonElement, protected readonly next: HTMLButtonElement) {
+    super(el, speed, very_fast, fast, medium, slow, very_slow, save, run, play, prev, next);
+    this.very_fast.textContent = "Very Fast";
+    this.fast.textContent = "Fast";
+    this.medium.textContent = "Medium";
+    this.slow.textContent = "Slow";
+    this.very_slow.textContent = "Very Slow";
+    this.speed.selectedIndex = 2;
 
-    this.save.el.textContent = "Save";
-    this.run.el.textContent = "Run";
-    this.prev.el.textContent = "Previous";
-    this.next.el.textContent = "Next";
-    this.play.el.textContent = "Play";
+    this.save.textContent = "Save";
+    this.run.textContent = "Run";
+    this.prev.textContent = "Previous";
+    this.next.textContent = "Next";
+    this.play.textContent = "Play";
 
-    this._saveClicked = eventHappened(this.save.el, "click");
-    this._runClicked = eventHappened(this.run.el, "click");
-    this._prevClicked = eventHappened(this.prev.el, "click");
-    this._nextClicked = eventHappened(this.next.el, "click");
-    this._playClicked = eventHappened(this.play.el, "click");
+    this._saveClicked = eventHappened(this.save, "click");
+    this._runClicked = eventHappened(this.run, "click");
+    this._prevClicked = eventHappened(this.prev, "click");
+    this._nextClicked = eventHappened(this.next, "click");
+    this._playClicked = eventHappened(this.play, "click");
 
     for (const input of [this.speed,this.save,this.run,this.prev,this.next,this.play]){
-      input.el.disabled = true;
+      input.disabled = true;
     }
   }
 
@@ -204,76 +211,33 @@ class Inputs extends TS_inputs_Container {
 }
 
 
-interface BaseSchema {
-  readonly id: string;
-}
-
-class BaseSchemaImpl {
-  public constructor(public id: string){}
-}
-
-interface Req2 {
-  readonly req: string;
-}
-
-class ReqImpl {
-  public constructor(public req: string){}
-}
-
-class ReqImpl2 {
-  public constructor(public req: string){}
-}
-
-interface OtherSchema {
-  readonly id: string;
-  readonly other_id: string;
-}
-
-class Model<GenericSchema extends BaseSchema = BaseSchemaImpl, Req extends Req2 = ReqImpl> {
-  public constructor(public what: GenericSchema){}
-}
-
-class Mugh<GenericSchema2 extends BaseSchema> extends Model<GenericSchema2> {
-
-}
-
-class Wugh extends Mugh<OtherSchema> {
-
-}
-
-const m = new Model("foo");
-
-class A{}
-
-class B{}
-
-
-class Foo<T extends A, U extends A>{
-  public constructor(public bob: T, public sue: U){}
-}
-
-class FooNum extends Foo<B, B>{
-
-}
-
-const foo_num:Foo<A, B> = new FooNum(1.2, "sdf");
-
-
 function setup() {
   const top_el = document.getElementById("app");
-  if (top_el === null) {
-    throw Error(`Unable to find element with id "app"`);
+  if (top_el === null || top_el.tagName != "div") {
+    throw Error(`Unable to find div element with id "app"`);
   }
   top_el.textContent = "";
 
-  class_registry.ide_cls = IDE;
-  class_registry.top_left_cell_contents_cls = AlgoEditorArea;
-  class_registry.bottom_left_cell_contents_cls = VizEditorArea;
-  class_registry.inputs_cls = Inputs;
+  // class_registry.ide_cls = IDE;
+  // class_registry.top_left_cell_contents_cls = AlgoEditorArea;
+  // class_registry.bottom_left_cell_contents_cls = VizEditorArea;
+  // class_registry.inputs_cls = Inputs;
   // TODO extend
 
   //@ts-ignore
-  const root_container = new TS_app_Container(top_el as HTMLDivElement);
+  // const root_container = new TS_app_Container(top_el as HTMLDivElement);
+  const app = build_app({
+    TS_inputs_Container_cls: Inputs,
+    TS_top_left_cell_contents_Container_cls: AlgoEditorArea,
+    TS_bottom_left_cell_contents_Container_cls: clses.TS_bottom_left_cell_contents_Container,
+    TS_top_right_cell_contents_Container_cls: clses.TS_top_right_cell_contents_Container,
+    TS_bottom_right_cell_contents_Container_cls: clses.TS_bottom_right_cell_contents_Container,
+    TS_ide_Container_cls: IDE,
+    TS_content_Container_cls: clses.TS_content_Container,
+    TS_app_Container_cls: clses.TS_app_Container,
+  });
+
+  app.replaceEl(top_el as HTMLDivElement);
 
 
   // these lines fail (and should)

@@ -42,6 +42,7 @@ arc(100,
     showVizErrors: true,
 };
 
+//@ts-ignore
 const script = `
 from __future__ import annotations
 import sys

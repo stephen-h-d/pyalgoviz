@@ -12,7 +12,7 @@ class Outer {
 }
 
 
-interface Args<I extends Inner,O extends Outer>{
+interface Args<I extends Inner,O extends Outer,>{
     oc: new (i: I) => O;
     ic: new (el: number) => I;
 }

@@ -4,7 +4,8 @@ import { writeFileSync } from 'fs';
 
 class ClassInfo {
 
-    public constructor(public page_decl_obj: PageDeclObject, public ts_class_name: string){
+    public constructor(public page_decl_obj: PageDeclObject, public ts_class_name: string,
+        public generic_class_name: string){
 
     }
 }
@@ -22,20 +23,33 @@ classes_output += `import * as styles from "./classes.css";
 css_output += `import { style } from '@vanilla-extract/css';
 `
 
-let build_classes_output = `
-function build_top() {
+let factory_funcs_output = '';
+
+let build_classes_output = '';
 
 
-`;
+let args_interface_generic_params = '';
+const args_interface_generic_args_list: string[] = [];
+const args_class_list: string[] = [];
+const args_class_decl_list: string[] = [];
+
+
+function genCreateElement(el_name: string, page_decl: PageDeclObject, style_name: string) {
+    return `
+    const ${el_name} = document.createElement('${page_decl.tagName}');
+    ${el_name}.id = "${page_decl.id}";
+    ${el_name}.className = styles.${style_name};
+    `;
+}
 
 
 function declareClass(
     export_class: string,
     name: string,
     constructor_sig: string,
-    style_assignment: string,
     member_declarations: string[],
-    member_initializations: string[]): void {
+    member_initializations: string[],
+    replace_method: string=""): void {
     classes_output += `
 ${export_class} class ${name} {
 `;
@@ -48,8 +62,7 @@ var joined = member_declarations.join(`
 `;
 
 classes_output += `
-    ${constructor_sig} {
-        ${style_assignment}`;
+    ${constructor_sig} {`;
 
     var joined = member_initializations.join(`
         `);
@@ -59,32 +72,42 @@ classes_output += `
     }
 `;
 
-    classes_output += `
+classes_output += `
+    ${replace_method}
 };
 `
 ;
 
 }
 
+function genReplaceMethod(ts_element_class_name: string) {
+    return `
+    public replaceEl(el: ${ts_element_class_name}){
+        el.replaceWith(this.el);
+    }
+`;
+}
+
 function declareFactoryFunc(function_name: string,
     factory_func_params: string,
     el_name: string,
     create_el: string,
-    generated_ts_class_name: string,
+    ts_cls_name: string,
     factory_func_args: string,
-    ts_element_class_name: string) {
-    classes_output += `
-function ${function_name}(${factory_func_params}): [${ts_element_class_name}, ${generated_ts_class_name}] {
-    ${create_el}
+    ts_element_class_name: string,
+    ts_cls_constructor: string) {
+    factory_funcs_output += `
+    // function ${function_name}(${factory_func_params}): [${ts_element_class_name}, ${ts_cls_name}] {
+        ${create_el}
 
-    return [${el_name}, new ${generated_ts_class_name}(${el_name}, ${factory_func_args})];
-}
+        // return [${el_name}, new ${ts_cls_constructor}(${el_name}, ${factory_func_args})];
+    // }
     `;
 }
 
-function addBuildChildOutput(child_name: string, factory_func_name: string, factory_func_args: string){
+function addInstantiateClassOutput(child_name: string, cls_name: string, args: string){
     build_classes_output += `
-    const [${child_name}_el, ${child_name}] = ${factory_func_name}(${factory_func_args});`;
+    const ${child_name} = new ${cls_name}(${args});`;
 }
 
 function addAttachChildrenOutput(el_name: string, children_el_names: string[]) {
@@ -105,122 +128,138 @@ function genStyle(page_decl: PageDeclObject): string {
     return style_name;
 }
 
-function genClass(page_decl: PageDeclObject): [string, string, string, string, string[]] {
+function genClass(page_decl: PageDeclObject, include_replace:boolean=false): [string, string, string[], PageDeclObject[]] {
     if (ids_to_class_info.has(page_decl.id)) {
         throw new Error(`Already generated class for id ${page_decl.id}`);
     }
 
-    const generated_ts_class_name = `TS_${page_decl.id}_Container`;
-    const class_info = new ClassInfo(page_decl, generated_ts_class_name);
+    const ts_cls_name = `TS_${page_decl.id}_Container`;
+    let ts_cls_name_constructor = ts_cls_name;
+    const generic_class_name = `${ts_cls_name}_T`;
+    const class_info = new ClassInfo(page_decl, ts_cls_name, generic_class_name);
     ids_to_class_info.set(page_decl.id, class_info);
     const ts_element_class_name = tag_name_to_class.get(page_decl.tagName);
 
     let [members_modifier, constructor_modifier] = ["public", "public"];
+
     if (page_decl.owner) {
         members_modifier = "protected";
     }
 
     const arg_name = "el";
     let constructor_sig = `${constructor_modifier} constructor(${members_modifier} readonly ${arg_name}: ${ts_element_class_name}`;
+    let ad_hoc_constructor_sig = `${arg_name}: ${ts_element_class_name}`;
+    let ad_hoc_constructor_args = `${page_decl.id}_el`;
+
     const export_class = page_decl.owner ? "export" : "";
     const member_declarations: string[] = [];
     const child_instantiations: string[] = [];
 
     const style_name = genStyle(page_decl);
 
-    const style_assignment = `this.el.className = styles.${style_name};`;
-
     let factory_func_params = '';
     let factory_func_args = '';
     const children_el_names = [];
+    let descendants: PageDeclObject[] = [];
 
     for (const child of page_decl.children) {
-        const [child_ts_class_name, child_factory_func_name, child_factory_func_args, child_el_name, grandchildren_names] = genClass(child);
-        constructor_sig += `, ${members_modifier} readonly ${child.id}: ${child_ts_class_name}`;
+        const [child_ts_class_name, child_el_name, grandchildren_names, desc_names] = genClass(child);
+        // constructor_sig += `, ${members_modifier} readonly ${child.id}: ${child_ts_class_name}`;
+        // ad_hoc_constructor_sig += `, ${child.id}: ${child_ts_class_name}`;
         factory_func_params += `${child.id}: ${child_ts_class_name}, `;
         factory_func_args += `${child.id}, `;
-        children_el_names.push(child_el_name);
 
-        addBuildChildOutput(child.id, child_factory_func_name, child_factory_func_args);
+        children_el_names.push(child_el_name);
+        descendants.push(child);
+        descendants = descendants.concat(desc_names);
+
+        // addBuildChildOutput(child.id, child_factory_func_name, child_factory_func_args);
         addAttachChildrenOutput(child_el_name, grandchildren_names);
     }
-    constructor_sig += ')';
 
     const el_name = `${page_decl.id}_el`;
-    const create_el = `const ${el_name} = document.createElement('${page_decl.tagName}');`;
-    const factory_func_name = `make_${generated_ts_class_name}`;
+    const create_el = genCreateElement(el_name, page_decl, style_name);
+    const factory_func_name = `make_${ts_cls_name}`;
 
-    declareClass(export_class,generated_ts_class_name,constructor_sig,style_assignment,member_declarations,child_instantiations);
-    declareFactoryFunc(factory_func_name, factory_func_params, el_name, create_el, generated_ts_class_name, factory_func_args, ts_element_class_name);
+    if (page_decl.owner) {
+        args_interface_generic_params += `${generic_class_name} extends ${ts_cls_name}, `;
+        args_interface_generic_args_list.push(generic_class_name);
+        const args_class_decl = `const ${ts_cls_name}_cls = args.${ts_cls_name}_cls || ${ts_cls_name};`;
+        ts_cls_name_constructor = `${ts_cls_name}_cls`;
+        args_class_decl_list.push(args_class_decl);
 
-    return [generated_ts_class_name, factory_func_name, factory_func_args, el_name, children_el_names];
+        for (const descendant of descendants) {
+            const element_class_name = tag_name_to_class.get(descendant.tagName);
+            if (descendant.owner) {
+                const class_info = ids_to_class_info.get(descendant.id);
+                if (class_info === undefined) {
+                    throw Error(`Unable to find class info for id ${descendant.id}`);
+                }
+
+                constructor_sig += `, ${members_modifier} readonly ${descendant.id}: ${class_info.ts_class_name}`;
+                ad_hoc_constructor_sig += `, ${descendant.id}: ${class_info.generic_class_name}`;
+                ad_hoc_constructor_args += `, ${descendant.id}`;
+            } else {
+                constructor_sig += `, ${members_modifier} readonly ${descendant.id}: ${element_class_name}`;
+                ad_hoc_constructor_sig += `, ${descendant.id}: ${element_class_name}`;
+                ad_hoc_constructor_args += `, ${descendant.id}_el`;
+            }
+        }
+        const args_class = `${ts_cls_name}_cls: new (${ad_hoc_constructor_sig}) => ${generic_class_name}`;
+        args_class_list.push(args_class);
+        constructor_sig += ')';
+
+        let replace_method = "";
+        if (include_replace) {
+            replace_method = genReplaceMethod(ts_element_class_name);
+        }
+
+        declareClass(export_class,ts_cls_name,constructor_sig,member_declarations,child_instantiations,replace_method);
+
+        addInstantiateClassOutput(page_decl.id, `${ts_cls_name}_cls`, ad_hoc_constructor_args);
+
+        descendants = [];
+    }
+    declareFactoryFunc(factory_func_name, factory_func_params, el_name, create_el, ts_cls_name, factory_func_args,
+        ts_element_class_name, ts_cls_name_constructor);
+
+    return [ts_cls_name, el_name, children_el_names, descendants];
 }
 
-const [_generated_ts_class_name, factory_func_name, factory_func_args, el_name, child_el_names] = genClass(page_object);
-addBuildChildOutput(page_object.id, factory_func_name, factory_func_args);
+const [_generated_ts_class_name, el_name, child_el_names, _descendants] = genClass(page_object, true);
+// addBuildChildOutput(page_object.id, factory_func_name, factory_func_args);
 addAttachChildrenOutput(el_name, child_el_names);
 
-build_classes_output += `
+const args_members = args_class_list.join(`;
+`);
+
+const args_def = `
+interface Args<${args_interface_generic_params}> {
+    ${args_members}
+}
+`;
+
+const args_interface_generic_args = args_interface_generic_args_list.join(",");
+const args_class_decls = args_class_decl_list.join(`
+`);
+
+build_classes_output = `export function build_${page_object.id}<${args_interface_generic_params}>(args: Args<${args_interface_generic_args}>) {
+${args_class_decls}
+${factory_funcs_output}
+${build_classes_output}
+
+    return ${page_object.id};
 }`;
 
-classes_output += build_classes_output;
+classes_output += args_def + build_classes_output;
+
+// for (const class_info of ids_to_class_info.values()){
+//     if (!class_info.page_decl_obj.owner) {
+//     classes_output += `
+// export type { ${class_info.ts_class_name} };
+//     `
+//     }
+// }
 
 writeFileSync("src/generated/classes.css.ts", css_output, {flag: "w"});
 writeFileSync("src/generated/classes.ts", classes_output, {flag: "w"});
-
-
-
-// function oldgenClass(page_decl: PageDeclObject) {
-//     if (ids_to_class_info.has(page_decl.id)) {
-//         throw new Error(`Already generated class for id ${page_decl.id}`);
-//     }
-
-//     const generated_ts_class_name = `TS_${page_decl.id}_Container`;
-//     const class_info = new ClassInfo(page_decl, generated_ts_class_name);
-//     ids_to_class_info.set(page_decl.id, class_info);
-//     const el_ts_class_name = tag_name_to_class.get(page_decl.tagName);
-
-//     let [members_modifier, constructor_modifier] = ["public", "public"];
-//     if (page_decl.owner) {
-//         members_modifier = "protected";
-//     } else {
-//         constructor_modifier = "private";
-//     }
-
-//     const arg_name = "el";
-//     const constructor_sig = `${constructor_modifier} constructor(${members_modifier} readonly ${arg_name}: ${el_ts_class_name})`;
-//     const member_declarations: string[] = [];
-//     const child_instantiations: string[] = [];
-
-//     const style_name = genStyle(page_decl);
-
-//     const style_assignment = `this.el.className = styles.${style_name};`;
-
-//     for (const child of page_decl.children) {
-//         const child_ts_class_name = genClass(child);
-//         const child_declaration = `${members_modifier} readonly ${child.id}: ${child_ts_class_name};`;
-//         member_declarations.push(child_declaration);
-
-//         const temp_child_name = `child_${child.id}`;
-//         const create_child = `const ${temp_child_name} = document.createElement('${child.tagName}');`;
-//         const assign_id = `${temp_child_name}.id = '${child.id}';`;
-//         const add_child_to_parent = `this.el.appendChild(${temp_child_name});`;
-//         const child_ts_class_name_to_use = `class_registry.${child.id}_cls`;
-//         let create_child_container = '';
-//         if (child.owner) {
-//             create_child_container = `this.${child.id} = new ${child_ts_class_name_to_use}(${temp_child_name});`;
-//         } else {
-//             create_child_container = `this.${child.id} = ${child_ts_class_name}.create(${temp_child_name})`;
-//         }
-//         const child_instantiation = create_child + assign_id + add_child_to_parent + create_child_container;
-//         child_instantiations.push(child_instantiation);
-//     }
-//     if (page_decl.owner) {
-//         declareClass(generated_ts_class_name,constructor_sig,style_assignment,member_declarations,child_instantiations, null);
-//     } else {
-//         const factory_func = genFactoryFunc(generated_ts_class_name,arg_name,el_ts_class_name);
-//         declareClass(generated_ts_class_name,constructor_sig,style_assignment,member_declarations,child_instantiations, factory_func);
-//     }
-
-//     return generated_ts_class_name;
-// }
