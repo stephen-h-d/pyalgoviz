@@ -84,8 +84,8 @@ const page: PageDecl =
                 ]],
                 ["div", "bottom_left_cell", {gridRow: 2, position: "relative"},false,[
                     ["div", "left_top_edge", top_edge],
-                    ["div", "bottom_left_cell_contents", {height: "100%", width: "100%", display: "flex", flexFlow: "column", }, true, [
-                        ["div", "viz_editor_wrapper", {position: "relative", flex: "1 1 auto"},false, [
+                    ["div", "bottom_left_cell_contents", {height: "100%", width: "100%", display: "flex", flexFlow: "column", }, false, [
+                        ["div", "viz_editor_wrapper", {position: "relative", flex: "1 1 auto"},true, [
                             ["div", "viz_editor", {height: "100%", position: "absolute", top: 0, bottom: 0, left: 0, right: 0}],
                         ]],
                     ]],

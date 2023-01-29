@@ -5,8 +5,12 @@ import { Editor } from "./editor";
 // import { build_top, TS_app_Container, TS_bottom_left_cell_contents_Container, TS_ide_Container, TS_inputs_Container, TS_top_left_cell_contents_Container } from "./generated/classes";
 import { build_app } from "./generated/classes";
 import * as clses from "./generated/classes";
-import { fromEvent, map, Observable } from "rxjs";
+import { combineLatest, fromEvent, map, Observable } from "rxjs";
 import { pyodide_ready } from "./py-worker";
+import { DelayedInitObservable } from "./delayed_init_obs";
+import {VizOutput} from "./animator";
+import { EventNavigator, NavigationInputsClicked } from "./events";
+
 
 // Begin HMR Setup
 // I am not 100% sure if this section is necessary to make HMR work,
@@ -70,63 +74,82 @@ function create_resize_col_listener(el: HTMLDivElement, firstColVar: string, sec
 }
 
 class IDE extends clses.TS_ide_Container {
-  public constructor(protected readonly el: HTMLDivElement, protected readonly left_col: HTMLDivElement, protected readonly right_edge: HTMLDivElement, protected readonly top_left_cell: HTMLDivElement, protected readonly left_bottom_edge: HTMLDivElement, protected readonly top_left_cell_contents: HTMLDivElement, protected readonly algo_editor_wrapper: clses.TS_algo_editor_wrapper_Container, protected readonly inputs: Inputs, protected readonly bottom_left_cell: HTMLDivElement, protected readonly left_top_edge: HTMLDivElement, protected readonly bottom_left_cell_contents: clses.TS_bottom_left_cell_contents_Container, protected readonly right_col: HTMLDivElement, protected readonly left_edge: HTMLDivElement, protected readonly top_right_cell: HTMLDivElement, protected readonly right_bottom_edge: HTMLDivElement, protected readonly top_right_cell_contents: clses.TS_top_right_cell_contents_Container, protected readonly bottom_right_cell: HTMLDivElement, protected readonly right_top_edge: HTMLDivElement, protected readonly bottom_right_cell_contents: clses.TS_bottom_right_cell_contents_Container) {
-    // super(el, left_col, right_edge, top_left_cell, left_bottom_edge, top_left_cell_contents,
-    //   bottom_left_cell, left_top_edge, bottom_left_cell_contents, right_col,
-    //    left_edge, top_right_cell, right_bottom_edge, top_right_cell_contents, bottom_right_cell, right_top_edge, bottom_right_cell_contents);
-    super(el, left_col, right_edge, top_left_cell, left_bottom_edge, top_left_cell_contents, algo_editor_wrapper,inputs,bottom_left_cell,left_top_edge,bottom_left_cell_contents,right_col,left_edge,top_right_cell,right_bottom_edge,top_right_cell_contents,bottom_right_cell,right_top_edge,bottom_right_cell_contents);
+  private event_navigator: EventNavigator;
 
-    this.el.classList.add(styles.ide_style);
+  public constructor(protected readonly els: clses.TS_ide_ContainerElements, 
+    protected readonly algo_editor_wrapper: AlgoEditor, 
+    protected readonly inputs: Inputs, 
+    protected readonly viz_editor_wrapper: VizEditor, 
+    protected readonly top_right_cell_contents: VizOutput, 
+    protected readonly bottom_right_cell_contents: clses.TS_bottom_right_cell_contents_Container,
+    ) 
+  {
+    super(els,algo_editor_wrapper,inputs,viz_editor_wrapper,top_right_cell_contents,bottom_right_cell_contents);
+
+    const el = this.els.ide;
+    el.classList.add(styles.ide_style);
 
     const resize_cols_listener = create_resize_col_listener(el, "--col-1-width", "--col-2-width");
-    this.right_edge.addEventListener("mousedown", resize_cols_listener);
-    this.left_edge.addEventListener("mousedown", resize_cols_listener);
+    this.els.right_edge.addEventListener("mousedown", resize_cols_listener);
+    this.els.left_edge.addEventListener("mousedown", resize_cols_listener);
 
     const left_rows_md_listener = create_resize_row_listener(el, "--row-11-height", "--row-12-height");
-    this.left_top_edge.addEventListener("mousedown", left_rows_md_listener);
-    this.left_bottom_edge.addEventListener("mousedown", left_rows_md_listener);
+    this.els.left_top_edge.addEventListener("mousedown", left_rows_md_listener);
+    this.els.left_bottom_edge.addEventListener("mousedown", left_rows_md_listener);
 
     const right_rows_md_listener = create_resize_row_listener(el, "--row-21-height", "--row-22-height");
-    this.right_top_edge.addEventListener("mousedown", right_rows_md_listener);
-    this.right_bottom_edge.addEventListener("mousedown", right_rows_md_listener);
+    this.els.right_top_edge.addEventListener("mousedown", right_rows_md_listener);
+    this.els.right_bottom_edge.addEventListener("mousedown", right_rows_md_listener);
 
     this.inputs.addPyodideAvailable(pyodide_ready);
+    this.inputs.runClicked().subscribe(this.run.bind(this));
+
+    this.event_navigator = new EventNavigator(this.inputs.navigationInputs());
+
+    this.top_right_cell_contents.addCurrEvent(this.event_navigator.getEvent$());
+  }
+
+  private run(){
+    const algo_script = this.algo_editor_wrapper.getValue();
+    const viz_script = this.viz_editor_wrapper.getValue();
   }
 }
 
 class AlgoEditor extends clses.TS_algo_editor_wrapper_Container {
-  //@ts-ignore
   private algoEditor: Editor;
 
-  public constructor(protected readonly el: HTMLDivElement, protected readonly algo_editor: HTMLDivElement) {
-    super(el, algo_editor);
+  public constructor(els: clses.TS_algo_editor_wrapper_ContainerElements) {
+    super(els);
 
     const fixedHeightEditor = EditorView.theme({
       "&": {height: "100%"},
       ".cm-scroller": {overflow: "auto"}
     });
 
-    this.algoEditor = new Editor(this.algo_editor, `
+    this.algoEditor = new Editor(this.els.algo_editor, `
     for x in range(50, 500, 50):
         for y in range(50, 500, 50):
             n = y / 50
           `, [basicSetup, fixedHeightEditor, python()]);
   }
+
+  public getValue(): string {
+    return this.algoEditor.currentValue();
+  }
 }
 
-class VizEditorArea extends clses.TS_bottom_left_cell_contents_Container {
-  //@ts-ignore
+class VizEditor extends clses.TS_viz_editor_wrapper_Container {
   private vizEditor: Editor;
 
-  public constructor(protected readonly el: HTMLDivElement, protected readonly viz_editor_wrapper: HTMLDivElement, protected readonly viz_editor: HTMLDivElement) {
-    super(el, viz_editor_wrapper, viz_editor);
+  public constructor(els: clses.TS_viz_editor_wrapper_ContainerElements) {
+    super(els);
 
     const fixedHeightEditor = EditorView.theme({
       "&": {height: "100%"},
       ".cm-scroller": {overflow: "auto"}
     });
 
-    this.vizEditor = new Editor(this.viz_editor, `
+    this.vizEditor = new Editor(this.els.viz_editor, `
     from math import pi
 
     text(x, y, "x=%s y=%s n=%d" % (x, y, n), size=10 + n*3, font="Arial", color='red')
@@ -142,12 +165,9 @@ class VizEditorArea extends clses.TS_bottom_left_cell_contents_Container {
         color="orange")
           `, [basicSetup, fixedHeightEditor, python()]);
   }
-}
 
-class VizOutput extends clses.TS_top_right_cell_contents_Container {
-  public constructor(protected readonly el: HTMLDivElement){
-    super(el);
-    el.textContent = "viz goes here";
+  public getValue(): string {
+    return this.vizEditor.currentValue();
   }
 }
 
@@ -157,64 +177,83 @@ function eventHappened(el: HTMLElement, event_name: string): Observable<null> {
 
 class Inputs extends clses.TS_inputs_Container {
 
-  private _saveClicked: Observable<null>;
-  private _runClicked: Observable<null>;
-  private _prevClicked: Observable<null>;
-  private _nextClicked: Observable<null>;
-  private _playClicked: Observable<null>;
+  private _saveClicked$: Observable<null>;
+  private _runClicked$: Observable<null>;
+  private _prevClicked$: Observable<null>;
+  private _nextClicked$: Observable<null>;
+  private _playPauseClicked$: Observable<null>;
 
-  public constructor(protected readonly el: HTMLDivElement, protected readonly speed: HTMLSelectElement, protected readonly very_fast: HTMLOptionElement, protected readonly fast: HTMLOptionElement, protected readonly medium: HTMLOptionElement, protected readonly slow: HTMLOptionElement, protected readonly very_slow: HTMLOptionElement, protected readonly save: HTMLButtonElement, protected readonly run: HTMLButtonElement, protected readonly play: HTMLButtonElement, protected readonly prev: HTMLButtonElement, protected readonly next: HTMLButtonElement) {
-    super(el, speed, very_fast, fast, medium, slow, very_slow, save, run, play, prev, next);
-    this.very_fast.textContent = "Very Fast";
-    this.fast.textContent = "Fast";
-    this.medium.textContent = "Medium";
-    this.slow.textContent = "Slow";
-    this.very_slow.textContent = "Very Slow";
-    this.speed.selectedIndex = 2;
+  private _pyodide_available$: DelayedInitObservable<boolean> = new DelayedInitObservable();
+  private _pyodide_running$: DelayedInitObservable<boolean> = new DelayedInitObservable();
 
-    this.save.textContent = "Save";
-    this.run.textContent = "Run";
-    this.prev.textContent = "Previous";
-    this.next.textContent = "Next";
-    this.play.textContent = "Play";
+  public constructor(els: clses.TS_inputs_ContainerElements) {
+    super(els);
+    this.els.very_fast.textContent = "Very Fast";
+    this.els.fast.textContent = "Fast";
+    this.els.medium.textContent = "Medium";
+    this.els.slow.textContent = "Slow";
+    this.els.very_slow.textContent = "Very Slow";
+    this.els.speed.selectedIndex = 2;
 
-    this._saveClicked = eventHappened(this.save, "click");
-    this._runClicked = eventHappened(this.run, "click");
-    this._prevClicked = eventHappened(this.prev, "click");
-    this._nextClicked = eventHappened(this.next, "click");
-    this._playClicked = eventHappened(this.play, "click");
+    this.els.save.textContent = "Save";
+    this.els.run.textContent = "Run";
+    this.els.prev.textContent = "Previous";
+    this.els.next.textContent = "Next";
+    this.els.play.textContent = "Play";
 
-    for (const input of [this.speed,this.save,this.run,this.prev,this.next,this.play]){
+    this._saveClicked$ = eventHappened(this.els.save, "click");
+    this._runClicked$ = eventHappened(this.els.run, "click");
+    this._prevClicked$ = eventHappened(this.els.prev, "click");
+    this._nextClicked$ = eventHappened(this.els.next, "click");
+    this._playPauseClicked$ = eventHappened(this.els.play, "click");
+
+    for (const input of [this.els.speed,this.els.save,this.els.run,this.els.prev,this.els.next,this.els.play]){
       input.disabled = true;
     }
+
+    combineLatest([this._pyodide_available$.obs$(), this._pyodide_running$.obs$()]).subscribe(this._pyodide_update.bind(this));
+  }
+
+  private _pyodide_update(pyodide_update: [boolean, boolean]) {
+    const [avail, running] = pyodide_update;
+    this.els.run.disabled = !avail || running;
   }
 
   public addPyodideAvailable(pyodide_available: Observable<boolean>){
-    pyodide_available.subscribe(avail => {
-      this.run.disabled = !avail;
-    });
+    this._pyodide_available$.init(pyodide_available);
+  }
+
+  public addPyodideRunning(pyodide_running: Observable<boolean>){
+    this._pyodide_running$.init(pyodide_running);
   }
 
   public saveClicked(): Observable<null> {
-    return this._saveClicked;
+    return this._saveClicked$;
   }
 
   public runClicked(): Observable<null> {
-    return this._runClicked;
+    return this._runClicked$;
   }
 
   public prevClicked(): Observable<null> {
-    return this._prevClicked;
+    return this._prevClicked$;
   }
 
   public nextClicked(): Observable<null> {
-    return this._nextClicked;
+    return this._nextClicked$;
   }
 
   public playClicked(): Observable<null> {
-    return this._playClicked;
+    return this._playPauseClicked$;
   }
 
+  public navigationInputs(): NavigationInputsClicked {
+    return {
+      prev$: this._prevClicked$,
+      next$: this._nextClicked$,
+      play_pause$: this._playPauseClicked$,
+    };
+  }
 }
 
 
@@ -228,7 +267,7 @@ function setup() {
   const app = build_app({
     TS_inputs_Container_cls: Inputs,
     TS_algo_editor_wrapper_Container_cls: AlgoEditor,
-    TS_bottom_left_cell_contents_Container_cls: VizEditorArea,
+    TS_viz_editor_wrapper_Container_cls: VizEditor,
     TS_top_right_cell_contents_Container_cls: VizOutput,
     TS_bottom_right_cell_contents_Container_cls: clses.TS_bottom_right_cell_contents_Container,
     TS_ide_Container_cls: IDE,

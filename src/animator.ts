@@ -1,5 +1,8 @@
 import { Editor } from "./editor";
 import { select, arc } from "d3";
+import { TS_top_right_cell_contents_Container, TS_top_right_cell_contents_ContainerElements } from "./generated/classes";
+import { DelayedInitObservable } from "./delayed_init_obs";
+import { Observable } from "rxjs";
 
 const EDITOR_WIDTH = 600; // TODO make this more dynamic
 const EDITOR_HEIGHT = 450; // TODO make this more dynamic
@@ -212,5 +215,39 @@ export class Animator {
     this.showEvent();
     this.timerId = window.setInterval(() => this.doAnimationStep(), DELAY.get(speed) || 25);
     return this.timerId;
+  }
+}
+
+export class VizOutput extends TS_top_right_cell_contents_Container {
+  private _event$: DelayedInitObservable<string | null> = new DelayedInitObservable();
+
+  public constructor(els: TS_top_right_cell_contents_ContainerElements){
+    super(els);
+    this._event$.obs$().subscribe(this.showRendering.bind(this));
+  }
+
+  private showRendering(script: string | null, w: number=EDITOR_WIDTH, h: number=EDITOR_HEIGHT) {
+    this.els.top_right_cell_contents.textContent = '';
+    if (script) {
+      const svg = select(this.els.top_right_cell_contents)
+        .append("svg")
+        .attr("width", w)
+        .attr("height", h);
+      const canvas = svg
+        .append("g")
+        .attr("transform", "scale(" + RENDERING_SCALE + ")");
+
+      try {
+        eval(script);
+      } catch (e) {
+        T(canvas, 100, 100, "INTERNAL ERROR: ", 15, "Arial", "red");
+        T(canvas, 100, 120, "" + e, 15, "Arial", "red");
+        T(canvas, 100, 140, "" + script, 15, "Arial", "black");
+      }
+    }
+  }
+
+  public addCurrEvent(curr_event: Observable<string | null>){
+    this._event$.init(curr_event);
   }
 }
