@@ -5,11 +5,13 @@ import { Editor } from "./editor";
 // import { build_top, TS_app_Container, TS_bottom_left_cell_contents_Container, TS_ide_Container, TS_inputs_Container, TS_top_left_cell_contents_Container } from "./generated/classes";
 import { build_app } from "./generated/classes";
 import * as clses from "./generated/classes";
-import { combineLatest, fromEvent, map, Observable } from "rxjs";
-import { pyodide_ready } from "./py-worker";
+import { BehaviorSubject, combineLatest, fromEvent, map, Observable, Subject } from "rxjs";
+import { asyncRun, pyodide_ready } from "./py-worker";
 import { DelayedInitObservable } from "./delayed_init_obs";
 import {VizOutput} from "./animator";
-import { EventNavigator, NavigationInputsClicked } from "./events";
+import { VizEventNavigator, NavigationInputsClicked, VizEventIdx } from "./vizEvents";
+import { executorScript } from "./executor";
+import { ExecResult } from "./exec_result";
 
 
 // Begin HMR Setup
@@ -74,7 +76,9 @@ function create_resize_col_listener(el: HTMLDivElement, firstColVar: string, sec
 }
 
 class IDE extends clses.TS_ide_Container {
-  private event_navigator: EventNavigator;
+  private exec_result$ = new Subject<ExecResult>();
+  private event_navigator: VizEventNavigator;
+  private pyodide_running = new Subject<boolean>();
 
   public constructor(protected readonly els: clses.TS_ide_ContainerElements, 
     protected readonly algo_editor_wrapper: AlgoEditor, 
@@ -101,17 +105,33 @@ class IDE extends clses.TS_ide_Container {
     this.els.right_top_edge.addEventListener("mousedown", right_rows_md_listener);
     this.els.right_bottom_edge.addEventListener("mousedown", right_rows_md_listener);
 
-    this.inputs.addPyodideAvailable(pyodide_ready);
+    this.inputs.addPyodideRunning(this.pyodide_running);
     this.inputs.runClicked().subscribe(this.run.bind(this));
 
-    this.event_navigator = new EventNavigator(this.inputs.navigationInputs());
+    this.event_navigator = new VizEventNavigator(this.inputs.navigationInputs());
+    this.event_navigator.setExecResult$(this.exec_result$);
+
+    this.inputs.addEventIdx$(this.event_navigator.getVizEventIdx$());
 
     this.top_right_cell_contents.addCurrEvent(this.event_navigator.getEvent$());
   }
 
-  private run(){
+  private async run(){
+    console.log("run");
     const algo_script = this.algo_editor_wrapper.getValue();
     const viz_script = this.viz_editor_wrapper.getValue();
+
+    const context = {
+      script: algo_script,
+      viz: viz_script,
+      showVizErrors: true,
+    };
+
+    this.pyodide_running.next(true);
+    const result_json = await asyncRun(executorScript, context);
+    this.pyodide_running.next(false);
+    const run_result = JSON.parse(result_json) as ExecResult;
+    this.exec_result$.next(run_result);
   }
 }
 
@@ -127,9 +147,9 @@ class AlgoEditor extends clses.TS_algo_editor_wrapper_Container {
     });
 
     this.algoEditor = new Editor(this.els.algo_editor, `
-    for x in range(50, 500, 50):
-        for y in range(50, 500, 50):
-            n = y / 50
+for x in range(50, 500, 50):
+    for y in range(50, 500, 50):
+        n = y / 50
           `, [basicSetup, fixedHeightEditor, python()]);
   }
 
@@ -150,20 +170,20 @@ class VizEditor extends clses.TS_viz_editor_wrapper_Container {
     });
 
     this.vizEditor = new Editor(this.els.viz_editor, `
-    from math import pi
+from math import pi
 
-    text(x, y, "x=%s y=%s n=%d" % (x, y, n), size=10 + n*3, font="Arial", color='red')
-    rect(450, 50, 50 + n*10, 50 + n*10, fill="brown", border="lightyellow")
-    line(50, 50, x, y, color="purple", width=6)
-    circle(300, 200, n * 25, fill="transparent", border="green")
-    arc(100,
-        325,
-        innerRadius=50,
-        outerRadius=100,
-        startAngle=(n - 1) * 2 * pi/7,
-        endAngle=n * 2 * pi/7,
-        color="orange")
-          `, [basicSetup, fixedHeightEditor, python()]);
+text(x, y, "x=%s y=%s n=%d" % (x, y, n), size=10 + n*3, font="Arial", color='red')
+rect(450, 50, 50 + n*10, 50 + n*10, fill="brown", border="lightyellow")
+line(50, 50, x, y, color="purple", width=6)
+circle(300, 200, n * 25, fill="transparent", border="green")
+arc(100,
+    325,
+    innerRadius=50,
+    outerRadius=100,
+    startAngle=(n - 1) * 2 * pi/7,
+    endAngle=n * 2 * pi/7,
+    color="orange")
+      `, [basicSetup, fixedHeightEditor, python()]);
   }
 
   public getValue(): string {
@@ -183,8 +203,11 @@ class Inputs extends clses.TS_inputs_Container {
   private _nextClicked$: Observable<null>;
   private _playPauseClicked$: Observable<null>;
 
-  private _pyodide_available$: DelayedInitObservable<boolean> = new DelayedInitObservable();
-  private _pyodide_running$: DelayedInitObservable<boolean> = new DelayedInitObservable();
+  private _pyodide_running$: DelayedInitObservable<boolean> = new DelayedInitObservable(
+    () => new BehaviorSubject(false)
+  );
+
+  private event_idx$: DelayedInitObservable<VizEventIdx> = new DelayedInitObservable();
 
   public constructor(els: clses.TS_inputs_ContainerElements) {
     super(els);
@@ -207,20 +230,22 @@ class Inputs extends clses.TS_inputs_Container {
     this._nextClicked$ = eventHappened(this.els.next, "click");
     this._playPauseClicked$ = eventHappened(this.els.play, "click");
 
-    for (const input of [this.els.speed,this.els.save,this.els.run,this.els.prev,this.els.next,this.els.play]){
+    for (const input of [this.els.speed,this.els.save,this.els.prev,this.els.next,this.els.play]){
       input.disabled = true;
     }
 
-    combineLatest([this._pyodide_available$.obs$(), this._pyodide_running$.obs$()]).subscribe(this._pyodide_update.bind(this));
+    this.els.run.disabled = !pyodide_ready.getValue(); // TODO improve this.  This is a fix for HMR
+    combineLatest([pyodide_ready, this._pyodide_running$.obs$()]).subscribe(this._pyodide_update.bind(this));
+  }
+
+  public addEventIdx$(event_idx$: Observable<VizEventIdx>) {
+    this.event_idx$.init(event_idx$);
   }
 
   private _pyodide_update(pyodide_update: [boolean, boolean]) {
     const [avail, running] = pyodide_update;
+    console.log(`avail ${avail} running ${running}`);
     this.els.run.disabled = !avail || running;
-  }
-
-  public addPyodideAvailable(pyodide_available: Observable<boolean>){
-    this._pyodide_available$.init(pyodide_available);
   }
 
   public addPyodideRunning(pyodide_running: Observable<boolean>){
@@ -258,6 +283,9 @@ class Inputs extends clses.TS_inputs_Container {
 
 
 function setup() {
+  const ready = pyodide_ready.getValue();
+  console.log(`pyodide_ready ${ready}`);
+
   const top_el = document.getElementById("app");
   if (top_el === null || top_el.tagName.toLowerCase() != "div") {
     throw Error(`Unable to find div element with id "app": ${top_el}`);
@@ -276,6 +304,8 @@ function setup() {
   });
 
   app.replaceEl(top_el as HTMLDivElement);
+
+  // pyodide_ready.next(ready);
 }
 
 setup();

@@ -1,9 +1,9 @@
-import { Subject } from "rxjs";
+import { BehaviorSubject } from "rxjs";
 
 const pyodideWorker = new Worker("pyodide-0.21.3/webworker.js");
 
 const callbacks = new Map();
-export const pyodide_ready: Subject<boolean> = new Subject();
+export const pyodide_ready = new BehaviorSubject<boolean>(false);
 
 pyodideWorker.onmessage = (event) => {
   if (event.data.pyodide_ready !== undefined) {

@@ -212,6 +212,7 @@ class Executor(object):
             return self.trace
 
     def createEvent(self, lineno):
+        print("viz",viz_output)
         event = {
             "lineno": lineno,
             "viz_output": viz_output,

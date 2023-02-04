@@ -3,6 +3,7 @@ import { select, arc } from "d3";
 import { TS_top_right_cell_contents_Container, TS_top_right_cell_contents_ContainerElements } from "./generated/classes";
 import { DelayedInitObservable } from "./delayed_init_obs";
 import { Observable } from "rxjs";
+import { VizEvent } from "./exec_result";
 
 const EDITOR_WIDTH = 600; // TODO make this more dynamic
 const EDITOR_HEIGHT = 450; // TODO make this more dynamic
@@ -219,16 +220,17 @@ export class Animator {
 }
 
 export class VizOutput extends TS_top_right_cell_contents_Container {
-  private _event$: DelayedInitObservable<string | null> = new DelayedInitObservable();
+  private _event$: DelayedInitObservable<VizEvent | null> = new DelayedInitObservable();
 
   public constructor(els: TS_top_right_cell_contents_ContainerElements){
     super(els);
     this._event$.obs$().subscribe(this.showRendering.bind(this));
   }
 
-  private showRendering(script: string | null, w: number=EDITOR_WIDTH, h: number=EDITOR_HEIGHT) {
+  private showRendering(event: VizEvent | null, w: number=EDITOR_WIDTH, h: number=EDITOR_HEIGHT) {
+    console.log("event", event);
     this.els.top_right_cell_contents.textContent = '';
-    if (script) {
+    if (event !== null) {
       const svg = select(this.els.top_right_cell_contents)
         .append("svg")
         .attr("width", w)
@@ -238,16 +240,16 @@ export class VizOutput extends TS_top_right_cell_contents_Container {
         .attr("transform", "scale(" + RENDERING_SCALE + ")");
 
       try {
-        eval(script);
+        eval(event.viz_output);
       } catch (e) {
         T(canvas, 100, 100, "INTERNAL ERROR: ", 15, "Arial", "red");
         T(canvas, 100, 120, "" + e, 15, "Arial", "red");
-        T(canvas, 100, 140, "" + script, 15, "Arial", "black");
+        T(canvas, 100, 140, "" + event.viz_output, 15, "Arial", "black");
       }
     }
   }
 
-  public addCurrEvent(curr_event: Observable<string | null>){
+  public addCurrEvent(curr_event: Observable<VizEvent | null>){
     this._event$.init(curr_event);
   }
 }
