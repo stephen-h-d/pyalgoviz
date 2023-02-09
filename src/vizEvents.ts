@@ -1,11 +1,16 @@
-import { BehaviorSubject, Observable, Subject, take, takeUntil, timer } from "rxjs";
+import { BehaviorSubject, filter, Observable, Subject, take, takeUntil, tap, timer } from "rxjs";
 import { DelayedInitObservable } from "./delayed_init_obs";
 import { ExecResult, VizEvent } from "./exec_result";
+
+export interface ObservableWithValue<T> extends Observable<T> {
+  getValue(): T
+}
 
 export interface NavigationInputsClicked {
   readonly prev$: Observable<null>;
   readonly next$: Observable<null>;
   readonly play_pause$: Observable<null>;
+  readonly speed$: ObservableWithValue<string>;
 }
 
 export interface EventsObservables {
@@ -15,6 +20,18 @@ export interface EventsObservables {
 
 export class VizEventIdx {
   public constructor(public current: number, public total: number){}
+
+  public canGoNext(){
+    return this.total > 0 && this.current < this.total - 1;
+  }
+
+  public canGoPrev(){
+    return this.total > 0 && this.current > 0;
+  }
+
+  public eventsRemaining(){
+    return this.total - this.current;
+  }
 }
 
 export class VizEventIdxSubject {
@@ -31,11 +48,11 @@ export class VizEventIdxSubject {
   }
 
   public canGoNext(){
-    return this.event_idx.total > 0 && this.event_idx.current < this.event_idx.total - 1;
+    return this.event_idx.canGoNext();
   }
 
   public next(){
-    if (this.canGoNext()){
+    if (!this.canGoNext()){
       console.error("Tried to go to next event when we were already at the last event");
     } else {
       this.event_idx.current += 1;
@@ -44,11 +61,11 @@ export class VizEventIdxSubject {
   }
 
   public canGoPrev(){
-    return this.event_idx.total > 0 && this.event_idx.current > 0;
+    return this.event_idx.canGoPrev();
   }
 
   public prev(){
-    if (this.canGoPrev()){
+    if (!this.canGoPrev()){
       console.error("Tried to go to prev event when we were already at the first event");
     } else {
       this.event_idx.current -= 1;
@@ -57,7 +74,7 @@ export class VizEventIdxSubject {
   }
 
   public eventsRemaining(){
-    return this.event_idx.total - this.event_idx.current;
+    return this.event_idx.eventsRemaining();
   }
 }
 
@@ -92,10 +109,14 @@ export class VizEventNavigator {
       this.playing$.next(false);
     } else {
       this.playing$.next(true);
+      const notPlaying = this.playing$.pipe(filter((val) => !val));
+
+      // TODO do the speed thing
       this.event_timer$ = timer(1000,1000).pipe(
-        takeUntil(this.playing$),
+        takeUntil(notPlaying),
         take(this.event_idx_subject.eventsRemaining())
         );
+      this.event_timer$.subscribe(console.log);
       this.event_timer$.subscribe(this.event_idx_subject.next.bind(this.event_idx_subject));
     }
   }
@@ -117,7 +138,7 @@ export class VizEventNavigator {
     return this.playing$;
   }
 
-  public setExecResult$(events$: Observable<ExecResult>){
+  public addExecResult$(events$: Observable<ExecResult>){
     this.exec_result$.init(events$);
   }
 }

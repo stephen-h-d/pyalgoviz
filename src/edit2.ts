@@ -109,7 +109,7 @@ class IDE extends clses.TS_ide_Container {
     this.inputs.runClicked().subscribe(this.run.bind(this));
 
     this.event_navigator = new VizEventNavigator(this.inputs.navigationInputs());
-    this.event_navigator.setExecResult$(this.exec_result$);
+    this.event_navigator.addExecResult$(this.exec_result$);
 
     this.inputs.addEventIdx$(this.event_navigator.getVizEventIdx$());
 
@@ -117,7 +117,6 @@ class IDE extends clses.TS_ide_Container {
   }
 
   private async run(){
-    console.log("run");
     const algo_script = this.algo_editor_wrapper.getValue();
     const viz_script = this.viz_editor_wrapper.getValue();
 
@@ -197,13 +196,14 @@ function eventHappened(el: HTMLElement, event_name: string): Observable<null> {
 
 class Inputs extends clses.TS_inputs_Container {
 
-  private _saveClicked$: Observable<null>;
-  private _runClicked$: Observable<null>;
-  private _prevClicked$: Observable<null>;
-  private _nextClicked$: Observable<null>;
-  private _playPauseClicked$: Observable<null>;
+  private saveClicked$: Observable<null>;
+  private runClicked$: Observable<null>;
+  private prevClicked$: Observable<null>;
+  private nextClicked$: Observable<null>;
+  private speed$ = new BehaviorSubject("Medium");
+  private playPauseClicked$: Observable<null>;
 
-  private _pyodide_running$: DelayedInitObservable<boolean> = new DelayedInitObservable(
+  private pyodide_running$: DelayedInitObservable<boolean> = new DelayedInitObservable(
     () => new BehaviorSubject(false)
   );
 
@@ -224,18 +224,27 @@ class Inputs extends clses.TS_inputs_Container {
     this.els.next.textContent = "Next";
     this.els.play.textContent = "Play";
 
-    this._saveClicked$ = eventHappened(this.els.save, "click");
-    this._runClicked$ = eventHappened(this.els.run, "click");
-    this._prevClicked$ = eventHappened(this.els.prev, "click");
-    this._nextClicked$ = eventHappened(this.els.next, "click");
-    this._playPauseClicked$ = eventHappened(this.els.play, "click");
+    this.saveClicked$ = eventHappened(this.els.save, "click");
+    this.runClicked$ = eventHappened(this.els.run, "click");
+    this.prevClicked$ = eventHappened(this.els.prev, "click");
+    this.nextClicked$ = eventHappened(this.els.next, "click");
+    this.playPauseClicked$ = eventHappened(this.els.play, "click");
+    this.els.speed.addEventListener("change", (_event) => this.speed$.next(this.els.speed.value));
 
-    for (const input of [this.els.speed,this.els.save,this.els.prev,this.els.next,this.els.play]){
+    for (const input of [this.els.save,this.els.prev,this.els.next,this.els.play]){
       input.disabled = true;
     }
+    this.els.play.disabled = false; // TODO make this something better
+
+    this.event_idx$.obs$().subscribe(this.nextEventIdx.bind(this));
 
     this.els.run.disabled = !pyodide_ready.getValue(); // TODO improve this.  This is a fix for HMR
-    combineLatest([pyodide_ready, this._pyodide_running$.obs$()]).subscribe(this._pyodide_update.bind(this));
+    combineLatest([pyodide_ready, this.pyodide_running$.obs$()]).subscribe(this._pyodide_update.bind(this));
+  }
+
+  private nextEventIdx(event_idx: VizEventIdx){
+    this.els.prev.disabled = !event_idx.canGoPrev();
+    this.els.next.disabled = !event_idx.canGoNext();
   }
 
   public addEventIdx$(event_idx$: Observable<VizEventIdx>) {
@@ -249,34 +258,35 @@ class Inputs extends clses.TS_inputs_Container {
   }
 
   public addPyodideRunning(pyodide_running: Observable<boolean>){
-    this._pyodide_running$.init(pyodide_running);
+    this.pyodide_running$.init(pyodide_running);
   }
 
   public saveClicked(): Observable<null> {
-    return this._saveClicked$;
+    return this.saveClicked$;
   }
 
   public runClicked(): Observable<null> {
-    return this._runClicked$;
+    return this.runClicked$;
   }
 
   public prevClicked(): Observable<null> {
-    return this._prevClicked$;
+    return this.prevClicked$;
   }
 
   public nextClicked(): Observable<null> {
-    return this._nextClicked$;
+    return this.nextClicked$;
   }
 
   public playClicked(): Observable<null> {
-    return this._playPauseClicked$;
+    return this.playPauseClicked$;
   }
 
   public navigationInputs(): NavigationInputsClicked {
     return {
-      prev$: this._prevClicked$,
-      next$: this._nextClicked$,
-      play_pause$: this._playPauseClicked$,
+      prev$: this.prevClicked$,
+      next$: this.nextClicked$,
+      play_pause$: this.playPauseClicked$,
+      speed$: this.speed$,
     };
   }
 }

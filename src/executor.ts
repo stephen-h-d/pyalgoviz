@@ -212,7 +212,7 @@ class Executor(object):
             return self.trace
 
     def createEvent(self, lineno):
-        print("viz",viz_output)
+        # print("viz",viz_output)
         event = {
             "lineno": lineno,
             "viz_output": viz_output,
@@ -236,6 +236,8 @@ author = "Unknown Author"
 # 'console.log' in pyodide, though originally this was putting
 # a log entry in the database
 # info('Ran %s "%s":\\n\\n%s' % (author, name, script))
+
+print("num_events", len(result.events))
 
 result = {
    'py_error': result.error,
