@@ -249,7 +249,7 @@ export class VizOutput extends TS_top_right_cell_contents_Container {
     }
   }
 
-  public addCurrEvent(curr_event: Observable<VizEvent | null>){
+  public addEvent$(curr_event: Observable<VizEvent | null>){
     this._event$.init(curr_event);
   }
 }

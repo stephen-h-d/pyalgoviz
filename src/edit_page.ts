@@ -18,6 +18,28 @@ export const STYLE = 2;
 export const OWNER = 3;
 export const CHILDREN = 4;
 
+// based on https://palettes.shecodes.io/palettes/1551
+export const dark = "#272343";
+// const white = "#ffffff";
+export const light_green = "#e3f6f5";
+export const dark_green = "#bae8e8";
+
+// .first-color {
+//     background: #272343;
+// }
+
+// .second-color {
+//     background: #ffffff;
+// }
+
+// .third-color {
+//     background: #e3f6f5;
+// }
+
+// .fourth-color {
+//     background: #bae8e8;
+// }
+
 function build_page_decl_object(page_decl: PageDecl): PageDeclObject {
     const result: Partial<PageDeclObject> = {};
     result["tagName"] = page_decl[EL];
@@ -34,7 +56,7 @@ function build_page_decl_object(page_decl: PageDecl): PageDeclObject {
     return result as PageDeclObject;
 }
 
-const edge: CSS.Properties = {position: "absolute", zIndex: 2, backgroundColor: "black", backgroundClip: "padding-box"};
+const edge: CSS.Properties = {position: "absolute", zIndex: 2, backgroundColor: dark, backgroundClip: "padding-box"};
 const horizontal_edge: CSS.Properties = {...edge, width: "100%", height: "1px", cursor: "row-resize", borderTop: "5px solid rgba(0,0,0,0)", borderBottom: "5px solid rgba(0,0,0,0)", };
 const vertical_edge: CSS.Properties = {...edge, height: "100%", width: "1px", cursor: "col-resize", borderLeft: "5px solid rgba(0,0,0,0)", borderRight: "5px solid rgba(0,0,0,0)", };
 const right_edge: CSS.Properties = {...vertical_edge, right: 0, marginRight: "-6px"};
@@ -60,11 +82,9 @@ const inputs: PageDecl[] = [
 ];
 
 const tab_style: CSS.Properties = {
-    // position: "absolute",
-    backgroundColor: "darkgray",
-    // width: "100px",
+    backgroundColor: light_green,
+    borderColor: dark_green,
     height: "1.2em",
-    // top: 0,
     borderTopLeftRadius: "10px",
     borderTopRightRadius: "10px",
     borderBottomRightRadius: "2px",
@@ -117,13 +137,11 @@ const page: PageDecl =
                     ["div", "right_top_edge", top_edge],
                     ["div", "bottom_right_cell_contents", {height: "100%", width: "100%", display: "flex", flexFlow: "column"}, true,[
                         ["div", "tabs", {display: "flex", flexFlow: "row", flex: "0 1 auto"}, false, [
-                            ["div", "tab_1", tab_style],
-                            ["div", "tab_2", tab_style],
+                            ["div", "algo_output_tab", tab_style],
+                            ["div", "viz_output_tab", tab_style],
                         ],],
                         ["div", "tab_content", {flex: "1 1 auto", position: "relative"}, false, [
-                            ["div", "editor_wrapper", {position: "relative"}, false, [
-                                ["div", "algo_output", editor_style]
-                            ]],
+                            ["div", "algo_output", editor_style],
                             ["div", "viz_output", editor_style],
                         ],]
                     ],],

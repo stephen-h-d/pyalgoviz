@@ -127,6 +127,7 @@ class Executor(object):
         self.state = []
         self.last_line = -1
         self.viz = viz
+        self.viz_error = None
         self.showVizErrors = showVizErrors
         self.vars = {}
         self.vizPrims = {
@@ -145,14 +146,14 @@ class Executor(object):
                 exec(script, self.vars)
 
             # Add an extra "event" indicating the end of the program, with the output
-            # being the output from the last line    
+            # being the output from the last line
             event = {
                 "lineno": self.last_line,
                 "viz_output": self.events[-1]["viz_output"],
                 "viz_error": self.viz_error,
                 "viz_log": None,
                 "algo_log": '\\n\\nProgram finished.\\n\\nHit F9 or Ctrl-Enter to run the script again.',
-            }    
+            }
             self.events.append(event)
         except Exception as e:
             tb = sys.exc_info()[2]
@@ -164,7 +165,7 @@ class Executor(object):
             msg += '-' * 70
             msg += '\\n\\n%s\\n\\n' % '\\n\\n'.join(['%s = %r' % v for v in self.state])
             msg += '=' * 70
-            self.error = dict(msg=msg, lineno=lines[-1])
+            self.error = dict(error_msg=msg, lineno=lines[-1])
         if '__builtins__' in self.vars:
             del self.vars['__builtins__']
 
@@ -203,7 +204,7 @@ class Executor(object):
                     tb = traceback.extract_tb(sys.exc_info()[2])
                     lines = [0] + [lineno for filename, lineno, fn, txt in tb if
                                    filename == '<string>']
-                    self.viz_error = {"line": lines[-1], "error": str(e)}
+                    self.viz_error = {"line": lines[-1], "error_msg": str(e)}
             finally:
                 current_log = algo_log
 
