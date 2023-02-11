@@ -1,6 +1,6 @@
 import * as styles from "./edit_page.css";
 import { python } from "@codemirror/lang-python";
-import { basicSetup, EditorView } from "codemirror";
+import { basicSetup, EditorView, minimalSetup } from "codemirror";
 import { Editor } from "./editor";
 // import { build_top, TS_app_Container, TS_bottom_left_cell_contents_Container, TS_ide_Container, TS_inputs_Container, TS_top_left_cell_contents_Container } from "./generated/classes";
 import { build_app } from "./generated/classes";
@@ -80,13 +80,13 @@ class IDE extends clses.TS_ide_Container {
   private event_navigator: VizEventNavigator;
   private pyodide_running = new Subject<boolean>();
 
-  public constructor(protected readonly els: clses.TS_ide_ContainerElements, 
-    protected readonly algo_editor_wrapper: AlgoEditor, 
-    protected readonly inputs: Inputs, 
-    protected readonly viz_editor_wrapper: VizEditor, 
-    protected readonly top_right_cell_contents: VizOutput, 
+  public constructor(protected readonly els: clses.TS_ide_ContainerElements,
+    protected readonly algo_editor_wrapper: AlgoEditor,
+    protected readonly inputs: Inputs,
+    protected readonly viz_editor_wrapper: VizEditor,
+    protected readonly top_right_cell_contents: VizOutput,
     protected readonly bottom_right_cell_contents: clses.TS_bottom_right_cell_contents_Container,
-    ) 
+    )
   {
     super(els,algo_editor_wrapper,inputs,viz_editor_wrapper,top_right_cell_contents,bottom_right_cell_contents);
 
@@ -134,16 +134,16 @@ class IDE extends clses.TS_ide_Container {
   }
 }
 
+const fixedHeightEditor = EditorView.theme({
+  "&": {height: "100%"},
+  ".cm-scroller": {overflow: "auto"}
+});
+
 class AlgoEditor extends clses.TS_algo_editor_wrapper_Container {
   private algoEditor: Editor;
 
   public constructor(els: clses.TS_algo_editor_wrapper_ContainerElements) {
     super(els);
-
-    const fixedHeightEditor = EditorView.theme({
-      "&": {height: "100%"},
-      ".cm-scroller": {overflow: "auto"}
-    });
 
     this.algoEditor = new Editor(this.els.algo_editor, `
 for x in range(50, 500, 50):
@@ -291,6 +291,27 @@ class Inputs extends clses.TS_inputs_Container {
   }
 }
 
+class TabContent extends clses.TS_bottom_right_cell_contents_Container{
+  // @ts-ignore
+  private vizOutputEditor: Editor;
+
+  public constructor(els: clses.TS_bottom_right_cell_contents_ContainerElements, ){
+    super(els);
+
+    this.els.tab_1.textContent = "Algorithm Output";
+    this.els.tab_2.textContent = "Viz Output";
+
+    this.vizOutputEditor= new Editor(this.els.viz_output, `line one
+line two
+line three
+you get the picture
+lorem ipsum
+etc. so forth
+
+these are the things that we decide to do sometimes
+              `, [minimalSetup, fixedHeightEditor]);
+  }
+}
 
 function setup() {
   const ready = pyodide_ready.getValue();
@@ -307,10 +328,10 @@ function setup() {
     TS_algo_editor_wrapper_Container_cls: AlgoEditor,
     TS_viz_editor_wrapper_Container_cls: VizEditor,
     TS_top_right_cell_contents_Container_cls: VizOutput,
-    TS_bottom_right_cell_contents_Container_cls: clses.TS_bottom_right_cell_contents_Container,
     TS_ide_Container_cls: IDE,
     TS_content_Container_cls: clses.TS_content_Container,
     TS_app_Container_cls: clses.TS_app_Container,
+    TS_bottom_right_cell_contents_Container_cls: TabContent,
   });
 
   app.replaceEl(top_el as HTMLDivElement);

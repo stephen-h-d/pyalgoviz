@@ -1,4 +1,4 @@
-import { BehaviorSubject, filter, Observable, Subject, take, takeUntil, tap, timer } from "rxjs";
+import { BehaviorSubject, filter, Observable, Subject, take, takeUntil, timer } from "rxjs";
 import { DelayedInitObservable } from "./delayed_init_obs";
 import { ExecResult, VizEvent } from "./exec_result";
 
@@ -36,7 +36,7 @@ export class VizEventIdx {
 
 export class VizEventIdxSubject {
   private event_idx = new VizEventIdx(-1, 0);
-  private subject = new BehaviorSubject(this.event_idx); 
+  private subject = new BehaviorSubject(this.event_idx);
 
   public obs$(): Observable<VizEventIdx>{
     return this.subject;

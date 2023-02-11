@@ -59,6 +59,22 @@ const inputs: PageDecl[] = [
     ["button","next",input_style],
 ];
 
+const tab_style: CSS.Properties = {
+    // position: "absolute",
+    backgroundColor: "darkgray",
+    // width: "100px",
+    height: "1.2em",
+    // top: 0,
+    borderTopLeftRadius: "10px",
+    borderTopRightRadius: "10px",
+    borderBottomRightRadius: "2px",
+    borderBottomLeftRadius: "2px",
+    flex: "0 1 auto",
+    padding: "2px",
+};
+
+const editor_style: CSS.Properties = { height: "100%", position: "absolute", top: 0, bottom: 0, left: 0, right: 0 };
+
 const page: PageDecl =
 ["div", "app", {display: "flex", flexFlow: "column", height: "100%"}, true, [
     ["div", "header", {flex: "0 1 auto"}],
@@ -77,7 +93,7 @@ const page: PageDecl =
                     ["div", "left_bottom_edge", bottom_edge],
                     ["div", "top_left_cell_contents", {height: "100%", width: "100%", display: "flex", flexFlow: "column", }, false, [
                         ["div", "algo_editor_wrapper", {position: "relative", flex: "1 1 auto"},true, [
-                            ["div", "algo_editor", {height: "100%", position: "absolute", top: 0, bottom: 0, left: 0, right: 0}],
+                            ["div", "algo_editor", editor_style],
                         ]],
                         ["div", "inputs", {flex: "0 1 auto"}, true, inputs],
                     ]],
@@ -86,20 +102,31 @@ const page: PageDecl =
                     ["div", "left_top_edge", top_edge],
                     ["div", "bottom_left_cell_contents", {height: "100%", width: "100%", display: "flex", flexFlow: "column", }, false, [
                         ["div", "viz_editor_wrapper", {position: "relative", flex: "1 1 auto"},true, [
-                            ["div", "viz_editor", {height: "100%", position: "absolute", top: 0, bottom: 0, left: 0, right: 0}],
+                            ["div", "viz_editor", editor_style],
                         ]],
                     ]],
                 ]],
             ]],
             ["div","right_col",{gridColumn: 2, display: "grid", gap:1, gridTemplateRows: "var(--row-21-height) var(--row-22-height)", position: "relative"},false,[
                 ["div", "left_edge", left_edge],
-                ["div", "top_right_cell", {gridRow: 1, position: "relative"}, false, [
+                ["div", "top_right_cell", {gridRow: 1, position: "relative", overflow: "scroll"}, false, [
                     ["div", "right_bottom_edge", bottom_edge],
                     ["div", "top_right_cell_contents", {}, true],
                 ]],
                 ["div", "bottom_right_cell", {gridRow: 2, position: "relative"}, false, [
                     ["div", "right_top_edge", top_edge],
-                    ["div", "bottom_right_cell_contents", {}, true],
+                    ["div", "bottom_right_cell_contents", {height: "100%", width: "100%", display: "flex", flexFlow: "column"}, true,[
+                        ["div", "tabs", {display: "flex", flexFlow: "row", flex: "0 1 auto"}, false, [
+                            ["div", "tab_1", tab_style],
+                            ["div", "tab_2", tab_style],
+                        ],],
+                        ["div", "tab_content", {flex: "1 1 auto", position: "relative"}, false, [
+                            ["div", "editor_wrapper", {position: "relative"}, false, [
+                                ["div", "algo_output", editor_style]
+                            ]],
+                            ["div", "viz_output", editor_style],
+                        ],]
+                    ],],
                 ]],
             ]],
         ]],
