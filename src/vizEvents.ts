@@ -6,16 +6,17 @@ export interface ObservableWithValue<T> extends Observable<T> {
   getValue(): T
 }
 
-export interface NavigationInputsClicked {
+export interface NavigationInputsObservables {
   readonly prev$: Observable<null>;
   readonly next$: Observable<null>;
   readonly play_pause$: Observable<null>;
   readonly speed$: ObservableWithValue<string>;
+  readonly sliderIndex$: Observable<number>;
 }
 
 export interface EventsObservables {
   readonly events: Observable<ExecResult>;
-  readonly inputs_clicked: NavigationInputsClicked;
+  readonly inputs_clicked: NavigationInputsObservables;
 }
 
 export class VizEventIdx {
@@ -30,7 +31,7 @@ export class VizEventIdx {
   }
 
   public eventsRemaining(){
-    return this.total - this.current;
+    return this.total - this.current - 1;
   }
 }
 
@@ -42,8 +43,9 @@ export class VizEventIdxSubject {
     return this.subject;
   }
 
-  public reset(total: number){
-    this.event_idx = new VizEventIdx(-1, total);
+  public reset(total?: number){
+    let new_total = total === undefined ? this.event_idx.total : total;
+    this.event_idx = new VizEventIdx(-1, new_total);
     this.subject.next(this.event_idx);
   }
 
@@ -53,7 +55,7 @@ export class VizEventIdxSubject {
 
   public next(){
     if (!this.canGoNext()){
-      console.error("Tried to go to next event when we were already at the last event");
+      console.error(`Tried to go to next event when we were already at the last event: ${this.event_idx.current} / ${this.event_idx.total}`);
     } else {
       this.event_idx.current += 1;
       this.subject.next(this.event_idx);
@@ -73,27 +75,54 @@ export class VizEventIdxSubject {
     }
   }
 
+  public goTo(index: number){
+    if (index < 0 || index >= this.event_idx.total){
+      console.error(`Tried to go to to an index: ${index}`);
+    } else {
+      this.event_idx.current = index;
+      this.subject.next(this.event_idx);
+    }
+  }
+
   public eventsRemaining(){
     return this.event_idx.eventsRemaining();
   }
+}
+
+function getSpeedDelay(speed: string) {
+  switch (speed) {
+    case "Very Fast": return 1;
+    case "Fast": return 10;
+    case "Medium": return 25;
+    case "Slow": return 50;
+    case "Very Slow": return 200;
+    case "Extra Slow": return 1000;
+  }
+  return 25;
 }
 
 export class VizEventNavigator {
   private readonly current_event$: Subject<VizEvent | null> = new Subject();
 
   private event_idx_subject = new VizEventIdxSubject();
-  private exec_result: ExecResult = {py_error: "", events: []};
+  private exec_result: ExecResult = {py_error: null, events: []};
   private readonly exec_result$: DelayedInitObservable<ExecResult> = new DelayedInitObservable();
   private event_timer$: Observable<number> | null = null;
 
   private readonly playing$ = new BehaviorSubject<boolean>(false);
 
-  public constructor(private readonly inputs_clicked: NavigationInputsClicked){
+  public constructor(private readonly inputs_clicked: NavigationInputsObservables){
     this.inputs_clicked.prev$.subscribe(this.event_idx_subject.prev.bind(this.event_idx_subject));
     this.inputs_clicked.next$.subscribe(this.event_idx_subject.next.bind(this.event_idx_subject));
     this.inputs_clicked.play_pause$.subscribe(this.playPause.bind(this));
+    this.inputs_clicked.sliderIndex$.subscribe(this.handleSliderIndex.bind(this));
     this.exec_result$.obs$().subscribe(this.nextEvents.bind(this));
     this.event_idx_subject.obs$().subscribe(this.nextEventIdx.bind(this));
+  }
+
+  private handleSliderIndex(index: number){
+    this.event_idx_subject.goTo(index);
+    // TODO update output... for whatever reason, it isn't being updated rn
   }
 
   private nextEventIdx(event_idx: VizEventIdx){
@@ -110,14 +139,23 @@ export class VizEventNavigator {
     } else {
       this.playing$.next(true);
       const notPlaying = this.playing$.pipe(filter((val) => !val));
+      const speed = this.inputs_clicked.speed$.getValue();
+      const delay = getSpeedDelay(speed);
 
-      // TODO do the speed thing
-      this.event_timer$ = timer(1000,1000).pipe(
+      if (this.event_idx_subject.eventsRemaining() === 0) {
+        this.event_idx_subject.reset();
+      }
+
+      this.event_timer$ = timer(delay,delay).pipe(
         takeUntil(notPlaying),
         take(this.event_idx_subject.eventsRemaining())
         );
-      this.event_timer$.subscribe(console.log);
-      this.event_timer$.subscribe(this.event_idx_subject.next.bind(this.event_idx_subject));
+      this.event_timer$.subscribe(
+        {
+          next: this.event_idx_subject.next.bind(this.event_idx_subject),
+          complete: () => {this.playing$.next(false);}
+        }
+        );
     }
   }
 

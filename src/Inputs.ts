@@ -1,9 +1,10 @@
 import * as clses from "./generated/classes";
-import { BehaviorSubject, combineLatest, Observable } from "rxjs";
+import { BehaviorSubject, combineLatest, Observable, Subject } from "rxjs";
 import { pyodide_ready } from "./py-worker";
 import { DelayedInitObservable } from "./delayed_init_obs";
-import { NavigationInputsClicked, VizEventIdx } from "./vizEvents";
+import { NavigationInputsObservables, VizEventIdx } from "./vizEvents";
 import { eventHappened } from "./eventHappened";
+import { ExecResult } from "./exec_result";
 
 export class Inputs extends clses.TS_inputs_Container {
 
@@ -12,7 +13,10 @@ export class Inputs extends clses.TS_inputs_Container {
   private prevClicked$: Observable<null>;
   private nextClicked$: Observable<null>;
   private speed$ = new BehaviorSubject("Medium");
+  private sliderIndex$ = new Subject<number>();
   private playPauseClicked$: Observable<null>;
+  private readonly exec_result$: DelayedInitObservable<ExecResult> = new DelayedInitObservable();
+  private readonly playing$: DelayedInitObservable<boolean> = new DelayedInitObservable();
 
   private pyodide_running$: DelayedInitObservable<boolean> = new DelayedInitObservable(
     () => new BehaviorSubject(false)
@@ -27,7 +31,10 @@ export class Inputs extends clses.TS_inputs_Container {
     this.els.medium.textContent = "Medium";
     this.els.slow.textContent = "Slow";
     this.els.very_slow.textContent = "Very Slow";
+    this.els.extra_slow.textContent = "Extra Slow";
     this.els.speed.selectedIndex = 2;
+    this.els.slider.type = "range";
+    this.disableRangeSlider();
 
     this.els.save.textContent = "Save";
     this.els.run.textContent = "Run";
@@ -41,16 +48,49 @@ export class Inputs extends clses.TS_inputs_Container {
     this.nextClicked$ = eventHappened(this.els.next, "click");
     this.playPauseClicked$ = eventHappened(this.els.play, "click");
     this.els.speed.addEventListener("change", (_event) => this.speed$.next(this.els.speed.value));
+    this.els.slider.addEventListener("input", this.handleSliderValueChanged.bind(this));
 
     for (const input of [this.els.save, this.els.prev, this.els.next, this.els.play]) {
       input.disabled = true;
     }
-    this.els.play.disabled = false; // TODO make this something better
 
     this.event_idx$.obs$().subscribe(this.nextEventIdx.bind(this));
 
     this.els.run.disabled = !pyodide_ready.getValue(); // TODO improve this.  This is a fix for HMR
-    combineLatest([pyodide_ready, this.pyodide_running$.obs$()]).subscribe(this._pyodide_update.bind(this));
+    combineLatest([pyodide_ready, this.pyodide_running$.obs$()]).subscribe(this.pyodideUpdate.bind(this));
+    combineLatest([this.pyodide_running$.obs$(), this.exec_result$.obs$()]).subscribe(this.handleExecResult.bind(this));
+    this.playing$.obs$().subscribe(this.handlePlaying.bind(this));
+  }
+
+  private handleSliderValueChanged(_event: Event){
+    this.sliderIndex$.next(Number(this.els.slider.value));
+  }
+
+  private handlePlaying(playing: boolean){
+    this.els.play.textContent = playing ? "Pause" : "Play";
+  }
+
+  private disableRangeSlider(){
+    this.els.slider.disabled = true;
+  }
+
+  private handleExecResult(update: [boolean, ExecResult]){
+    const [running, exec_result] = update;
+    const have_useful_result = exec_result.events.length > 0 && exec_result.py_error === null;
+    if (have_useful_result && !running){
+      this.els.play.disabled = false;
+    } else {
+      this.els.play.disabled = true;
+    }
+
+    if (have_useful_result){
+      this.els.slider.min = "0";
+      this.els.slider.max = String(exec_result.events.length - 1);
+      this.els.slider.value = "0";
+      this.els.slider.disabled = false;
+    } else {
+      this.disableRangeSlider();
+    }
   }
 
   private nextEventIdx(event_idx: VizEventIdx) {
@@ -62,9 +102,8 @@ export class Inputs extends clses.TS_inputs_Container {
     this.event_idx$.init(event_idx$);
   }
 
-  private _pyodide_update(pyodide_update: [boolean, boolean]) {
+  private pyodideUpdate(pyodide_update: [boolean, boolean]) {
     const [avail, running] = pyodide_update;
-    console.log(`avail ${avail} running ${running}`);
     this.els.run.disabled = !avail || running;
   }
 
@@ -80,24 +119,21 @@ export class Inputs extends clses.TS_inputs_Container {
     return this.runClicked$;
   }
 
-  public prevClicked(): Observable<null> {
-    return this.prevClicked$;
-  }
-
-  public nextClicked(): Observable<null> {
-    return this.nextClicked$;
-  }
-
-  public playClicked(): Observable<null> {
-    return this.playPauseClicked$;
-  }
-
-  public navigationInputs(): NavigationInputsClicked {
+  public navigationInputs(): NavigationInputsObservables {
     return {
       prev$: this.prevClicked$,
       next$: this.nextClicked$,
       play_pause$: this.playPauseClicked$,
       speed$: this.speed$,
+      sliderIndex$: this.sliderIndex$,
     };
+  }
+
+  public addExecResult$(exec_result$: Observable<ExecResult>){
+    this.exec_result$.init(exec_result$);
+  }
+
+  public addPlaying$(playing$: Observable<boolean>){
+    this.playing$.init(playing$);
   }
 }

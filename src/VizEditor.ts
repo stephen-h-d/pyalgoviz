@@ -1,10 +1,14 @@
 import { python } from "@codemirror/lang-python";
 import { basicSetup, EditorView } from "codemirror";
+import { Observable } from "rxjs";
+import { DelayedInitObservable } from "./delayed_init_obs";
 import { Editor } from "./editor";
+import { VizEvent } from "./exec_result";
 import * as clses from "./generated/classes";
 
 export class VizEditor extends clses.TS_viz_editor_wrapper_Container {
   private vizEditor: Editor;
+  private event$: DelayedInitObservable<VizEvent | null> = new DelayedInitObservable();
 
   public constructor(els: clses.TS_viz_editor_wrapper_ContainerElements) {
     super(els);
@@ -29,9 +33,23 @@ arc(100,
     endAngle=n * 2 * pi/7,
     color="orange")
       `, [basicSetup, fixedHeightEditor, python()]);
+
+    this.event$.obs$().subscribe(this.handleEvent.bind(this));
+  }
+
+  private handleEvent(event: VizEvent | null){
+    if (event === null || event.viz_error === null) {
+      this.vizEditor.setErrorLine(-1);
+    } else {
+      this.vizEditor.setErrorLine(event.viz_error.lineno);
+    }
   }
 
   public getValue(): string {
     return this.vizEditor.currentValue();
+  }
+
+  public addEvent$(curr_event: Observable<VizEvent | null>){
+    this.event$.init(curr_event);
   }
 }

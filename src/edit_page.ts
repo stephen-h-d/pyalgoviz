@@ -1,60 +1,10 @@
-import { ComplexStyleRule } from '@vanilla-extract/css';
 import type * as CSS from 'csstype';
-
-type PageDecl = [string, string, ComplexStyleRule] |
-                [string, string, ComplexStyleRule, boolean] |
-                [string, string, ComplexStyleRule, boolean, PageDecl[]];
-export interface PageDeclObject {
-    tagName: string,
-    id: string,
-    style: ComplexStyleRule,
-    owner: boolean,
-    children: PageDeclObject[],
-}
-
-export const EL = 0;
-export const ID = 1;
-export const STYLE = 2;
-export const OWNER = 3;
-export const CHILDREN = 4;
+import { build_page_decl_object, PageDecl } from './PageDeclObject.js';
 
 // based on https://palettes.shecodes.io/palettes/1551
 export const dark = "#272343";
-// const white = "#ffffff";
 export const light_green = "#e3f6f5";
 export const dark_green = "#bae8e8";
-
-// .first-color {
-//     background: #272343;
-// }
-
-// .second-color {
-//     background: #ffffff;
-// }
-
-// .third-color {
-//     background: #e3f6f5;
-// }
-
-// .fourth-color {
-//     background: #bae8e8;
-// }
-
-function build_page_decl_object(page_decl: PageDecl): PageDeclObject {
-    const result: Partial<PageDeclObject> = {};
-    result["tagName"] = page_decl[EL];
-    result["id"] = page_decl[ID];
-    result["style"] = page_decl[STYLE];
-    result["owner"] = page_decl[OWNER];
-    result["children"] = [];
-
-    if (page_decl.length > CHILDREN && page_decl[CHILDREN] !== undefined) {
-        for (const child of page_decl[CHILDREN]) {
-            result["children"].push(build_page_decl_object(child));
-        }
-    }
-    return result as PageDeclObject;
-}
 
 const edge: CSS.Properties = {position: "absolute", zIndex: 2, backgroundColor: dark, backgroundClip: "padding-box"};
 const horizontal_edge: CSS.Properties = {...edge, width: "100%", height: "1px", cursor: "row-resize", borderTop: "5px solid rgba(0,0,0,0)", borderBottom: "5px solid rgba(0,0,0,0)", };
@@ -73,12 +23,14 @@ const inputs: PageDecl[] = [
         ["option","medium",{}],
         ["option","slow",{}],
         ["option","very_slow",{}],
+        ["option","extra_slow",{}],
     ]],
     ["button","save",input_style],
     ["button","run",input_style],
     ["button","play",input_style],
     ["button","prev",input_style],
     ["button","next",input_style],
+    ["input","slider",input_style],
 ];
 
 const tab_style: CSS.Properties = {

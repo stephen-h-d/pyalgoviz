@@ -220,11 +220,11 @@ export class Animator {
 }
 
 export class VizOutput extends TS_top_right_cell_contents_Container {
-  private _event$: DelayedInitObservable<VizEvent | null> = new DelayedInitObservable();
+  private event$: DelayedInitObservable<VizEvent | null> = new DelayedInitObservable();
 
   public constructor(els: TS_top_right_cell_contents_ContainerElements){
     super(els);
-    this._event$.obs$().subscribe(this.showRendering.bind(this));
+    this.event$.obs$().subscribe(this.showRendering.bind(this));
   }
 
   private showRendering(event: VizEvent | null, w: number=EDITOR_WIDTH, h: number=EDITOR_HEIGHT) {
@@ -250,6 +250,6 @@ export class VizOutput extends TS_top_right_cell_contents_Container {
   }
 
   public addEvent$(curr_event: Observable<VizEvent | null>){
-    this._event$.init(curr_event);
+    this.event$.init(curr_event);
   }
 }

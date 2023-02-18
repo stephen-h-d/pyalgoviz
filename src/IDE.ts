@@ -43,14 +43,18 @@ export class IDE extends clses.TS_ide_Container {
 
     this.inputs.addPyodideRunning(this.pyodide_running);
     this.inputs.runClicked().subscribe(this.run.bind(this));
+    this.inputs.addExecResult$(this.exec_result$);
 
     this.event_navigator = new VizEventNavigator(this.inputs.navigationInputs());
     this.event_navigator.addExecResult$(this.exec_result$);
 
     this.inputs.addEventIdx$(this.event_navigator.getVizEventIdx$());
+    this.inputs.addPlaying$(this.event_navigator.getPlaying$());
 
     this.top_right_cell_contents.addEvent$(this.event_navigator.getEvent$());
     this.bottom_right_cell_contents.addEvent$(this.event_navigator.getEvent$());
+    this.algo_editor_wrapper.addEvent$(this.event_navigator.getEvent$());
+    this.viz_editor_wrapper.addEvent$(this.event_navigator.getEvent$());
   }
 
   private async run() {
@@ -67,6 +71,7 @@ export class IDE extends clses.TS_ide_Container {
     const result_json = await asyncRun(executorScript, context);
     this.pyodide_running.next(false);
     const run_result = JSON.parse(result_json) as ExecResult;
+    console.log(run_result);
     this.exec_result$.next(run_result);
   }
 }

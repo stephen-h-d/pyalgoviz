@@ -129,7 +129,7 @@ class Executor(object):
         self.viz = viz
         self.viz_error = None
         self.showVizErrors = showVizErrors
-        self.vars = {}
+        self.vars = {"log": log}
         self.vizPrims = {
             'text': text,
             'number': number,
@@ -166,8 +166,6 @@ class Executor(object):
             msg += '\\n\\n%s\\n\\n' % '\\n\\n'.join(['%s = %r' % v for v in self.state])
             msg += '=' * 70
             self.error = dict(error_msg=msg, lineno=lines[-1])
-        if '__builtins__' in self.vars:
-            del self.vars['__builtins__']
 
     def __enter__(self):
         self.start = time.time()
@@ -204,7 +202,7 @@ class Executor(object):
                     tb = traceback.extract_tb(sys.exc_info()[2])
                     lines = [0] + [lineno for filename, lineno, fn, txt in tb if
                                    filename == '<string>']
-                    self.viz_error = {"line": lines[-1], "error_msg": str(e)}
+                    self.viz_error = {"lineno": lines[-1], "error_msg": str(e)}
             finally:
                 current_log = algo_log
 

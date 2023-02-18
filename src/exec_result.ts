@@ -12,6 +12,6 @@ export interface VizEvent {
 }
 
 export interface ExecResult {
-    py_error: string;
+    py_error: PythonScriptError | null;
     events: VizEvent[];
 }

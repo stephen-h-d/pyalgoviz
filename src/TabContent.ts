@@ -21,31 +21,11 @@ export class TabContent extends clses.TS_bottom_right_cell_contents_Container {
     this.els.viz_output_tab.textContent = "Viz Output";
     this.makeAlgoOutputVisible();
 
-    this.vizOutputEditor = new Editor(this.els.viz_output, `line one
-line two
-line three
-you get the picture
-lorem ipsum
-etc. so forth
-
-these are the things that we decide to do sometimes
-more text = more pain
-less fever = more dream
-              `, [minimalSetup, fixedHeightEditor]);
+    this.vizOutputEditor = new Editor(this.els.viz_output, "", [minimalSetup, fixedHeightEditor]);
 
     this.vizOutputEditor.setReadOnly(true);
 
-    this.algoOutputEditor = new Editor(this.els.algo_output, `algo one
-    algo two
-    algo three
-    algo get the picture
-    algo ipsum
-etc. so forth
-
-these are the things that we decide to do sometimes
-more text = more pain
-less fever = more dream
-              `, [minimalSetup, fixedHeightEditor]);
+    this.algoOutputEditor = new Editor(this.els.algo_output, "", [minimalSetup, fixedHeightEditor]);
 
     this.algoOutputEditor.setReadOnly(true);
 
