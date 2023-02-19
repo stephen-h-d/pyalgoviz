@@ -4,7 +4,7 @@ import * as clses from "./generated/classes";
 import { Observable } from "rxjs";
 import { DelayedInitObservable } from "./delayed_init_obs";
 import { VizEvent } from "./exec_result";
-import { dark_green, light_green } from "./edit_page";
+import { dark_green, light_green } from "./containers/edit_page";
 import { eventHappened } from "./eventHappened";
 import { fixedHeightEditor } from "./editor_theme";
 

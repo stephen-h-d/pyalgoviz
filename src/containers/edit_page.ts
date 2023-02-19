@@ -1,5 +1,5 @@
 import type * as CSS from 'csstype';
-import { build_page_decl_object, PageDecl } from './PageDeclObject.js';
+import { build_page_decl_object, PageDecl } from '../PageDeclObject.js';
 
 // based on https://palettes.shecodes.io/palettes/1551
 export const dark = "#272343";

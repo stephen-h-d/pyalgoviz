@@ -15,5 +15,5 @@
     "skipLibCheck": true,
     "outDir": "generator/ts-out/"
   },
-  "include": ["src/edit_page.js", "generator/*.ts"]
+  "include": ["src/containers/*.js", "generator/*.ts"]
 }
