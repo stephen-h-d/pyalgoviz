@@ -2,7 +2,9 @@ import { PageDeclObject } from "../src/PageDeclObject";
 import { tag_name_to_class } from "./mappings.js";
 import { writeFileSync } from 'fs';
 
-export function genCode(page_object: PageDeclObject, file_loc: string) {
+export function genCode(page_object: PageDeclObject, file_name: string) {
+    const file_loc = `src/generated/${file_name}`;
+
     class ClassInfo {
 
         public constructor(public page_decl_obj: PageDeclObject, public ts_class_name: string,
@@ -18,7 +20,7 @@ export function genCode(page_object: PageDeclObject, file_loc: string) {
     let css_output = classes_output;
     const ids_to_class_info = new Map<string, ClassInfo>();
 
-    classes_output += `import * as styles from "./classes.css";
+    classes_output += `import * as styles from "./${file_name}.css";
     `;
 
     css_output += `import { style } from '@vanilla-extract/css';

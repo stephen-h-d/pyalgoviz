@@ -18,7 +18,11 @@ export const dark_green = "#bae8e8";
 //     padding: "2px",
 // };
 
-const page: PageDecl = ["div", "app", {display: "flex", flexFlow: "column", height: "100%"}, true, []];
+const page: PageDecl = ["div", "app", {display: "flex", flexFlow: "row", height: "70%", width: "70%"}, true, [
+    ["div","scripts",{width:"30%"}],
+    ["div","scripts",{width:"30%"}],
+]
+];
 
 const page_object = build_page_decl_object(page);
 
