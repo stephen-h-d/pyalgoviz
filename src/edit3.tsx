@@ -1,10 +1,19 @@
 /* @refresh reload */
 import { createSignal} from 'solid-js';
 import { render } from 'solid-js/web';
+import {LoadScriptDialog} from "./solid_load_dialog";
 import * as styles from "./edit3.css";
 
 function TopLeftContents(){
-    return <div class={styles.top_left_contents}></div>
+    const showDialogSig = createSignal<boolean>(false);
+    const showDialog = () =>{
+        showDialogSig[1](true);
+    };
+
+    return <div class={styles.top_left_contents}>
+        <LoadScriptDialog openSig={showDialogSig}/>
+        <button onclick={(_e) => showDialog()}>Load</button>
+    </div>
 }
 
 function BottomLeftContents(){

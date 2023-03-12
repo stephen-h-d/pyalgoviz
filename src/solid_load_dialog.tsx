@@ -1,5 +1,5 @@
 /* @refresh reload */
-import { createResource, createSignal, For, Signal } from 'solid-js';
+import { createResource, createSignal, For, Signal, createEffect } from 'solid-js';
 import { render } from 'solid-js/web';
 import * as styles from "./solid_load_dialog.css";
 
@@ -50,23 +50,33 @@ function SelectDialog(props:{options:string[],openSig:Signal<boolean>}) {
   }
 
 const fetchPeople = async() => {
-    return (await fetch(`https://swapi.dev/api/people/?page=1`)).json();
+  const newLocal = await fetch(`api/get_script_names`);
+  console.log("newLocal",newLocal);
+  const newLocal_1 = await newLocal.json();
+  console.log("newLocal_1",newLocal_1);
+  return newLocal_1;
 };
 
-function LoadScriptDialog(props:{openSig:Signal<boolean>}) {
-    const [people] = createResource(fetchPeople);
+export function LoadScriptDialog(props:{openSig:Signal<boolean>}) {
+    const [people, { mutate, refetch }] = createResource(fetchPeople);
+    createEffect(() => {
+      if (props.openSig[0]()) {
+        refetch();
+      }
+    });
 
     const peopleList = () => {
         const peopleNames = [];
         if (people.loading || people.error){
+          console.log("error",people.error);
           return [];
-        }
+        } 
 
         const peeps = people();
-        console.log(peeps);
+        console.log("peeps.result",peeps.result);
 
-        for (const result of peeps.results){
-            peopleNames.push(result.name);
+        for (const name of peeps.result){
+            peopleNames.push(name);
         }
         return peopleNames;
     };
