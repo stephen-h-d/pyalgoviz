@@ -1,8 +1,7 @@
 /* @refresh reload */
-import { createResource, createSignal, For, Signal, createEffect } from 'solid-js';
+import { createResource, createSignal, For, Signal, createEffect, createRenderEffect } from 'solid-js';
 import { render } from 'solid-js/web';
 import * as styles from "./solid_load_dialog.css";
-
 
 function SelectDialogEl(props:{option:string,selectedSig:Signal<string | null>}){
     const [selected, setSelected] = props.selectedSig;
@@ -39,7 +38,7 @@ function SelectDialog(props:{options:string[],openSig:Signal<boolean>}) {
     const selectedSig = createSignal<string|null>(null);
 
     return (
-      <dialog open={open()} class={styles.dialog_style}>
+      <dialog open={open()} class={styles.dialog} role="dialog" aria-modal="true">
         <For each={props.options}>{(option, _i) =>
             <SelectDialogEl option={option} selectedSig={selectedSig}/>
           }
@@ -49,7 +48,7 @@ function SelectDialog(props:{options:string[],openSig:Signal<boolean>}) {
     );
   }
 
-const fetchPeople = async() => {
+const fetchScriptNames = async() => {
   const newLocal = await fetch(`api/get_script_names`);
   console.log("newLocal",newLocal);
   const newLocal_1 = await newLocal.json();
@@ -57,8 +56,63 @@ const fetchPeople = async() => {
   return newLocal_1;
 };
 
+function model(element: HTMLInputElement, value: Accessor<Signal<string>>) {
+  const [field, setField] = value();
+  createRenderEffect(() => (element.value = field()));
+  element.addEventListener("input", (e) => {
+    const value = (e.target as HTMLInputElement).value;
+    setField(value);
+  });
+}
+
+declare module "solid-js" {
+  namespace JSX {
+    interface Directives {
+      // use:model
+      model: Signal<string>;
+    }
+  }
+}
+
+export function SaveScriptDialog(props:{openSig:Signal<boolean>}) {
+  const [open, setOpen] = props.openSig;
+  const [name, setName] = createSignal("");
+  const [saving, setSaving] = createSignal(false);
+
+  const save = (_event: MouseEvent) => {
+    setSaving(true);
+    fetch("api/save", {
+      method: "POST",
+      body: JSON.stringify({
+        algo_script: "TODO",
+        viz_script: "TODO",
+        name: name(),
+      }),
+      headers: {
+        "Content-type": "application/json; charset=UTF-8",
+      },
+    })
+      .then((_result) => {
+        setSaving(false);
+        setOpen(false);
+      }) // TODO handle result
+      .catch((_error) => {
+        setSaving(false);
+      }); // TODO handle error
+  }
+
+  // see https://docs.solidjs.com/guides/foundations/typescript-for-solid#use___
+  // for more on `use:model`
+  return <dialog open={open()}>
+    <input type="text" use:model={[name, setName]} /> 
+    <button onClick={(_e) => setOpen(false)}>Cancel</button>
+    <button onClick={save}>Save</button>
+    <p>{saving() && "Saving..."}</p>
+  </dialog>
+}
+
 export function LoadScriptDialog(props:{openSig:Signal<boolean>}) {
-    const [people, { mutate, refetch }] = createResource(fetchPeople);
+    const [scriptNames, { mutate, refetch }] = createResource(fetchScriptNames);
     createEffect(() => {
       if (props.openSig[0]()) {
         refetch();
@@ -67,15 +121,12 @@ export function LoadScriptDialog(props:{openSig:Signal<boolean>}) {
 
     const peopleList = () => {
         const peopleNames = [];
-        if (people.loading || people.error){
-          console.log("error",people.error);
+        if (scriptNames.loading || scriptNames.error){
+          console.log("error",scriptNames.error);
           return [];
         } 
 
-        const peeps = people();
-        console.log("peeps.result",peeps.result);
-
-        for (const name of peeps.result){
+        for (const name of scriptNames().result){
             peopleNames.push(name);
         }
         return peopleNames;

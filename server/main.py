@@ -47,9 +47,9 @@ def save() -> Response:
         submission = json.loads(data)
         algo = Algorithm(
             author_id=author.get_id(),
-            algo_script=submission.get("script"),
-            viz_script="test viz",
-            name="test name",
+            algo_script=submission.get("algo_script"),
+            viz_script=submission.get("viz_script"),
+            name=submission.get("name"),
         )
         db.save_algo(algo)
         # notify(author, 'save', algo.name, algo.script, algo.viz)
@@ -74,7 +74,9 @@ def get_script_names() -> Response:
         msg = "Could not load script names: %s" % e
         logger.error(msg)
         logger.exception(e)
-        return Response(status=HTTPStatus.INTERNAL_SERVER_ERROR, mimetype="application/json")
+        return Response(
+            status=HTTPStatus.INTERNAL_SERVER_ERROR, mimetype="application/json"
+        )
 
 
 if __name__ == "__main__":
