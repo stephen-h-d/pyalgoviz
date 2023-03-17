@@ -1,5 +1,5 @@
 /* @refresh reload */
-import { createResource, createSignal, For, Signal, createEffect, createRenderEffect } from 'solid-js';
+import { createResource, createSignal, For, Signal, createEffect, createRenderEffect, Accessor } from 'solid-js';
 import { render } from 'solid-js/web';
 import * as styles from "./solid_load_dialog.css";
 
@@ -56,7 +56,8 @@ const fetchScriptNames = async() => {
   return newLocal_1;
 };
 
-function model(element: HTMLInputElement, value: Accessor<Signal<string>>) {
+//@ts-ignore
+function text_input(element: HTMLInputElement, value: Accessor<Signal<string>>) {
   const [field, setField] = value();
   createRenderEffect(() => (element.value = field()));
   element.addEventListener("input", (e) => {
@@ -68,8 +69,8 @@ function model(element: HTMLInputElement, value: Accessor<Signal<string>>) {
 declare module "solid-js" {
   namespace JSX {
     interface Directives {
-      // use:model
-      model: Signal<string>;
+      // use:text_input
+      text_input: Signal<string>;
     }
   }
 }
@@ -104,7 +105,7 @@ export function SaveScriptDialog(props:{openSig:Signal<boolean>}) {
   // see https://docs.solidjs.com/guides/foundations/typescript-for-solid#use___
   // for more on `use:model`
   return <dialog open={open()}>
-    <input type="text" use:model={[name, setName]} /> 
+    <input type="text" use:text_input={[name, setName]} />
     <button onClick={(_e) => setOpen(false)}>Cancel</button>
     <button onClick={save}>Save</button>
     <p>{saving() && "Saving..."}</p>
@@ -112,7 +113,7 @@ export function SaveScriptDialog(props:{openSig:Signal<boolean>}) {
 }
 
 export function LoadScriptDialog(props:{openSig:Signal<boolean>}) {
-    const [scriptNames, { mutate, refetch }] = createResource(fetchScriptNames);
+    const [scriptNames, { refetch }] = createResource(fetchScriptNames);
     createEffect(() => {
       if (props.openSig[0]()) {
         refetch();
@@ -124,7 +125,7 @@ export function LoadScriptDialog(props:{openSig:Signal<boolean>}) {
         if (scriptNames.loading || scriptNames.error){
           console.log("error",scriptNames.error);
           return [];
-        } 
+        }
 
         for (const name of scriptNames().result){
             peopleNames.push(name);

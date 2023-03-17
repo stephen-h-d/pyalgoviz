@@ -1,8 +1,36 @@
 /* @refresh reload */
-import { createSignal} from 'solid-js';
+import { Accessor, createEffect, createSignal, Match, Switch} from 'solid-js';
 import { render } from 'solid-js/web';
 import {LoadScriptDialog, SaveScriptDialog} from "./solid_load_dialog";
 import * as styles from "./edit3.css";
+import { Extension } from '@codemirror/state';
+import { Editor } from './editor';
+import { python } from '@codemirror/lang-python';
+import { fixedHeightEditor } from './editor_theme';
+import { basicSetup } from 'codemirror';
+import { Tab } from './Tab';
+
+interface EditorArgs {
+    initialContents: string,
+    extensions: Array<Extension>,
+}
+
+// TODO add signals and hook them up to the function calls
+//@ts-ignore
+function editor(element: HTMLInputElement, args: Accessor<EditorArgs>) {
+    const argsObj = args();
+    console.log("args",args);
+    new Editor(element,argsObj.initialContents,argsObj.extensions);
+  }
+
+  declare module "solid-js" {
+    namespace JSX {
+      interface Directives {
+        // use:editor
+        editor: EditorArgs;
+      }
+    }
+  }
 
 function TopLeftContents(){
     const showLoadDialogSig = createSignal<boolean>(false);
@@ -14,25 +42,111 @@ function TopLeftContents(){
         showSaveDialogSig[1](true);
     };
 
+    const editorArgs: EditorArgs = {
+        initialContents: '# foo script goes here',
+        extensions: [basicSetup, fixedHeightEditor, python()]
+    };
+
     return <div class={styles.top_left_contents}>
-        <LoadScriptDialog openSig={showLoadDialogSig}/>
+        <div class={styles.editor_wrapper}>
+            <div use:editor={editorArgs} class={styles.editor}></div>
+        </div>
         <SaveScriptDialog openSig={showSaveDialogSig}/>
-        <button onclick={(_e) => showLoadDialog()}>Load</button>
-        <button onclick={(_e) => showSaveDialog()}>Save</button>
+        <LoadScriptDialog openSig={showLoadDialogSig}/>
+        <div class={styles.inputs}>
+            <button class={styles.input}>Run</button>
+            <button class={styles.input}>Prev</button>
+            <button class={styles.input}>Play</button>
+            <button class={styles.input}>Next</button>
+            <button class={styles.input} onclick={(_e) => showSaveDialog()}>Save</button>
+            <button class={styles.input} onclick={(_e) => showLoadDialog()}>Load</button>
+        </div>
     </div>
 }
 
 function BottomLeftContents(){
-    return <div class={styles.bottom_left_contents}></div>
+    const editorArgs: EditorArgs = {
+        initialContents: '# viz script goes here',
+        extensions: [basicSetup, fixedHeightEditor, python()]
+    };
+
+    return <div class={styles.bottom_left_contents}>
+        <div class={styles.editor_wrapper}>
+            <div use:editor={editorArgs} class={styles.editor}></div>
+        </div>
+    </div>
 }
 
 function TopRightContents(){
     return <div class={styles.top_right_contents}></div>
 }
 
-function BottomRightContents(){
-    return <div class={styles.bottom_right_contents}></div>
-}
+interface Tab {
+    id: number;
+    label: string;
+    content: string;
+  }
+
+function BottomRightContents() {
+    const [hoveredTab, setHoveredTab] = createSignal<number | null>(null);
+    const [selectedTab, setSelectedTab] = createSignal<number>(1);
+
+    createEffect(() => {
+      console.log("selected..", selectedTab())
+      if (hoveredTab()) {
+        // TODO replace this with something better
+        const newLocal = document.getElementById(`tooltip-${hoveredTab()}`);
+        if (newLocal !== null) {
+            newLocal.classList.add(styles.showTooltip);
+        }
+      } else {
+        const tooltips = document.querySelectorAll(`.${styles.tooltip}`);
+        tooltips.forEach((tooltip) => tooltip.classList.remove(styles.showTooltip));
+      }
+    });
+
+    const isSelected = (id: number) => {
+        return selectedTab() === id;
+    };
+
+    return (
+        <div class={styles.bottom_right_contents}>
+          <div class={styles.tabsContainer}>
+            <Tab
+                id={1}
+                label={"Algorithm Log"}
+                tooltip={"This contains the debugging output of your algorithm script (all calls to the log() function)."}
+                selected={selectedTab() === 1}
+                onTabClick={() => setSelectedTab(1)}
+                onTabMouseEnter={() => setHoveredTab(1)}
+                onTabMouseLeave={() => setHoveredTab(null)}
+            />
+            <Tab
+                id={2}
+                label={"Viz Log"}
+                tooltip={"This contains the debugging output of your visualization script (all calls to the log() function)."}
+                selected={isSelected(2)}
+                onTabClick={() => setSelectedTab(2)}
+                onTabMouseEnter={() => setHoveredTab(2)}
+                onTabMouseLeave={() => setHoveredTab(null)}
+            />
+          </div>
+
+        <div class="tab" >
+            <Switch>
+                <Match when={selectedTab() === 1}>
+                blah
+                </Match>
+                <Match when={selectedTab() === 2}>
+                fdsadfsdf
+                </Match>
+            </Switch>
+        </div>
+        </div>
+      );
+  }
+
+export default BottomRightContents;
 
 function IDE(props: {ref: any,getSelf:() => HTMLDivElement}){
 
