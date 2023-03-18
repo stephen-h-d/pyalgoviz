@@ -1,13 +1,9 @@
 import { Editor } from "./editor";
 import { select, arc } from "d3";
-import { TS_top_right_cell_contents_Container, TS_top_right_cell_contents_ContainerElements } from "./generated/classes";
-import { DelayedInitObservable } from "./delayed_init_obs";
-import { Observable } from "rxjs";
-import { VizEvent } from "./exec_result";
 
-const EDITOR_WIDTH = 600; // TODO make this more dynamic
-const EDITOR_HEIGHT = 450; // TODO make this more dynamic
-const RENDERING_SCALE = 1.0; // TODO make this more dynamic
+export const EDITOR_WIDTH = 600; // TODO make this more dynamic
+export const EDITOR_HEIGHT = 450; // TODO make this more dynamic
+export const RENDERING_SCALE = 1.0; // TODO make this more dynamic
 
 const DELAY = new Map([
     ['Fast', 1],
@@ -28,7 +24,7 @@ const STEPS = new Map([
 ]);
 
 // @ts-ignore
-function T(canvas: Selection<SVGGElement, unknown, null, undefined>,x: number, y: number,txt: string,size: number,font:string, color:string) {
+export function T(canvas: Selection<SVGGElement, unknown, null, undefined>,x: number, y: number,txt: string,size: number,font:string, color:string) {
   canvas.append('text').attr('x', x)
       .attr('y', y)
       .text(txt)
@@ -219,37 +215,4 @@ export class Animator {
   }
 }
 
-export class VizOutput extends TS_top_right_cell_contents_Container {
-  private event$: DelayedInitObservable<VizEvent | null> = new DelayedInitObservable();
 
-  public constructor(els: TS_top_right_cell_contents_ContainerElements){
-    super(els);
-    this.event$.obs$().subscribe(this.showRendering.bind(this));
-  }
-
-  private showRendering(event: VizEvent | null, w: number=EDITOR_WIDTH, h: number=EDITOR_HEIGHT) {
-    console.log("event", event);
-    this.els.top_right_cell_contents.textContent = '';
-    if (event !== null) {
-      const svg = select(this.els.top_right_cell_contents)
-        .append("svg")
-        .attr("width", w)
-        .attr("height", h);
-      const canvas = svg
-        .append("g")
-        .attr("transform", "scale(" + RENDERING_SCALE + ")");
-
-      try {
-        eval(event.viz_output);
-      } catch (e) {
-        T(canvas, 100, 100, "INTERNAL ERROR: ", 15, "Arial", "red");
-        T(canvas, 100, 120, "" + e, 15, "Arial", "red");
-        T(canvas, 100, 140, "" + event.viz_output, 15, "Arial", "black");
-      }
-    }
-  }
-
-  public addEvent$(curr_event: Observable<VizEvent | null>){
-    this.event$.init(curr_event);
-  }
-}

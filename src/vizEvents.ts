@@ -103,17 +103,17 @@ export class VizEventNavigator {
 
   private event_idx_subject = new VizEventIdxSubject();
   private exec_result: ExecResult = {py_error: null, events: []};
-  private readonly exec_result$: DelayedInitObservable<ExecResult> = new DelayedInitObservable();
   private event_timer$: Observable<number> | null = null;
 
   private readonly playing$ = new BehaviorSubject<boolean>(false);
 
-  public constructor(private readonly inputs_clicked: EventNavObservables){
+  public constructor(private readonly inputs_clicked: EventNavObservables,
+    private readonly exec_result$: Observable<ExecResult>){
     this.inputs_clicked.prev$.subscribe(this.event_idx_subject.prev.bind(this.event_idx_subject));
     this.inputs_clicked.next$.subscribe(this.event_idx_subject.next.bind(this.event_idx_subject));
     this.inputs_clicked.playPause$.subscribe(this.playPause.bind(this));
     this.inputs_clicked.sliderIndex$.subscribe(this.handleSliderIndex.bind(this));
-    this.exec_result$.obs$().subscribe(this.nextEvents.bind(this));
+    this.exec_result$.subscribe(this.nextEvents.bind(this));
     this.event_idx_subject.obs$().subscribe(this.nextEventIdx.bind(this));
   }
 

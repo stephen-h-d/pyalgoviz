@@ -2,7 +2,7 @@ import * as styles from "./edit_page.css";
 import { build_app } from "./generated/classes";
 import * as clses from "./generated/classes";
 import { pyodide_ready } from "./py-worker";
-import {VizOutput} from "./animator";
+import { VizOutput } from "./VizOutput";
 import { TabContent } from "./TabContent";
 import { Inputs } from "./Inputs";
 import { VizEditor } from "./VizEditor";

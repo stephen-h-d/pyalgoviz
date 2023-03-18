@@ -1,5 +1,5 @@
 /* @refresh reload */
-import { Accessor, createEffect, createSignal, Setter, Signal} from 'solid-js';
+import { Accessor, createEffect, createSignal, Setter, Signal, from} from 'solid-js';
 import { render } from 'solid-js/web';
 import {LoadScriptDialog, SaveScriptDialog} from "./solid_load_dialog";
 import * as styles from "./edit3.css";
@@ -11,6 +11,20 @@ import { basicSetup, minimalSetup } from 'codemirror';
 import { Tab } from './Tab';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { VizEventNavigator, Speed } from './vizEvents';
+import { asyncRun } from './py-worker';
+import { executorScript } from './executor';
+import { ExecResult, VizEvent } from './exec_result';
+import { renderEvent } from './VizOutput';
+
+declare module "solid-js" {
+    namespace JSX {
+      interface Directives {
+        // use:editor
+        vizrenderer: { currentEvent: Accessor<VizEvent | null | undefined>};
+      }
+    }
+  }
+  
 
 interface EditorArgs {
     contents: Signal<string>,
@@ -51,7 +65,12 @@ class EventNavSubjects {
     public readonly sliderIndex$: Subject<number> = new Subject();
 }  
 
-function TopLeftContents(){
+function TopLeftContents(props: {
+    run: () => Promise<any>,
+    algo: Signal<string>,
+    eventNavSubjects: EventNavSubjects,
+    eventNavigator: VizEventNavigator,
+}){
     const showLoadDialogSig = createSignal<boolean>(false);
     const showLoadDialog = () =>{
         showLoadDialogSig[1](true);
@@ -61,13 +80,8 @@ function TopLeftContents(){
         showSaveDialogSig[1](true);
     };
 
-    const contents = createSignal('# foo script goes here');
-    const inputsObservables = new EventNavSubjects();
-    const eventNavigator = new VizEventNavigator(inputsObservables);
-    const runClicked$: Subject<null> =new Subject();
-
     const editorArgs: EditorArgs = {
-        contents,
+        contents: props.algo,
         extensions: [basicSetup, fixedHeightEditor, python()],
         textReadOnly: false,
     };
@@ -79,21 +93,21 @@ function TopLeftContents(){
         <SaveScriptDialog openSig={showSaveDialogSig}/>
         <LoadScriptDialog openSig={showLoadDialogSig}/>
         <div class={styles.inputs}>
-            <button class={styles.input} onclick={(_e) => runClicked$.next(null)}>Run</button>
-            <button class={styles.input} onclick={(_e) => inputsObservables.prev$.next(null)}>Prev</button>
-            <button class={styles.input} onclick={(_e) => inputsObservables.playPause$.next(null)}>Play</button>
-            <button class={styles.input} onclick={(_e) => inputsObservables.next$.next(null)}>Next</button>
+            <button class={styles.input} onclick={async (_e) => props.run()}>Run</button>
+            <button class={styles.input} onclick={(_e) => props.eventNavSubjects.prev$.next(null)}>Prev</button>
+            <button class={styles.input} onclick={(_e) => props.eventNavSubjects.playPause$.next(null)}>Play</button>
+            <button class={styles.input} onclick={(_e) => props.eventNavSubjects.next$.next(null)}>Next</button>
             <button class={styles.input} onclick={(_e) => showSaveDialog()}>Save</button>
             <button class={styles.input} onclick={(_e) => showLoadDialog()}>Load</button>
         </div>
     </div>
 }
 
-function BottomLeftContents(){
-    const contents = createSignal('# viz script goes here');
-
+function BottomLeftContents(props: {
+    viz: Signal<string>,
+}){
     const editorArgs: EditorArgs = {
-        contents,
+        contents: props.viz,
         extensions: [basicSetup, fixedHeightEditor, python()],
         textReadOnly: false,
     };
@@ -105,8 +119,19 @@ function BottomLeftContents(){
     </div>
 }
 
-function TopRightContents(){
-    return <div class={styles.top_right_contents}></div>
+//@ts-ignore
+function vizrenderer(div: HTMLDivElement, argsAccessor: Accessor<RendererArgs>) {
+    const args = argsAccessor();
+  
+    createEffect(() => {
+        const event = args.currentEvent();
+        console.log("trying to render event",event);
+        renderEvent(div, event);
+    });
+}
+  
+function TopRightContents(props: {currentEvent: Accessor<VizEvent | null | undefined>}){
+    return <div class={styles.top_right_contents} use:vizrenderer={props}></div>
 }
 
 interface Tab {
@@ -132,7 +157,6 @@ function BottomRightContents(props: {vizLog: Signal<string>, algoLog: Signal<str
     };
 
     createEffect(() => {
-      console.log("selected..", selectedTab())
       if (hoveredTab()) {
         // TODO replace this with something better
         const newLocal = document.getElementById(`tooltip-${hoveredTab()}`);
@@ -261,31 +285,71 @@ class Resizer{
 }
 
 function IDE(props: {ref: any, getSelf:() => HTMLDivElement}){
-    const vizLog = createSignal("viz log contents...");
-    const algoLog = createSignal("algo log contents...");
-
     const resizer = new Resizer(props.getSelf);
+    const eventNavSubjects = new EventNavSubjects();
+    const execResult = new Subject<ExecResult>();
+    const eventNavigator = new VizEventNavigator(eventNavSubjects, execResult);
+
+    const algo = createSignal(`
+for x in range(50, 500, 50):
+    for y in range(50, 500, 50):
+        n = y / 50
+`);
+    const viz = createSignal(`
+from math import pi
+
+text(x, y, "x=%s y=%s n=%d" % (x, y, n), size=10 + n*3, font="Arial", color='red')
+rect(450, 50, 50 + n*10, 50 + n*10, fill="brown", border="lightyellow")
+line(50, 50, x, y, color="purple", width=6)
+circle(300, 200, n * 25, fill="transparent", border="green")
+arc(100,
+    325,
+    innerRadius=50,
+    outerRadius=100,
+    startAngle=(n - 1) * 2 * pi/7,
+    endAngle=n * 2 * pi/7,
+    color="orange")
+`);
+    const algoLog = createSignal("algo log contents...");
+    const vizLog = createSignal("viz log contents...");
+
+    async function run() {
+        const context = {
+          script: algo[0](),
+          viz: viz[0](),
+          showVizErrors: true,
+        };
+    
+        // TODO make pyodide_running
+        // this.pyodide_running.next(true);
+        const result_json = await asyncRun(executorScript, context);
+        // this.pyodide_running.next(false);
+        const run_result = JSON.parse(result_json) as ExecResult;
+        execResult.next(run_result);
+        console.log(run_result);
+    }
+    const currentEvent = from(eventNavigator.getEvent$());
 
     return <div ref={props.ref} class={styles.ide} style={resizer.getCellStyle()}>
         <div class={styles.left_col}>
             <div class={styles.right_edge} onmousedown={resizer.resize_col_listener.bind(resizer)}></div>
             <div class={styles.top_left_cell} >
-                <TopLeftContents/>
+                <TopLeftContents eventNavSubjects={eventNavSubjects} eventNavigator={eventNavigator} run={run} algo={algo}/>
                 <div class={styles.bottom_edge} onmousedown={resizer.resize_cell_11_listener()}></div>
             </div>
             <div class={styles.bottom_left_cell}>
-                <BottomLeftContents/>
+                <BottomLeftContents {...{ viz }}/>
                 <div class={styles.top_edge} onmousedown={resizer.resize_cell_11_listener()}></div>
             </div>
         </div>
         <div class={styles.right_col}>
             <div class={styles.left_edge} onmousedown={resizer.resize_col_listener.bind(resizer)}></div>
             <div class={styles.top_right_cell}>
-                <TopRightContents/>
+                <TopRightContents currentEvent={currentEvent}/>
                 <div class={styles.bottom_edge} onmousedown={resizer.resize_cell_21_listener()}></div>
             </div>
             <div class={styles.bottom_right_cell}>
-                <BottomRightContents algoLog={algoLog} vizLog={vizLog}/>
+                <BottomRightContents {...{ algoLog, vizLog }} />
                 <div class={styles.top_edge} onmousedown={resizer.resize_cell_21_listener()}></div>
             </div>
         </div>

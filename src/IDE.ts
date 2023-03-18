@@ -2,7 +2,7 @@ import * as styles from "./edit_page.css";
 import * as clses from "./generated/classes";
 import { Subject } from "rxjs";
 import { asyncRun } from "./py-worker";
-import { VizOutput } from "./animator";
+import { VizOutput } from "./VizOutput";
 import { VizEventNavigator } from "./vizEvents";
 import { executorScript } from "./executor";
 import { ExecResult } from "./exec_result";
