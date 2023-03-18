@@ -1,5 +1,5 @@
 /* @refresh reload */
-import { Accessor, createEffect, createSignal, Setter} from 'solid-js';
+import { Accessor, createEffect, createSignal, Setter, Signal} from 'solid-js';
 import { render } from 'solid-js/web';
 import {LoadScriptDialog, SaveScriptDialog} from "./solid_load_dialog";
 import * as styles from "./edit3.css";
@@ -11,7 +11,7 @@ import { basicSetup, minimalSetup } from 'codemirror';
 import { Tab } from './Tab';
 
 interface EditorArgs {
-    initialContents: string,
+    contents: Signal<string>,
     extensions: Array<Extension>,
     textReadOnly: boolean,
 }
@@ -20,8 +20,16 @@ interface EditorArgs {
 //@ts-ignore
 function editor(element: HTMLInputElement, argsAccessor: Accessor<EditorArgs>) {
     const args = argsAccessor();
-    const editor = new Editor(element,args.initialContents,args.extensions);
+    const [contents, setContents] = args.contents;
+
+    const editor = new Editor(element,contents(),args.extensions);
     editor.setReadOnly(args.textReadOnly);
+
+    createEffect(() => {
+        editor.setText(contents());
+    });
+
+    editor.subscribe(setContents);
   }
 
   declare module "solid-js" {
@@ -43,8 +51,10 @@ function TopLeftContents(){
         showSaveDialogSig[1](true);
     };
 
+    const contents = createSignal('# foo script goes here');
+
     const editorArgs: EditorArgs = {
-        initialContents: '# foo script goes here',
+        contents,
         extensions: [basicSetup, fixedHeightEditor, python()],
         textReadOnly: false,
     };
@@ -67,8 +77,10 @@ function TopLeftContents(){
 }
 
 function BottomLeftContents(){
+    const contents = createSignal('# viz script goes here');
+
     const editorArgs: EditorArgs = {
-        initialContents: '# viz script goes here',
+        contents,
         extensions: [basicSetup, fixedHeightEditor, python()],
         textReadOnly: false,
     };
@@ -90,18 +102,18 @@ interface Tab {
     content: string;
   }
 
-function BottomRightContents(props: {vizLog: Accessor<string>, algoLog: Accessor<string>}) {
+function BottomRightContents(props: {vizLog: Signal<string>, algoLog: Signal<string>}) {
     const [hoveredTab, setHoveredTab] = createSignal<number | null>(null);
     const [selectedTab, setSelectedTab] = createSignal<number>(1);
 
     const algoLogArgs: EditorArgs = {
-        initialContents: '# algo logs should be here',
+        contents: props.algoLog,
         extensions: [minimalSetup, fixedHeightEditor],
         textReadOnly: true,
     };
 
     const vizLogArgs: EditorArgs = {
-        initialContents: '# viz logs should be here',
+        contents: props.vizLog,
         extensions: [minimalSetup, fixedHeightEditor],
         textReadOnly: true,
     };
@@ -235,15 +247,9 @@ class Resizer{
     }
 }
 
-interface ResizerArgs {
-    initialContents: string,
-    extensions: Array<Extension>,
-    textReadOnly: boolean,
-}
-
 function IDE(props: {ref: any, getSelf:() => HTMLDivElement}){
-    const [vizLog, setVizLog] = createSignal("viz log contents...");
-    const [algoLog, setAlgoLog] = createSignal("algo log contents...");
+    const vizLog = createSignal("viz log contents...");
+    const algoLog = createSignal("algo log contents...");
 
     const resizer = new Resizer(props.getSelf);
     // const resize_col_listener = resizer.re

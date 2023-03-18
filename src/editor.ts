@@ -1,6 +1,7 @@
 import { EditorView } from "codemirror";
 import { RangeSetBuilder, StateField, Transaction, StateEffect, EditorState, Extension, Compartment } from '@codemirror/state';
 import { Decoration, ViewPlugin, DecorationSet, ViewUpdate } from '@codemirror/view';
+import { BehaviorSubject, debounceTime, Observable, Subject } from "rxjs";
 
 const normalTheme = EditorView.baseTheme({
   '&light .cm-highlight': { backgroundColor: '#d4fafa' },
@@ -24,7 +25,8 @@ class LinesToHighlight {
 
 export class Editor {
   private editorView: EditorView;
-  private docChangedSubscribers: Array<{ (): void; }>;
+  private text$: Subject<string>;
+  private textDebounced$: Observable<string>;
   private readOnly: Compartment;
 
   private linesToHighlightEffect = StateEffect.define<LinesToHighlight>();
@@ -69,8 +71,10 @@ export class Editor {
   private linesToHighlight: LinesToHighlight = new LinesToHighlight(-1, -1);
 
   public constructor(parentDiv: HTMLDivElement, initialContents: string, extensions: Array<Extension>){
+    this.text$ = new BehaviorSubject(initialContents);
+    this.textDebounced$ = this.text$.pipe(debounceTime(300));
+
     this.readOnly = new Compartment();
-    this.docChangedSubscribers = [];
     const boundStripeDeco = this.stripeDeco.bind(this);
 
     this.highlightLinePlugin = ViewPlugin.fromClass(class {
@@ -90,9 +94,7 @@ export class Editor {
     extensions = extensions.concat([normalTheme, errorTheme, this.highlightLinePlugin, this.linesToHighlightState.extension]);
     extensions.push(EditorView.updateListener.of((v:ViewUpdate) => {
       if (v.docChanged) {
-        for (const subscriber of this.docChangedSubscribers) {
-          subscriber();
-        }
+        this.text$.next(this.currentValue());
       }
   }));
     extensions.push(this.readOnly.of(EditorState.readOnly.of(false)));
@@ -111,8 +113,8 @@ export class Editor {
     });
   }
 
-  public addDocChangedSubscriber(subscriber: { (): void; }) {
-    this.docChangedSubscribers.push(subscriber);
+  public subscribe(subscriber: { (text: string): void; }) {
+    this.textDebounced$.subscribe(subscriber);
   }
 
   public setErrorLine(errorLine: number) {

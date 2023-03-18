@@ -52,8 +52,8 @@ export class Visualizer {
     private readonly renderAreaDiv: HTMLDivElement,
     private readonly progressDiv: HTMLDivElement
   ) {
-    this.algoEditor.addDocChangedSubscriber(this.algoChanged.bind(this));
-    this.vizEditor.addDocChangedSubscriber(this.vizScriptChanged.bind(this));
+    this.algoEditor.subscribe(this.algoChanged.bind(this));
+    this.vizEditor.subscribe(this.vizScriptChanged.bind(this));
   }
 
   private algoChanged(){
