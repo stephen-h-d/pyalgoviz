@@ -7,20 +7,21 @@ import { Extension } from '@codemirror/state';
 import { Editor } from './editor';
 import { python } from '@codemirror/lang-python';
 import { fixedHeightEditor } from './editor_theme';
-import { basicSetup } from 'codemirror';
+import { basicSetup, minimalSetup } from 'codemirror';
 import { Tab } from './Tab';
 
 interface EditorArgs {
     initialContents: string,
     extensions: Array<Extension>,
+    textReadOnly: boolean,
 }
 
 // TODO add signals and hook them up to the function calls
 //@ts-ignore
-function editor(element: HTMLInputElement, args: Accessor<EditorArgs>) {
-    const argsObj = args();
-    console.log("args",args);
-    new Editor(element,argsObj.initialContents,argsObj.extensions);
+function editor(element: HTMLInputElement, argsAccessor: Accessor<EditorArgs>) {
+    const args = argsAccessor();
+    const editor = new Editor(element,args.initialContents,args.extensions);
+    editor.setReadOnly(args.textReadOnly);
   }
 
   declare module "solid-js" {
@@ -44,7 +45,8 @@ function TopLeftContents(){
 
     const editorArgs: EditorArgs = {
         initialContents: '# foo script goes here',
-        extensions: [basicSetup, fixedHeightEditor, python()]
+        extensions: [basicSetup, fixedHeightEditor, python()],
+        textReadOnly: false,
     };
 
     return <div class={styles.top_left_contents}>
@@ -67,7 +69,8 @@ function TopLeftContents(){
 function BottomLeftContents(){
     const editorArgs: EditorArgs = {
         initialContents: '# viz script goes here',
-        extensions: [basicSetup, fixedHeightEditor, python()]
+        extensions: [basicSetup, fixedHeightEditor, python()],
+        textReadOnly: false,
     };
 
     return <div class={styles.bottom_left_contents}>
@@ -90,6 +93,18 @@ interface Tab {
 function BottomRightContents() {
     const [hoveredTab, setHoveredTab] = createSignal<number | null>(null);
     const [selectedTab, setSelectedTab] = createSignal<number>(1);
+
+    const algoLogArgs: EditorArgs = {
+        initialContents: '# algo logs should be here',
+        extensions: [minimalSetup, fixedHeightEditor],
+        textReadOnly: true,
+    };
+
+    const vizLogArgs: EditorArgs = {
+        initialContents: '# viz logs should be here',
+        extensions: [minimalSetup, fixedHeightEditor],
+        textReadOnly: true,
+    };
 
     createEffect(() => {
       console.log("selected..", selectedTab())
@@ -131,17 +146,12 @@ function BottomRightContents() {
                 onTabMouseLeave={() => setHoveredTab(null)}
             />
           </div>
-
-        <div class="tab" >
-            <Switch>
-                <Match when={selectedTab() === 1}>
-                blah
-                </Match>
-                <Match when={selectedTab() === 2}>
-                fdsadfsdf
-                </Match>
-            </Switch>
-        </div>
+            <div hidden={selectedTab() !== 1} class={styles.editor_wrapper}>
+                <div use:editor={algoLogArgs} class={styles.editor}></div>
+            </div>
+            <div hidden={selectedTab() !== 2} class={styles.editor_wrapper}>
+                <div use:editor={vizLogArgs} class={styles.editor}></div>
+            </div>
         </div>
       );
   }
