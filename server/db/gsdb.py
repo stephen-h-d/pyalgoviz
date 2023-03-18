@@ -82,5 +82,5 @@ class GoogleStoreDatabase(DatabaseProtocol):
     def get_algo_names_by(self, author_id: UserId) -> list[str]:
         raise NotImplementedError()
 
-    def get_public_algos(self) -> list[tuple[UserId,str]]:
+    def get_public_algos(self) -> list[tuple[UserId, str]]:
         raise NotImplementedError()

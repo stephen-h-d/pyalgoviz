@@ -20,7 +20,7 @@ class RunVizState {
     private viz_output: Subject<string> = new Subject();
 
     public constructor(public run_result: RunResult) {
-        
+
     }
 
     public updateSubjects(){

@@ -6,8 +6,8 @@
 //     ["div", "root", style({position: "absolute"}), [
 //         ["div", "child_one", style({position: "relative"})],
 //         ["div", "child_two", "child_two_style"],
-//         ["div", "child_three", 
-//             style({position: "absolute"}), 
+//         ["div", "child_three",
+//             style({position: "absolute"}),
 //             [
 //                 ["div", "grandchild", "grandchild_style"]
 //         ]],
