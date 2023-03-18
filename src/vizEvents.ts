@@ -6,17 +6,26 @@ export interface ObservableWithValue<T> extends Observable<T> {
   getValue(): T
 }
 
-export interface NavigationInputsObservables {
+export enum Speed {
+    Very_Fast = 1,
+    Fast = 10,
+    Medium = 25,
+    Slow = 50,
+    Very_Slow = 200,
+    Extra_Slow = 1000,
+}
+
+export interface EventNavObservables {
   readonly prev$: Observable<null>;
+  readonly playPause$: Observable<null>;
   readonly next$: Observable<null>;
-  readonly play_pause$: Observable<null>;
-  readonly speed$: ObservableWithValue<string>;
+  readonly speed$: ObservableWithValue<Speed>;
   readonly sliderIndex$: Observable<number>;
 }
 
 export interface EventsObservables {
   readonly events: Observable<ExecResult>;
-  readonly inputs_clicked: NavigationInputsObservables;
+  readonly inputs_clicked: EventNavObservables;
 }
 
 export class VizEventIdx {
@@ -89,18 +98,6 @@ export class VizEventIdxSubject {
   }
 }
 
-function getSpeedDelay(speed: string) {
-  switch (speed) {
-    case "Very Fast": return 1;
-    case "Fast": return 10;
-    case "Medium": return 25;
-    case "Slow": return 50;
-    case "Very Slow": return 200;
-    case "Extra Slow": return 1000;
-  }
-  return 25;
-}
-
 export class VizEventNavigator {
   private readonly current_event$: Subject<VizEvent | null> = new Subject();
 
@@ -111,10 +108,10 @@ export class VizEventNavigator {
 
   private readonly playing$ = new BehaviorSubject<boolean>(false);
 
-  public constructor(private readonly inputs_clicked: NavigationInputsObservables){
+  public constructor(private readonly inputs_clicked: EventNavObservables){
     this.inputs_clicked.prev$.subscribe(this.event_idx_subject.prev.bind(this.event_idx_subject));
     this.inputs_clicked.next$.subscribe(this.event_idx_subject.next.bind(this.event_idx_subject));
-    this.inputs_clicked.play_pause$.subscribe(this.playPause.bind(this));
+    this.inputs_clicked.playPause$.subscribe(this.playPause.bind(this));
     this.inputs_clicked.sliderIndex$.subscribe(this.handleSliderIndex.bind(this));
     this.exec_result$.obs$().subscribe(this.nextEvents.bind(this));
     this.event_idx_subject.obs$().subscribe(this.nextEventIdx.bind(this));
@@ -140,7 +137,7 @@ export class VizEventNavigator {
       this.playing$.next(true);
       const notPlaying = this.playing$.pipe(filter((val) => !val));
       const speed = this.inputs_clicked.speed$.getValue();
-      const delay = getSpeedDelay(speed);
+      const delay = speed.valueOf();
 
       if (this.event_idx_subject.eventsRemaining() === 0) {
         this.event_idx_subject.reset();

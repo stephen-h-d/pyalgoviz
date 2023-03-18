@@ -2,7 +2,7 @@ import * as clses from "./generated/classes";
 import { BehaviorSubject, combineLatest, Observable, Subject } from "rxjs";
 import { pyodide_ready } from "./py-worker";
 import { DelayedInitObservable } from "./delayed_init_obs";
-import { NavigationInputsObservables, VizEventIdx } from "./vizEvents";
+import { EventNavObservables, VizEventIdx } from "./vizEvents";
 import { eventHappened } from "./eventHappened";
 import { ExecResult } from "./exec_result";
 
@@ -119,11 +119,11 @@ export class Inputs extends clses.TS_inputs_Container {
     return this.runClicked$;
   }
 
-  public navigationInputs(): NavigationInputsObservables {
+  public navigationInputs(): EventNavObservables {
     return {
       prev$: this.prevClicked$,
       next$: this.nextClicked$,
-      play_pause$: this.playPauseClicked$,
+      playPause$: this.playPauseClicked$,
       speed$: this.speed$,
       sliderIndex$: this.sliderIndex$,
     };

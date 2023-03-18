@@ -9,6 +9,8 @@ import { python } from '@codemirror/lang-python';
 import { fixedHeightEditor } from './editor_theme';
 import { basicSetup, minimalSetup } from 'codemirror';
 import { Tab } from './Tab';
+import { BehaviorSubject, Subject } from 'rxjs';
+import { VizEventNavigator, Speed } from './vizEvents';
 
 interface EditorArgs {
     contents: Signal<string>,
@@ -41,6 +43,14 @@ function editor(element: HTMLInputElement, argsAccessor: Accessor<EditorArgs>) {
     }
   }
 
+class EventNavSubjects {
+    public readonly prev$: Subject<null> = new Subject();
+    public readonly playPause$: Subject<null> = new Subject();
+    public readonly next$: Subject<null> = new Subject();
+    public readonly speed$: BehaviorSubject<Speed> = new BehaviorSubject(Speed.Medium as Speed);
+    public readonly sliderIndex$: Subject<number> = new Subject();
+}  
+
 function TopLeftContents(){
     const showLoadDialogSig = createSignal<boolean>(false);
     const showLoadDialog = () =>{
@@ -52,6 +62,9 @@ function TopLeftContents(){
     };
 
     const contents = createSignal('# foo script goes here');
+    const inputsObservables = new EventNavSubjects();
+    const eventNavigator = new VizEventNavigator(inputsObservables);
+    const runClicked$: Subject<null> =new Subject();
 
     const editorArgs: EditorArgs = {
         contents,
@@ -66,10 +79,10 @@ function TopLeftContents(){
         <SaveScriptDialog openSig={showSaveDialogSig}/>
         <LoadScriptDialog openSig={showLoadDialogSig}/>
         <div class={styles.inputs}>
-            <button class={styles.input}>Run</button>
-            <button class={styles.input}>Prev</button>
-            <button class={styles.input}>Play</button>
-            <button class={styles.input}>Next</button>
+            <button class={styles.input} onclick={(_e) => runClicked$.next(null)}>Run</button>
+            <button class={styles.input} onclick={(_e) => inputsObservables.prev$.next(null)}>Prev</button>
+            <button class={styles.input} onclick={(_e) => inputsObservables.playPause$.next(null)}>Play</button>
+            <button class={styles.input} onclick={(_e) => inputsObservables.next$.next(null)}>Next</button>
             <button class={styles.input} onclick={(_e) => showSaveDialog()}>Save</button>
             <button class={styles.input} onclick={(_e) => showLoadDialog()}>Load</button>
         </div>
@@ -252,7 +265,6 @@ function IDE(props: {ref: any, getSelf:() => HTMLDivElement}){
     const algoLog = createSignal("algo log contents...");
 
     const resizer = new Resizer(props.getSelf);
-    // const resize_col_listener = resizer.re
 
     return <div ref={props.ref} class={styles.ide} style={resizer.getCellStyle()}>
         <div class={styles.left_col}>
