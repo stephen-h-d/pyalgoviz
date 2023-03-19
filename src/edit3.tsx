@@ -1,5 +1,5 @@
 /* @refresh reload */
-import { Accessor, createEffect, createSignal, Setter, Signal, from} from 'solid-js';
+import { Accessor, createEffect, createSignal, Setter, Signal, from, createRenderEffect, createMemo} from 'solid-js';
 import { render } from 'solid-js/web';
 import {LoadScriptDialog, SaveScriptDialog} from "./solid_load_dialog";
 import * as styles from "./edit3.css";
@@ -9,22 +9,22 @@ import { python } from '@codemirror/lang-python';
 import { fixedHeightEditor } from './editor_theme';
 import { basicSetup, minimalSetup } from 'codemirror';
 import { Tab } from './Tab';
-import { BehaviorSubject, Subject } from 'rxjs';
-import { VizEventNavigator, Speed } from './vizEvents';
-import { asyncRun } from './py-worker';
+import { VizEventNavigator, Speed, VizEventIdx } from './vizEvents';
+import { asyncRun, pyodide_ready } from './py-worker';
 import { executorScript } from './executor';
 import { ExecResult, VizEvent } from './exec_result';
 import { renderEvent } from './VizOutput';
+import { BehaviorSubject, Subject } from 'rxjs';
 
 declare module "solid-js" {
     namespace JSX {
       interface Directives {
         // use:editor
-        vizrenderer: { currentEvent: Accessor<VizEvent | null | undefined>};
+        vizrenderer: { currentEvent: Accessor<VizEvent | null>};
       }
     }
   }
-  
+
 
 interface EditorArgs {
     contents: Signal<string>,
@@ -57,19 +57,47 @@ function editor(element: HTMLInputElement, argsAccessor: Accessor<EditorArgs>) {
     }
   }
 
-class EventNavSubjects {
+  class EventNavSubjects {
     public readonly prev$: Subject<null> = new Subject();
     public readonly playPause$: Subject<null> = new Subject();
     public readonly next$: Subject<null> = new Subject();
     public readonly speed$: BehaviorSubject<Speed> = new BehaviorSubject(Speed.Medium as Speed);
     public readonly sliderIndex$: Subject<number> = new Subject();
-}  
+}
+
+//@ts-ignore
+function range_input(element: HTMLInputElement, value: Accessor<Signal<number>>) {
+    const [field, setField] = value();
+    createRenderEffect(() => {
+        const newValue = String(field());
+        if (element.value !== newValue) {
+            console.log("yup",element.value,newValue);
+            element.value = newValue;
+        }
+    });
+    element.addEventListener("input", (e) => {
+      const value = (e.target as HTMLInputElement).value;
+      setField(Number.parseFloat(value));
+    });
+  }
+
+  declare module "solid-js" {
+    namespace JSX {
+      interface Directives {
+        // use:text_input
+        range_input: Signal<number>;
+      }
+    }
+  }
 
 function TopLeftContents(props: {
     run: () => Promise<any>,
     algo: Signal<string>,
     eventNavSubjects: EventNavSubjects,
-    eventNavigator: VizEventNavigator,
+    currentEventIdx: Accessor<VizEventIdx>,
+    running: Accessor<boolean>,
+    playing: Accessor<boolean>,
+    pyodideReady: Accessor<boolean>,
 }){
     const showLoadDialogSig = createSignal<boolean>(false);
     const showLoadDialog = () =>{
@@ -86,6 +114,41 @@ function TopLeftContents(props: {
         textReadOnly: false,
     };
 
+    const runDisabled = () => props.running() || !props.pyodideReady();
+    const prevDisabled = () => !props.currentEventIdx().canGoPrev();
+    const nextDisabled = () => !props.currentEventIdx().canGoNext();
+    const playPauseDisabled = () => props.running() || props.currentEventIdx().total == 0;
+
+    const saveDisabled = () => false; // TODO replace with isLoggedIn()
+    const loadDisabled = () => false; // TODO replace with isLoggedIn()
+
+    const range = createSignal(0.0);
+    const memoizedRange = createMemo(() => range[0]());
+    const memoizedEventIdx = createMemo(() => props.currentEventIdx(),undefined,{
+        equals: (prev, next) => {
+            console.log("prev",prev);
+            console.log("next",next);
+            const result = prev.current === next.current && prev.total === next.total;
+            console.log("result",result);
+            return result;
+        }
+    });
+
+    createEffect(() => {
+        const rangePct = memoizedRange();
+        if (!props.playing()){
+            props.eventNavSubjects.sliderIndex$.next(rangePct);
+        }
+    });
+
+    createEffect(() => {
+        const currIdx = memoizedEventIdx();
+        const currPct = currIdx.current / currIdx.total;
+        if (props.playing()){
+            range[1](currPct);
+        }
+    });
+
     return <div class={styles.top_left_contents}>
         <div class={styles.editor_wrapper}>
             <div use:editor={editorArgs} class={styles.editor}></div>
@@ -93,12 +156,13 @@ function TopLeftContents(props: {
         <SaveScriptDialog openSig={showSaveDialogSig}/>
         <LoadScriptDialog openSig={showLoadDialogSig}/>
         <div class={styles.inputs}>
-            <button class={styles.input} onclick={async (_e) => props.run()}>Run</button>
-            <button class={styles.input} onclick={(_e) => props.eventNavSubjects.prev$.next(null)}>Prev</button>
-            <button class={styles.input} onclick={(_e) => props.eventNavSubjects.playPause$.next(null)}>Play</button>
-            <button class={styles.input} onclick={(_e) => props.eventNavSubjects.next$.next(null)}>Next</button>
-            <button class={styles.input} onclick={(_e) => showSaveDialog()}>Save</button>
-            <button class={styles.input} onclick={(_e) => showLoadDialog()}>Load</button>
+            <button disabled={runDisabled()} class={styles.input} onclick={async (_e) => props.run()}>Run</button>
+            <button disabled={prevDisabled()} class={styles.input} onclick={(_e) => props.eventNavSubjects.prev$.next(null)}>Prev</button>
+            <button disabled={playPauseDisabled()} class={styles.input} onclick={(_e) => props.eventNavSubjects.playPause$.next(null)}>Play</button>
+            <button disabled={nextDisabled()} class={styles.input} onclick={(_e) => props.eventNavSubjects.next$.next(null)}>Next</button>
+            <button disabled={saveDisabled()} class={styles.input} onclick={(_e) => showSaveDialog()}>Save</button>
+            <button disabled={loadDisabled()} class={styles.input} onclick={(_e) => showLoadDialog()}>Load</button>
+            <input type="range" use:range_input={range} min={0} max={1} step="0.01"></input>
         </div>
     </div>
 }
@@ -122,15 +186,14 @@ function BottomLeftContents(props: {
 //@ts-ignore
 function vizrenderer(div: HTMLDivElement, argsAccessor: Accessor<RendererArgs>) {
     const args = argsAccessor();
-  
+
     createEffect(() => {
         const event = args.currentEvent();
-        console.log("trying to render event",event);
         renderEvent(div, event);
     });
 }
-  
-function TopRightContents(props: {currentEvent: Accessor<VizEvent | null | undefined>}){
+
+function TopRightContents(props: {currentEvent: Accessor<VizEvent | null>}){
     return <div class={styles.top_right_contents} use:vizrenderer={props}></div>
 }
 
@@ -287,8 +350,13 @@ class Resizer{
 function IDE(props: {ref: any, getSelf:() => HTMLDivElement}){
     const resizer = new Resizer(props.getSelf);
     const eventNavSubjects = new EventNavSubjects();
-    const execResult = new Subject<ExecResult>();
-    const eventNavigator = new VizEventNavigator(eventNavSubjects, execResult);
+    const execResult = createSignal<ExecResult>({py_error:null, events:[]});
+    const eventNavigator = new VizEventNavigator(eventNavSubjects, execResult[0]);
+    const [pyodideRunning, setPyodideRunning] = createSignal(false);
+    const pyodideReadyAcc = from(pyodide_ready);
+    const pyodideReady = () => {
+        return pyodideReadyAcc() === true;
+    };
 
     const algo = createSignal(`
 for x in range(50, 500, 50):
@@ -319,37 +387,58 @@ arc(100,
           viz: viz[0](),
           showVizErrors: true,
         };
-    
-        // TODO make pyodide_running
-        // this.pyodide_running.next(true);
-        const result_json = await asyncRun(executorScript, context);
-        // this.pyodide_running.next(false);
-        const run_result = JSON.parse(result_json) as ExecResult;
-        execResult.next(run_result);
-        console.log(run_result);
+
+        setPyodideRunning(true);
+        try {
+            const result_json = await asyncRun(executorScript, context);
+            setPyodideRunning(false);
+            const run_result = JSON.parse(result_json) as ExecResult;
+            execResult[1](run_result);
+        } catch(error) {
+            console.error(error);
+            setPyodideRunning(false);
+        }
     }
-    const currentEvent = from(eventNavigator.getEvent$());
+    const currentEventIdx = () => {
+        const result = eventNavigator.getVizEventIdxVal();
+        if (result === undefined){
+            return new VizEventIdx(-1,0);
+        }
+        // TODO figure out why this is happening sometimes
+        if (Number.isNaN(result.current) || Number.isNaN(result.total)){
+            return new VizEventIdx(-1,0);
+        }
+
+        return result;
+    };
 
     return <div ref={props.ref} class={styles.ide} style={resizer.getCellStyle()}>
         <div class={styles.left_col}>
             <div class={styles.right_edge} onmousedown={resizer.resize_col_listener.bind(resizer)}></div>
             <div class={styles.top_left_cell} >
-                <TopLeftContents eventNavSubjects={eventNavSubjects} eventNavigator={eventNavigator} run={run} algo={algo}/>
+                <TopLeftContents
+                  eventNavSubjects={eventNavSubjects}
+                  currentEventIdx={currentEventIdx}
+                  run={run}
+                  algo={algo}
+                  running={pyodideRunning}
+                  pyodideReady={pyodideReady}
+                  playing={eventNavigator.playingAcc()}/>
                 <div class={styles.bottom_edge} onmousedown={resizer.resize_cell_11_listener()}></div>
             </div>
             <div class={styles.bottom_left_cell}>
-                <BottomLeftContents {...{ viz }}/>
+                <BottomLeftContents viz={viz}/>
                 <div class={styles.top_edge} onmousedown={resizer.resize_cell_11_listener()}></div>
             </div>
         </div>
         <div class={styles.right_col}>
             <div class={styles.left_edge} onmousedown={resizer.resize_col_listener.bind(resizer)}></div>
             <div class={styles.top_right_cell}>
-                <TopRightContents currentEvent={currentEvent}/>
+                <TopRightContents currentEvent={eventNavigator.getEventVal()}/>
                 <div class={styles.bottom_edge} onmousedown={resizer.resize_cell_21_listener()}></div>
             </div>
             <div class={styles.bottom_right_cell}>
-                <BottomRightContents {...{ algoLog, vizLog }} />
+                <BottomRightContents algoLog={algoLog} vizLog={vizLog} />
                 <div class={styles.top_edge} onmousedown={resizer.resize_cell_21_listener()}></div>
             </div>
         </div>

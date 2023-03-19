@@ -1,6 +1,9 @@
 import { select, arc } from "d3";
 import { VizEvent } from "./exec_result";
-import { EDITOR_WIDTH, EDITOR_HEIGHT, RENDERING_SCALE, T } from "./animator";
+const EDITOR_WIDTH = 600; // TODO make this more dynamic
+const EDITOR_HEIGHT = 450; // TODO make this more dynamic
+const RENDERING_SCALE = 1.0; // TODO make this more dynamic
+
 
 // @ts-ignore
 export function T(canvas: Selection<SVGGElement, unknown, null, undefined>,x: number, y: number,txt: string,size: number,font:string, color:string) {
@@ -83,4 +86,3 @@ export function renderEvent(
     }
   }
 }
-
