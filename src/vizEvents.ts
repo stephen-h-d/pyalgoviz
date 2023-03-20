@@ -6,20 +6,21 @@ export interface ObservableWithValue<T> extends Observable<T> {
   getValue(): T
 }
 
-export enum Speed {
-    Very_Fast = 1,
-    Fast = 10,
-    Medium = 25,
-    Slow = 50,
-    Very_Slow = 200,
-    Extra_Slow = 1000,
+//TODO decide to make this list
+export const Speed = {
+    Very_Fast : 1000,
+    Fast : 100,
+    Medium : 40,
+    Slow : 20,
+    Very_Slow : 5,
+    Extra_Slow : 1,
 }
 
 export interface EventNavObservables {
   readonly prev$: Observable<null>;
   readonly playPause$: Observable<null>;
   readonly next$: Observable<null>;
-  readonly speed$: ObservableWithValue<Speed>;
+  readonly speed$: ObservableWithValue<keyof typeof Speed>;
   readonly sliderIndex$: Observable<number>;
 }
 
@@ -161,7 +162,8 @@ export class VizEventNavigator {
       const playing$ = from(observable(this.playing[0]));
       const notPlaying = playing$.pipe(filter((val) => !val));
       const speed = this.inputs_clicked.speed$.getValue();
-      const delay = speed.valueOf();
+      const delay = Speed[speed.valueOf() as keyof typeof Speed];
+      console.log("delay",delay)
 
       if (this.event_idx_subject.eventsRemaining() === 0) {
         this.event_idx_subject.reset();

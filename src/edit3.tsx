@@ -1,5 +1,5 @@
 /* @refresh reload */
-import { Accessor, createEffect, createSignal, Setter, Signal, from, createRenderEffect, createMemo} from 'solid-js';
+import { Accessor, createEffect, createSignal, Setter, Signal, from, createRenderEffect} from 'solid-js';
 import { render } from 'solid-js/web';
 import {LoadScriptDialog, SaveScriptDialog} from "./solid_load_dialog";
 import * as styles from "./edit3.css";
@@ -15,6 +15,7 @@ import { executorScript } from './executor';
 import { ExecResult, VizEvent } from './exec_result';
 import { renderEvent } from './VizOutput';
 import { BehaviorSubject, Subject } from 'rxjs';
+import EnumSelect from './EnumSelect';
 
 declare module "solid-js" {
     namespace JSX {
@@ -42,7 +43,12 @@ function editor(element: HTMLInputElement, argsAccessor: Accessor<EditorArgs>) {
     editor.setReadOnly(args.textReadOnly);
 
     createEffect(() => {
-        editor.setText(contents());
+        const newText = contents();
+
+        // if not read-only, we need to make sure the editor doesn't have focus
+        if (args.textReadOnly || !element.contains(document.activeElement)){
+            editor.setText(newText);
+        }
     });
 
     editor.subscribe(setContents);
@@ -61,7 +67,7 @@ function editor(element: HTMLInputElement, argsAccessor: Accessor<EditorArgs>) {
     public readonly prev$: Subject<null> = new Subject();
     public readonly playPause$: Subject<null> = new Subject();
     public readonly next$: Subject<null> = new Subject();
-    public readonly speed$: BehaviorSubject<Speed> = new BehaviorSubject(Speed.Medium as Speed);
+    public readonly speed$: BehaviorSubject<keyof typeof Speed> = new BehaviorSubject('Medium' as keyof typeof Speed);
     public readonly sliderIndex$: Subject<number> = new Subject();
 }
 
@@ -71,7 +77,6 @@ function range_input(element: HTMLInputElement, value: Accessor<Signal<number>>)
     createRenderEffect(() => {
         const newValue = String(field());
         if (element.value !== newValue) {
-            console.log("yup",element.value,newValue);
             element.value = newValue;
         }
     });
@@ -90,6 +95,7 @@ function range_input(element: HTMLInputElement, value: Accessor<Signal<number>>)
     }
   }
 
+
 function TopLeftContents(props: {
     run: () => Promise<any>,
     algo: Signal<string>,
@@ -107,6 +113,10 @@ function TopLeftContents(props: {
     const showSaveDialog = () =>{
         showSaveDialogSig[1](true);
     };
+    const selectedSpeedSig = createSignal<keyof typeof Speed>('Medium');
+    createEffect(()=>{
+        props.eventNavSubjects.speed$.next(selectedSpeedSig[0]());
+    });
 
     const editorArgs: EditorArgs = {
         contents: props.algo,
@@ -123,26 +133,16 @@ function TopLeftContents(props: {
     const loadDisabled = () => false; // TODO replace with isLoggedIn()
 
     const range = createSignal(0.0);
-    const memoizedRange = createMemo(() => range[0]());
-    const memoizedEventIdx = createMemo(() => props.currentEventIdx(),undefined,{
-        equals: (prev, next) => {
-            console.log("prev",prev);
-            console.log("next",next);
-            const result = prev.current === next.current && prev.total === next.total;
-            console.log("result",result);
-            return result;
-        }
-    });
 
     createEffect(() => {
-        const rangePct = memoizedRange();
+        const rangePct = range[0]();
         if (!props.playing()){
             props.eventNavSubjects.sliderIndex$.next(rangePct);
         }
     });
 
     createEffect(() => {
-        const currIdx = memoizedEventIdx();
+        const currIdx = props.currentEventIdx();
         const currPct = currIdx.current / currIdx.total;
         if (props.playing()){
             range[1](currPct);
@@ -157,6 +157,7 @@ function TopLeftContents(props: {
         <LoadScriptDialog openSig={showLoadDialogSig}/>
         <div class={styles.inputs}>
             <button disabled={runDisabled()} class={styles.input} onclick={async (_e) => props.run()}>Run</button>
+            <EnumSelect enumObject={Speed} signal={selectedSpeedSig}></EnumSelect>
             <button disabled={prevDisabled()} class={styles.input} onclick={(_e) => props.eventNavSubjects.prev$.next(null)}>Prev</button>
             <button disabled={playPauseDisabled()} class={styles.input} onclick={(_e) => props.eventNavSubjects.playPause$.next(null)}>Play</button>
             <button disabled={nextDisabled()} class={styles.input} onclick={(_e) => props.eventNavSubjects.next$.next(null)}>Next</button>
@@ -393,6 +394,7 @@ arc(100,
             const result_json = await asyncRun(executorScript, context);
             setPyodideRunning(false);
             const run_result = JSON.parse(result_json) as ExecResult;
+            console.log(run_result);
             execResult[1](run_result);
         } catch(error) {
             console.error(error);
