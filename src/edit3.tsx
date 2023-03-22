@@ -113,7 +113,7 @@ function TopLeftContents(props: {
     const showSaveDialog = () =>{
         showSaveDialogSig[1](true);
     };
-    const selectedSpeedSig = createSignal<keyof typeof Speed>('Medium');
+    const selectedSpeedSig = createSignal<keyof typeof Speed>('Medium (40/s)');
     createEffect(()=>{
         props.eventNavSubjects.speed$.next(selectedSpeedSig[0]());
     });

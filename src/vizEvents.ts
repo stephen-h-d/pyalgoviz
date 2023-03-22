@@ -6,14 +6,13 @@ export interface ObservableWithValue<T> extends Observable<T> {
   getValue(): T
 }
 
-//TODO decide to make this list
 export const Speed = {
-    Very_Fast : 1000,
-    Fast : 100,
-    Medium : 40,
-    Slow : 20,
-    Very_Slow : 5,
-    Extra_Slow : 1,
+    'Very Fast (1000/s)' : 1000,
+    'Fast (100/s)' : 100,
+    'Medium (40/s)' : 40,
+    'Slow (20/s)' : 20,
+    'Very Slow (5/s)' : 5,
+    'Extra Slow (1/s)' : 1,
 }
 
 export interface EventNavObservables {
@@ -162,14 +161,15 @@ export class VizEventNavigator {
       const playing$ = from(observable(this.playing[0]));
       const notPlaying = playing$.pipe(filter((val) => !val));
       const speed = this.inputs_clicked.speed$.getValue();
-      const delay = Speed[speed.valueOf() as keyof typeof Speed];
+      const rate_per_s = Speed[speed.valueOf() as keyof typeof Speed];
+      const delay = (1 / rate_per_s) * 1000;
       console.log("delay",delay)
 
       if (this.event_idx_subject.eventsRemaining() === 0) {
         this.event_idx_subject.reset();
       }
 
-      this.event_timer$ = timer(delay,delay).pipe(
+      this.event_timer$ = timer(0,delay).pipe(
         takeUntil(notPlaying),
         take(this.event_idx_subject.eventsRemaining())
         );
