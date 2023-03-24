@@ -229,8 +229,8 @@ from js import script, viz, showVizErrors
 result = Executor(
     script, viz, showVizErrors
 )
-author = "Unknown Author"
 
+# author = "Unknown Author"
 # TODO figure out how to log -- there is likely a way to do
 # 'console.log' in pyodide, though originally this was putting
 # a log entry in the database
@@ -243,6 +243,17 @@ result = {
    'events': result.events,
 }
 
+# The last line of the script is what gets returned by the pyodide evaluator.
+# We return JSON because the Python-to-JS conversion that pyodide provides doesn't suit our needs.
+# (Various issues were encountered.)
 json.dumps(result)
+
+# So how do I keep the `Executor` code the same between the client-side pyodide and the server-side runner?
+
+#  I could use a wheel.  That might be the long-term solution.
+
+#  A short-term solution would be to just bundle it somehow.
+#  Probably with a generator like I am using now with the code generation that I am going to toss.
+
 
 `;

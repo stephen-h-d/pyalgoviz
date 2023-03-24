@@ -35,7 +35,7 @@ class MemoryDatabase(DatabaseProtocol):
         self.algos[algo_key] = algo
 
     def get_algo_names_by(self, author_id: UserId) -> list[str]:
-        raise NotImplementedError()
+        return [algo.name for algo in self.algos.values() if algo.author_id == author_id]
 
     def get_public_algos(self) -> list[Algorithm]:
-        raise NotImplementedError()
+        return [algo for algo in self.algos.values() if algo.public is True]

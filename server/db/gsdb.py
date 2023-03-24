@@ -80,7 +80,9 @@ class GoogleStoreDatabase(DatabaseProtocol):
         self._save_entity(algo_key, algo)
 
     def get_algo_names_by(self, author_id: UserId) -> list[str]:
+        # TODO ask ChatGPT to implement this
         raise NotImplementedError()
 
     def get_public_algos(self) -> list[Algorithm]:
+        # TODO ask ChatGPT to implement this
         raise NotImplementedError()
