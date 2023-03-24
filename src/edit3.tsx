@@ -99,6 +99,7 @@ function range_input(element: HTMLInputElement, value: Accessor<Signal<number>>)
 function TopLeftContents(props: {
     run: () => Promise<any>,
     algo: Signal<string>,
+    viz: Accessor<string>,
     eventNavSubjects: EventNavSubjects,
     currentEventIdx: Accessor<VizEventIdx>,
     running: Accessor<boolean>,
@@ -153,7 +154,7 @@ function TopLeftContents(props: {
         <div class={styles.editor_wrapper}>
             <div use:editor={editorArgs} class={styles.editor}></div>
         </div>
-        <SaveScriptDialog openSig={showSaveDialogSig}/>
+        <SaveScriptDialog viz={props.viz} algo={props.algo[0]} openSig={showSaveDialogSig}/>
         <LoadScriptDialog openSig={showLoadDialogSig}/>
         <div class={styles.inputs}>
             <button disabled={runDisabled()} class={styles.input} onclick={async (_e) => props.run()}>Run</button>
@@ -423,6 +424,7 @@ arc(100,
                   currentEventIdx={currentEventIdx}
                   run={run}
                   algo={algo}
+                  viz={viz[0]}
                   running={pyodideRunning}
                   pyodideReady={pyodideReady}
                   playing={eventNavigator.playingAcc()}/>

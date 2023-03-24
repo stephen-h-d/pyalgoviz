@@ -1,5 +1,5 @@
 /* @refresh reload */
-import { createResource, createSignal, For, Signal, createEffect, createRenderEffect, Accessor } from 'solid-js';
+import { createResource, createSignal, For, Signal, createEffect, createRenderEffect, Accessor, onMount } from 'solid-js';
 import { render } from 'solid-js/web';
 import * as styles from "./solid_load_dialog.css";
 
@@ -75,18 +75,27 @@ declare module "solid-js" {
   }
 }
 
-export function SaveScriptDialog(props:{openSig:Signal<boolean>}) {
+export function SaveScriptDialog(props:{
+  openSig:Signal<boolean>,
+  algo: Accessor<string>,
+  viz: Accessor<string>,}) {
   const [open, setOpen] = props.openSig;
   const [name, setName] = createSignal("");
   const [saving, setSaving] = createSignal(false);
+
+  createEffect(()=>{
+    if (open()){
+      setName("");
+    }
+  });
 
   const save = (_event: MouseEvent) => {
     setSaving(true);
     fetch("api/save", {
       method: "POST",
       body: JSON.stringify({
-        algo_script: "TODO",
-        viz_script: "TODO",
+        algo_script: props.algo(),
+        viz_script: props.viz(),
         name: name(),
       }),
       headers: {
