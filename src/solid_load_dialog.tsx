@@ -7,7 +7,6 @@ import {
   createEffect,
   createRenderEffect,
   Accessor,
-  onMount,
 } from 'solid-js';
 import { render } from 'solid-js/web';
 import * as styles from './solid_load_dialog.css';
@@ -90,20 +89,20 @@ declare module 'solid-js' {
   }
 }
 
-function SuccessDialog({ open, onClose }) {
+function SuccessDialog(props: { open: Signal<boolean> }) {
   return (
-    <dialog open={open()}>
+    <dialog open={props.open[0]()}>
       <p>Data saved successfully.</p>
-      <button onClick={() => onClose(false)}>OK</button>
+      <button onClick={() => props.open[1](false)}>OK</button>
     </dialog>
   );
 }
 
-function ErrorDialog({ open, onClose }) {
+function ErrorDialog(props: { open: Signal<boolean> }) {
   return (
-    <dialog open={open()}>
+    <dialog open={props.open[0]()}>
       <p>Error saving data. Please try again.</p>
-      <button onClick={() => onClose(false)}>OK</button>
+      <button onClick={() => props.open[1](false)}>OK</button>
     </dialog>
   );
 }
@@ -116,10 +115,12 @@ export function SaveScriptDialog(props: {
   const [open, setOpen] = props.openSig;
   const [name, setName] = createSignal('');
   const [saving, setSaving] = createSignal(false);
-  const [successOpen, setSuccessOpen] = createSignal(false);
-  const [errorOpen, setErrorOpen] = createSignal(false);
+  const successOpen = createSignal(false);
+  const errorOpen = createSignal(false);
 
   createEffect(() => {
+    // when the dialog just becomes open, we need to reset the name.
+    // TODO add a "save" vs. "save as" distinction
     if (open()) {
       setName('');
     }
@@ -127,7 +128,6 @@ export function SaveScriptDialog(props: {
 
   const save = async (_event: MouseEvent) => {
     setSaving(true);
-    console.log("saving...?)")
 
     try {
       const response = await fetch('api/save', {
@@ -142,24 +142,24 @@ export function SaveScriptDialog(props: {
         },
       });
       debugger;
-  
+
       if (response.ok) {
-        const what = await response.json();
-        console.log("what",what);
+        await response.json();
         setSaving(false);
         setOpen(false);
-        setSuccessOpen(true); // Show success dialog
+        successOpen[1](true);
       } else {
+        const response_json = await response.json();
         console.error("API call error");
-        throw new Error(`Server error: ${response.status}`);
+        throw new Error(`Server error: ${response.status}. Message: ${response_json['result']}`);
       }
     } catch (error) {
       console.error(`API call error: ${error}`);
       setSaving(false);
-      setErrorOpen(true); // Show error dialog
+      errorOpen[1](true);
     }
   };
-  
+
 
   return (
     <>
@@ -169,8 +169,8 @@ export function SaveScriptDialog(props: {
         <button onClick={save}>Save</button>
         <p>{saving() && 'Saving...'}</p>
       </dialog>
-      <SuccessDialog open={successOpen} onClose={setSuccessOpen} />
-      <ErrorDialog open={errorOpen} onClose={setErrorOpen} />
+      <SuccessDialog open={successOpen} />
+      <ErrorDialog open={errorOpen} />
     </>
   );
 }

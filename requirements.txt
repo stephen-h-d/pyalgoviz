@@ -32,6 +32,8 @@ filelock==3.8.0
     # via virtualenv
 firebase-admin==6.0.1
     # via -r requirements.in
+flake8==6.0.0
+    # via -r requirements.in
 flask==2.2.2
     # via
     #   -r requirements.in
@@ -99,6 +101,8 @@ markupsafe==2.1.1
     # via
     #   jinja2
     #   werkzeug
+mccabe==0.7.0
+    # via flake8
 msgpack==1.0.4
     # via cachecontrol
 mypy==0.990
@@ -135,8 +139,12 @@ pyasn1==0.4.8
     #   rsa
 pyasn1-modules==0.2.8
     # via google-auth
+pycodestyle==2.10.0
+    # via flake8
 pycparser==2.21
     # via cffi
+pyflakes==3.0.1
+    # via flake8
 pyjwt[crypto]==2.6.0
     # via firebase-admin
 pyparsing==3.0.9

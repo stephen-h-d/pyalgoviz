@@ -8,3 +8,4 @@ attrs
 pre-commit
 pip-tools
 mypy
+flake8

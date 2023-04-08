@@ -65,7 +65,7 @@ repos:
         language: python
         files: \.py$
         exclude: 'scratch'
--   repo: https://gitlab.com/pycqa/flake8
+-   repo: https://github.com/PyCQA/flake8
     rev: 3.9.2
     hooks:
     - id: flake8

@@ -25,6 +25,7 @@ export const left_col = style({
     gap:1,
     gridTemplateRows: "var(--cell-11-height) var(--cell-12-height)",
     position: "relative",
+
 });
 export const right_col = style(
     {gridColumn: 2,
