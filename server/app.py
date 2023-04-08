@@ -9,11 +9,11 @@ from flask import Response
 from flask_login import current_user  # type: ignore[import]
 from flask_login import LoginManager
 
-from server.db.mdb import MemoryDatabase
-from server.db.models import Algorithm
-from server.db.models import User
-from server.db.models import UserId
-from server.middleware import JWTAuthenticator
+from .db.mdb import MemoryDatabase
+from .db.models import Algorithm
+from .db.models import User
+from .db.models import UserId
+from .middleware import JWTAuthenticator
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,8 @@ def save() -> Response:
         msg = "Could not save script: %s" % e
         logger.error(msg)
         logger.exception(e)
-    return Response({"result": msg}, mimetype="application/json")
+        return {"result": "Whoops!  Saving failed.  Please report this bug."}, HTTPStatus.INTERNAL_SERVER_ERROR
+    return {"result": msg}, HTTPStatus.OK
 
 
 @app.route("/get_script_names", methods=["GET"])

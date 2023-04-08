@@ -64,9 +64,7 @@ function SelectDialog(props: { options: string[]; openSig: Signal<boolean> }) {
 
 const fetchScriptNames = async () => {
   const newLocal = await fetch(`api/get_script_names`);
-  console.log('newLocal', newLocal);
   const newLocal_1 = await newLocal.json();
-  console.log('newLocal_1', newLocal_1);
   return newLocal_1;
 };
 
@@ -127,36 +125,39 @@ export function SaveScriptDialog(props: {
     }
   });
 
-  const save = (_event: MouseEvent) => {
+  const save = async (_event: MouseEvent) => {
     setSaving(true);
-    fetch('api/save', {
-      method: 'POST',
-      body: JSON.stringify({
-        algo_script: props.algo(),
-        viz_script: props.viz(),
-        name: name(),
-      }),
-      headers: {
-        'Content-type': 'application/json; charset=UTF-8',
-      },
-    })
-      .then(response => {
-        if (response.ok) {
-          // TODO confirm that this works
-          return response.json(); 
-        } else {
-          throw new Error(`Server error: ${response.status}`);
-        }
-      })
-      .then(_result => {
+    console.log("saving...?)")
+
+    try {
+      const response = await fetch('api/save', {
+        method: 'POST',
+        body: JSON.stringify({
+          algo_script: props.algo(),
+          viz_script: props.viz(),
+          name: name(),
+        }),
+        headers: {
+          'Content-type': 'application/json; charset=UTF-8',
+        },
+      });
+      debugger;
+  
+      if (response.ok) {
+        const what = await response.json();
+        console.log("what",what);
         setSaving(false);
         setOpen(false);
         setSuccessOpen(true); // Show success dialog
-      })
-      .catch(_error => {
-        setSaving(false);
-        setErrorOpen(true); // Show error dialog
-      });
+      } else {
+        console.error("API call error");
+        throw new Error(`Server error: ${response.status}`);
+      }
+    } catch (error) {
+      console.error(`API call error: ${error}`);
+      setSaving(false);
+      setErrorOpen(true); // Show error dialog
+    }
   };
   
 
