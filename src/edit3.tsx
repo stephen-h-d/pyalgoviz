@@ -25,7 +25,7 @@ import { renderEvent } from './VizOutput';
 import { BehaviorSubject, Subject } from 'rxjs';
 import EnumSelect from './EnumSelect';
 import { signInWithGoogle as loginWithGoogle, logout } from './login';
-import { setUser, user } from './authSignal';
+import { user } from './authSignal';
 
 declare module 'solid-js' {
   namespace JSX {
@@ -555,24 +555,37 @@ arc(100,
 
 function Header() {
 
-    return (
-      <div class={styles.header}>
-        <div class={styles.headerContent}>Header</div>
-        {user() ? (
-          <>
-            <span >{user().email}</span>
-            <button class={styles.logoutBtn} onClick={logout}>
-              Log Out
-            </button>
-          </>
-        ) : (
+  function Inner() {
+    const userObj = user();
+    if (userObj !== null) {
+      return (
+        <>
+          <span>{userObj.email}</span>
+          <button class={styles.logoutBtn} onClick={logout}>
+            Log Out
+          </button>
+        </>
+      );
+    } else {
+      return (
+        <>
           <button class={styles.loginBtn} onClick={loginWithGoogle}>
             Log In
           </button>
-        )}
-      </div>
-    );
+        </>
+      );
+    }
   }
+
+  return (
+    <>
+      <div class={styles.header}>
+        <div class={styles.headerContent}>Header</div>
+        {Inner()}
+      </div>
+    </>
+  );
+}
 
 function Content() {
   let ideDiv: HTMLDivElement | null = null;
