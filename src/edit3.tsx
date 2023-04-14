@@ -478,7 +478,6 @@ arc(100,
       const result_json = await asyncRun(executorScript, context);
       setPyodideRunning(false);
       const run_result = JSON.parse(result_json) as ExecResult;
-      console.log(run_result);
       execResult[1](run_result);
     } catch (error) {
       console.error(error);
