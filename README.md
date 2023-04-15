@@ -63,4 +63,5 @@ export FLASK_APP=server/app.py
 export SECRET_KEY=`openssl rand -base64 32`
 export GOOGLE_CLOUD_PROJECT=pyalgoviz-361922
 export PYTHONUNBUFFERED=1
+flask run
 ```

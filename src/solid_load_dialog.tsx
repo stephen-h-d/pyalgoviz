@@ -7,9 +7,10 @@ import {
   createEffect,
   createRenderEffect,
   Accessor,
+  Setter,
 } from 'solid-js';
-import { render } from 'solid-js/web';
 import * as styles from './solid_load_dialog.css';
+import { postJson } from './fetchJson';
 
 function SelectDialogEl(props: {
   option: string;
@@ -45,18 +46,33 @@ function SelectDialogEl(props: {
   );
 }
 
-function SelectDialog(props: { options: string[]; openSig: Signal<boolean> }) {
+function SelectDialog(props: {
+  options: string[];
+  openSig: Signal<boolean>;
+  selectedSig: Signal<string | null>;
+}) {
   const [open, setOpen] = props.openSig;
-  const selectedSig = createSignal<string | null>(null);
+  const innerSelectedSig = createSignal<string | null>(null);
+
+  function setSelectedAndClose(_e: MouseEvent) {
+    props.selectedSig[1](innerSelectedSig[0]());
+    setOpen(false);
+  }
 
   return (
     <dialog open={open()} class={styles.dialog} role="dialog" aria-modal="true">
       <For each={props.options}>
         {(option, _i) => (
-          <SelectDialogEl option={option} selectedSig={selectedSig} />
+          <SelectDialogEl option={option} selectedSig={innerSelectedSig} />
         )}
       </For>
-      <button onClick={_e => setOpen(false)}>Click to Close</button>
+      <button
+        disabled={innerSelectedSig[0]() == null}
+        onClick={setSelectedAndClose}
+      >
+        Load Selected Script
+      </button>
+      <button onClick={_e => setOpen(false)}>Cancel</button>
     </dialog>
   );
 }
@@ -130,36 +146,20 @@ export function SaveScriptDialog(props: {
     setSaving(true);
 
     try {
-      const response = await fetch('api/save', {
-        method: 'POST',
-        body: JSON.stringify({
-          algo_script: props.algo(),
-          viz_script: props.viz(),
-          name: name(),
-        }),
-        headers: {
-          'Content-type': 'application/json; charset=UTF-8',
-        },
+      postJson({
+        algo_script: props.algo(),
+        viz_script: props.viz(),
+        name: name(),
       });
-      debugger;
-
-      if (response.ok) {
-        await response.json();
-        setSaving(false);
-        setOpen(false);
-        successOpen[1](true);
-      } else {
-        const response_json = await response.json();
-        console.error("API call error");
-        throw new Error(`Server error: ${response.status}. Message: ${response_json['result']}`);
-      }
+      setSaving(false);
+      setOpen(false);
+      successOpen[1](true);
     } catch (error) {
       console.error(`API call error: ${error}`);
       setSaving(false);
       errorOpen[1](true);
     }
   };
-
 
   return (
     <>
@@ -174,51 +174,53 @@ export function SaveScriptDialog(props: {
     </>
   );
 }
-export function LoadScriptDialog(props: { openSig: Signal<boolean> }) {
+
+export function LoadScriptDialog(props: {
+  openSig: Signal<boolean>;
+  setAlgo: Setter<string>;
+  setViz: Setter<string>;
+}) {
   const [scriptNames, { refetch }] = createResource(fetchScriptNames);
+  const selectedSig = createSignal<string | null>(null);
+
   createEffect(() => {
     if (props.openSig[0]()) {
       refetch();
     }
   });
 
-  const peopleList = () => {
-    const peopleNames = [];
+  createEffect(() => {
+    const selectedScriptName = selectedSig[0]();
+    if (selectedScriptName !== null) {
+      fetch(`api/load?script_name=${selectedScriptName}`)
+        .then(response => response.json())
+        .then(data => console.log(data))
+        .catch(error => console.error(error));
+  
+      selectedSig[1](null);
+    }
+  });
+
+  const scriptNamesList = () => {
+    const names = [];
     if (scriptNames.loading || scriptNames.error) {
-      console.log('error', scriptNames.error);
+      if (scriptNames.error !== undefined) {
+        console.error('Error loading script names', scriptNames.error);
+      }
       return [];
     }
 
     for (const name of scriptNames().result) {
-      peopleNames.push(name);
+      names.push(name);
     }
-    return peopleNames;
+    return names;
   };
 
   return (
-    <SelectDialog openSig={props.openSig} options={peopleList()}></SelectDialog>
+    <SelectDialog
+      selectedSig={selectedSig}
+      openSig={props.openSig}
+      options={scriptNamesList()}
+    ></SelectDialog>
   );
 }
-
-function Inputs() {
-  const showDialogSig = createSignal<boolean>(false);
-  const showDialog = () => {
-    showDialogSig[1](true);
-  };
-
-  return (
-    <div>
-      <LoadScriptDialog openSig={showDialogSig} />
-      <button onclick={_e => showDialog()}>Load</button>
-    </div>
-  );
-}
-
-const rootDiv = document.getElementById('root');
-
-if (rootDiv === null) {
-  throw Error('Fatal error: root div is null');
-}
-
-rootDiv.textContent = '';
-render(() => <Inputs />, rootDiv);

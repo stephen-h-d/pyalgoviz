@@ -3,17 +3,18 @@ import logging
 import os
 from http import HTTPStatus
 
+import attrs
 from flask import Flask
 from flask import request
 from flask import Response
 from flask_login import current_user  # type: ignore[import]
 from flask_login import LoginManager
 
-from .db.mdb import MemoryDatabase
-from .db.models import Algorithm
-from .db.models import User
-from .db.models import UserId
-from .middleware import JWTAuthenticator
+from server.db.mdb import MemoryDatabase
+from server.db.models import Algorithm
+from server.db.models import User
+from server.db.models import UserId
+from server.middleware import JWTAuthenticator
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +72,23 @@ def get_script_names() -> Response:
     try:
         script_names = db.get_algo_names_by(author.firebase_user_id)
         return {"result": script_names}
+    except Exception as e:
+        msg = "Could not load script names: %s" % e
+        logger.error(msg)
+        logger.exception(e)
+        return Response(
+            status=HTTPStatus.INTERNAL_SERVER_ERROR, mimetype="application/json"
+        )
+
+
+@app.route("/load", methods=["GET"])
+@jwta.authenticated
+def load() -> Response:
+    author: User = current_user
+    try:
+        script_name = request.args.get("script_name")
+        algo = db.get_algo(author.firebase_user_id, script_name)
+        return attrs.asdict(algo), HTTPStatus.OK
     except Exception as e:
         msg = "Could not load script names: %s" % e
         logger.error(msg)

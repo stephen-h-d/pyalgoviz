@@ -111,7 +111,7 @@ declare module 'solid-js' {
 function TopLeftContents(props: {
   run: () => Promise<any>;
   algo: Signal<string>;
-  viz: Accessor<string>;
+  viz: Signal<string>;
   eventNavSubjects: EventNavSubjects;
   currentEventIdx: Accessor<VizEventIdx>;
   running: Accessor<boolean>;
@@ -169,11 +169,11 @@ function TopLeftContents(props: {
         <div use:editor={editorArgs} class={styles.editor}></div>
       </div>
       <SaveScriptDialog
-        viz={props.viz}
+        viz={props.viz[0]}
         algo={props.algo[0]}
         openSig={showSaveDialogSig}
       />
-      <LoadScriptDialog openSig={showLoadDialogSig} />
+      <LoadScriptDialog openSig={showLoadDialogSig} setAlgo={props.algo[1]} setViz={props.viz[1]} />
       <div class={styles.inputs}>
         <button
           disabled={runDisabled()}
@@ -510,7 +510,7 @@ arc(100,
             currentEventIdx={currentEventIdx}
             run={run}
             algo={algo}
-            viz={viz[0]}
+            viz={viz}
             running={pyodideRunning}
             pyodideReady={pyodideReady}
             playing={eventNavigator.playingAcc()}
