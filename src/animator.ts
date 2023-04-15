@@ -1,5 +1,5 @@
 import { Editor } from "./editor";
-import { select, arc } from "d3";
+import { select, arc, Selection } from "d3";
 
 export const EDITOR_WIDTH = 600; // TODO make this more dynamic
 export const EDITOR_HEIGHT = 450; // TODO make this more dynamic
@@ -23,8 +23,8 @@ const STEPS = new Map([
     ['Molasses', 800],
 ]);
 
-// @ts-ignore
-export function T(canvas: Selection<SVGGElement, unknown, null, undefined>,x: number, y: number,txt: string,size: number,font:string, color:string) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function T(canvas: Selection<SVGGElement, unknown, null, undefined>,x: number, y: number,txt: string,size: number,font:string, color:string) {
   canvas.append('text').attr('x', x)
       .attr('y', y)
       .text(txt)
@@ -33,7 +33,8 @@ export function T(canvas: Selection<SVGGElement, unknown, null, undefined>,x: nu
       .attr("fill", color);
 }
 
-// @ts-ignore
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function L(canvas: Selection<SVGGElement, unknown, null, undefined>,x1: number,y1: number,x2: number,y2: number,color: string,width: number) {
   canvas.append('line')
       .attr('x1', x1)
@@ -44,7 +45,7 @@ function L(canvas: Selection<SVGGElement, unknown, null, undefined>,x1: number,y
       .attr('stroke-width', width);
 }
 
-// @ts-ignore
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function R(canvas: Selection<SVGGElement, unknown, null, undefined>,x: number, y: number,w: number,h: number,fill: string,border: string) {
   canvas.append('rect')
       .attr('x', x)
@@ -55,7 +56,7 @@ function R(canvas: Selection<SVGGElement, unknown, null, undefined>,x: number, y
       .attr('stroke', border);
 }
 
-// @ts-ignore
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function C(canvas: Selection<SVGGElement, unknown, null, undefined>,x: number, y: number,r: number,fill: string,border: string) {
   canvas.append('circle')
       .attr('cx', x)
@@ -65,19 +66,28 @@ function C(canvas: Selection<SVGGElement, unknown, null, undefined>,x: number, y
       .attr('stroke', border);
 }
 
-// @ts-ignore
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function A(canvas: Selection<SVGGElement, unknown, null, undefined>, x: number, y: number,r1: number,r2: number,start: number,end: number,color: string) {
-  const arcToAdd = arc()
-    .innerRadius(r1)
-    .outerRadius(r2)
-    .startAngle(start)
-    .endAngle(end);
+  const arcData = {
+    innerRadius: r1,
+    outerRadius: r2,
+    startAngle: start,
+    endAngle: end,
+  };
 
+  const arcToAdd = arc()
+    .innerRadius(d => d.innerRadius)
+    .outerRadius(d => d.outerRadius)
+    .startAngle(d => d.startAngle)
+    .endAngle(d => d.endAngle);
+
+  // Pass the data object to the arcToAdd function.  It's a little redundant, but
+  // this was done to avoid TSC errors
   canvas.append('path')
-      // @ts-ignore // not sure why this says it's invalid, but `attr()` can indeed take an `Arc` as it 2nd arg
-      .attr('d', arcToAdd)
-      .attr('transform', "translate("+x+','+y+")")
-      .attr('fill', color);
+    .attr('d', arcToAdd(arcData))
+    .attr('transform', "translate("+x+','+y+")")
+    .attr('fill', color);
+
 }
 
 export class Animator {
@@ -136,7 +146,6 @@ export class Animator {
 
       this.progressDiv.innerText = "Step " + (this.currentEvent + 1) + " of " + this.events.length;
 
-      //   $("#slider").slider("value", this.currentEvent);  TODO make slider
       // let output = "";
       // for (let n = 0; n <= this.currentEvent; n++) {
       //   output += this.events[n][2];
@@ -151,7 +160,9 @@ export class Animator {
         this.setVizErrorLine(-1);
         this.vizOutputArea.setText("");
       }
-    } catch (exc) { }
+    } catch (exc) {
+      console.error(exc);
+    }
     this.showRendering(e[1], EDITOR_WIDTH, EDITOR_HEIGHT - 5);
   }
 

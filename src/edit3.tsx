@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-namespace */
 /* @refresh reload */
 import {
   Accessor,
@@ -7,6 +8,7 @@ import {
   Signal,
   from,
   createRenderEffect,
+  Ref,
 } from 'solid-js';
 import { render } from 'solid-js/web';
 import { LoadScriptDialog, SaveScriptDialog } from './solid_load_dialog';
@@ -42,8 +44,7 @@ interface EditorArgs {
   textReadOnly: boolean;
 }
 
-// TODO add signals and hook them up to the function calls
-//@ts-ignore
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function editor(element: HTMLInputElement, argsAccessor: Accessor<EditorArgs>) {
   const args = argsAccessor();
   const [contents, setContents] = args.contents;
@@ -81,7 +82,7 @@ class EventNavSubjects {
   public readonly sliderIndex$: Subject<number> = new Subject();
 }
 
-//@ts-ignore
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function range_input(
   element: HTMLInputElement,
   value: Accessor<Signal<number>>,
@@ -109,7 +110,7 @@ declare module 'solid-js' {
 }
 
 function TopLeftContents(props: {
-  run: () => Promise<any>;
+  run: () => Promise<void>;
   algo: Signal<string>;
   viz: Signal<string>;
   eventNavSubjects: EventNavSubjects;
@@ -173,11 +174,16 @@ function TopLeftContents(props: {
         algo={props.algo[0]}
         openSig={showSaveDialogSig}
       />
-      <LoadScriptDialog openSig={showLoadDialogSig} setAlgo={props.algo[1]} setViz={props.viz[1]} />
+      <LoadScriptDialog
+        openSig={showLoadDialogSig}
+        setAlgo={props.algo[1]}
+        setViz={props.viz[1]}
+      />
       <div class={styles.inputs}>
         <button
           disabled={runDisabled()}
           class={styles.input}
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           onclick={async _e => props.run()}
         >
           Run
@@ -186,6 +192,7 @@ function TopLeftContents(props: {
         <button
           disabled={prevDisabled()}
           class={styles.input}
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           onclick={_e => props.eventNavSubjects.prev$.next(null)}
         >
           Prev
@@ -193,6 +200,7 @@ function TopLeftContents(props: {
         <button
           disabled={playPauseDisabled()}
           class={styles.input}
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           onclick={_e => props.eventNavSubjects.playPause$.next(null)}
         >
           Play
@@ -200,6 +208,7 @@ function TopLeftContents(props: {
         <button
           disabled={nextDisabled()}
           class={styles.input}
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           onclick={_e => props.eventNavSubjects.next$.next(null)}
         >
           Next
@@ -207,6 +216,7 @@ function TopLeftContents(props: {
         <button
           disabled={saveDisabled()}
           class={styles.input}
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           onclick={_e => showSaveDialog()}
         >
           Save
@@ -214,6 +224,7 @@ function TopLeftContents(props: {
         <button
           disabled={loadDisabled()}
           class={styles.input}
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           onclick={_e => showLoadDialog()}
         >
           Load
@@ -250,7 +261,7 @@ interface RendererArgs {
   currentEvent: Accessor<VizEvent | null>;
 }
 
-//@ts-ignore
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function vizrenderer(
   div: HTMLDivElement,
   argsAccessor: Accessor<RendererArgs>,
@@ -382,6 +393,7 @@ class Resizer {
     };
 
     document.addEventListener('mousemove', mouse_moved); // TODO debounce this
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     document.addEventListener('mouseup', (_ev: MouseEvent) => {
       document.removeEventListener('mousemove', mouse_moved);
     });
@@ -405,6 +417,7 @@ class Resizer {
       };
 
       document.addEventListener('mousemove', mouse_moved); // TODO debounce this
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       document.addEventListener('mouseup', (_ev: MouseEvent) => {
         document.removeEventListener('mousemove', mouse_moved);
       });
@@ -432,7 +445,8 @@ class Resizer {
   }
 }
 
-function IDE(props: { ref: any; getSelf: () => HTMLDivElement }) {
+
+function IDE(props: { ref: Ref<HTMLDivElement | null>; getSelf: () => HTMLDivElement }) {
   const resizer = new Resizer(props.getSelf);
   const eventNavSubjects = new EventNavSubjects();
   const execResult = createSignal<ExecResult>({ py_error: null, events: [] });
@@ -498,7 +512,7 @@ arc(100,
   };
 
   return (
-    <div ref={props.ref} class={styles.ide} style={resizer.getCellStyle()}>
+    <div ref={props.ref as Ref<HTMLDivElement>} class={styles.ide} style={resizer.getCellStyle()}>
       <div class={styles.left_col}>
         <div
           class={styles.right_edge}
@@ -553,7 +567,6 @@ arc(100,
 }
 
 function Header() {
-
   function Inner() {
     const userObj = user();
     if (userObj !== null) {
@@ -587,7 +600,9 @@ function Header() {
 }
 
 function Content() {
-  const ideDiv: HTMLDivElement | null = null;
+  // must disable prefer-const because `ideDiv` is used, but TSC/ESLint don't see that
+  // eslint-disable-next-line prefer-const
+  let ideDiv: HTMLDivElement | null = null;
 
   const getSelf = () => {
     if (ideDiv === null) {

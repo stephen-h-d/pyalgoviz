@@ -10,9 +10,12 @@ function EnumSelect<T extends Record<string, number>>(props: EnumSelectProps<T>)
   const [selected, setSelected] = props.signal;
 
   const handleChange = (e: Event) => {
-    //@ts-ignore
-    setSelected(e.target.value);
+    if (e.target !== null) {
+      const target = e.target as HTMLSelectElement;
+      setSelected(target.value);
+    }
   };
+
 
   return (
     <select value={selected()} onInput={handleChange}>

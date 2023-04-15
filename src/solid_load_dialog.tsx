@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-namespace */
 /* @refresh reload */
 import {
   createResource,
@@ -40,7 +41,11 @@ function SelectDialogEl(props: {
   }
 
   return (
-    <div classList={getCl()} onClick={_e => optionClicked(props.option)}>
+    <div
+      classList={getCl()}
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      onClick={_e => optionClicked(props.option)}
+    >
       {props.option}
     </div>
   );
@@ -54,25 +59,32 @@ function SelectDialog(props: {
   const [open, setOpen] = props.openSig;
   const innerSelectedSig = createSignal<string | null>(null);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   function setSelectedAndClose(_e: MouseEvent) {
     props.selectedSig[1](innerSelectedSig[0]());
     setOpen(false);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  function showSelectDialog(option: string, _i: Accessor<number>) {
+    return <SelectDialogEl option={option} selectedSig={innerSelectedSig} />;
+  }
+
   return (
     <dialog open={open()} class={styles.dialog} role="dialog" aria-modal="true">
-      <For each={props.options}>
-        {(option, _i) => (
-          <SelectDialogEl option={option} selectedSig={innerSelectedSig} />
-        )}
-      </For>
+      <For each={props.options}>{showSelectDialog}</For>
       <button
         disabled={innerSelectedSig[0]() == null}
         onClick={setSelectedAndClose}
       >
         Load Selected Script
       </button>
-      <button onClick={_e => setOpen(false)}>Cancel</button>
+      <button
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        onClick={_e => setOpen(false)}
+      >
+        Cancel
+      </button>
     </dialog>
   );
 }
@@ -83,7 +95,7 @@ const fetchScriptNames = async () => {
   return newLocal_1;
 };
 
-//@ts-ignore
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function text_input(
   element: HTMLInputElement,
   value: Accessor<Signal<string>>,
@@ -142,6 +154,7 @@ export function SaveScriptDialog(props: {
     }
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const save = async (_event: MouseEvent) => {
     setSaving(true);
 
@@ -165,7 +178,12 @@ export function SaveScriptDialog(props: {
     <>
       <dialog open={open()}>
         <input type="text" use:text_input={[name, setName]} />
-        <button onClick={_e => setOpen(false)}>Cancel</button>
+        <button
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          onclick={_e => setOpen(false)}
+        >
+          Cancel
+        </button>
         <button onClick={save}>Save</button>
         <p>{saving() && 'Saving...'}</p>
       </dialog>
@@ -196,7 +214,7 @@ export function LoadScriptDialog(props: {
         .then(response => response.json())
         .then(data => console.log(data))
         .catch(error => console.error(error));
-  
+
       selectedSig[1](null);
     }
   });
