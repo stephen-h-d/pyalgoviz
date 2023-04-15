@@ -82,8 +82,8 @@ function A(canvas: Selection<SVGGElement, unknown, null, undefined>, x: number, 
 
 export class Animator {
   private timerId: number;
-  private currentEvent: number = 0;
-  private paused: boolean = false;
+  private currentEvent = 0;
+  private paused = false;
 
   public constructor(
     private readonly vizOutputArea: Editor,
@@ -214,5 +214,3 @@ export class Animator {
     return this.timerId;
   }
 }
-
-

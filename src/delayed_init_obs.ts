@@ -2,7 +2,7 @@ import { Observable, Subject } from "rxjs";
 
 export class DelayedInitObservable<T> {
     protected _subject: Subject<T>;
-    protected _initialized: boolean = false;
+    protected _initialized = false;
 
     public constructor(subj_maker?: () => Subject<T>){
         if (subj_maker !== undefined) {

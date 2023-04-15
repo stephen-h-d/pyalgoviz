@@ -14,7 +14,7 @@ export class RunSummary {
 }
 
 class RunVizState {
-    private current_event_idx: number = 0;
+    private current_event_idx = 0;
     private algo_state: Subject<AlgoState> = new Subject();
     private viz_state: Subject<VizState> = new Subject();
     private viz_output: Subject<string> = new Subject();

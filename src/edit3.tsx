@@ -587,7 +587,7 @@ function Header() {
 }
 
 function Content() {
-  let ideDiv: HTMLDivElement | null = null;
+  const ideDiv: HTMLDivElement | null = null;
 
   const getSelf = () => {
     if (ideDiv === null) {

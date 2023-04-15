@@ -65,7 +65,7 @@ export class VizEventIdxSig {
   }
 
   public reset(total?: number){
-    let new_total = total === undefined ? this.event_idx.total : total;
+    const new_total = total === undefined ? this.event_idx.total : total;
     this.event_idx = new VizEventIdx(-1, new_total);
     this.subject[1](this.event_idx);
   }
