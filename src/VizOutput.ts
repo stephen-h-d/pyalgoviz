@@ -62,8 +62,10 @@ function A(canvas: Selection<SVGGElement, unknown, null, undefined>, x: number, 
     .startAngle(d => d.startAngle)
     .endAngle(d => d.endAngle);
 
+  // Pass the data object to the arcToAdd function.  passing
+  // the `arcToAdd` function directly works as well, but TSC complains
   canvas.append('path')
-    .attr('d', arcToAdd(arcData)) // Pass the data object to the arcToAdd function
+    .attr('d', arcToAdd(arcData))
     .attr('transform', "translate("+x+','+y+")")
     .attr('fill', color);
 }
