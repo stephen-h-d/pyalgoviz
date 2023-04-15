@@ -3,6 +3,7 @@ import auth from './auth';
 import { setUser } from './authSignal';
 const googleProvider = new GoogleAuthProvider();
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function signInWithGoogle(_event: MouseEvent) {
   signInWithPopup(auth, googleProvider)
     .then(result => {

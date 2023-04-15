@@ -35,6 +35,7 @@ export class Editor {
     update: this.updateLinesToHighlight.bind(this),
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private createLinesToHighlight (_state: EditorState): LinesToHighlight {
     return new LinesToHighlight(-1, -1);
   }

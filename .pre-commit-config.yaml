@@ -31,8 +31,17 @@ repos:
         name: tsc
         stages: [commit]
         language: node
-        files: (\.ts)$
+        files: (\.ts|\.tsx)$
         entry: 'pnpm run tsc --noEmit'
+        pass_filenames: false
+-   repo: local
+    hooks:
+    -   id: lint
+        name: lint
+        stages: [commit]
+        language: node
+        files: (\.ts|\.tsx)$
+        entry: 'pnpm run lint'
         pass_filenames: false
 -   repo: https://github.com/Lucas-C/pre-commit-hooks
     rev: v1.1.13
