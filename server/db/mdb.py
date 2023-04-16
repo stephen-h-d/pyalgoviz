@@ -12,8 +12,8 @@ from server.db.protocol import DatabaseProtocol
 class MemoryDatabase(DatabaseProtocol):
     """A database based on Google DataStore."""
 
-    users: dict[UserId, User] = attrs.field(factory=dict, init=False)
-    algos: dict[str, Algorithm] = attrs.field(factory=dict, init=False)
+    users: dict[UserId, User] = attrs.field(factory=dict)
+    algos: dict[str, Algorithm] = attrs.field(factory=dict)
 
     def get_user(self, user_id: UserId) -> User | None:
         return self.users.get(user_id)
@@ -35,7 +35,17 @@ class MemoryDatabase(DatabaseProtocol):
         self.algos[algo_key] = algo
 
     def get_algo_names_by(self, author_id: UserId) -> list[str]:
-        raise NotImplementedError()
+        return [algo.name for algo in self.algos.values() if algo.author_id == author_id]
 
-    def get_public_algos(self) -> list[Algorithm]:
-        raise NotImplementedError()
+    def get_public_algos(self) -> list[tuple[UserId, str]]:
+        return [(algo.author_id, algo.name) for algo in self.algos.values()]
+
+    @classmethod
+    def with_fake_entries(cls):  #
+        user_id = "1jfsBKaFvEeM5PxP6GCzVadvrq33"
+        user = User(user_id, "stephendause@gmail.com")
+        algo = Algorithm(
+            author_id=user_id, name="foo", algo_script="", viz_script="", public=False
+        )
+        algo_key = cls._make_algo_key(user_id, "foo")
+        return cls({user_id: user}, {algo_key: algo})

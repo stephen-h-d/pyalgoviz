@@ -1,7 +1,9 @@
 import json
 import logging
 import os
+from http import HTTPStatus
 
+import attrs
 from flask import Flask
 from flask import request
 from flask import Response
@@ -23,7 +25,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT")
 
 # client = datastore.Client(project=PROJECT)
-db = MemoryDatabase()
+db = MemoryDatabase.with_fake_entries()
 jwta = JWTAuthenticator(db)
 
 app = Flask(__name__)
@@ -46,9 +48,9 @@ def save() -> Response:
         submission = json.loads(data)
         algo = Algorithm(
             author_id=author.get_id(),
-            algo_script=submission.get("script"),
-            viz_script="test viz",
-            name="test name",
+            algo_script=submission.get("algo_script"),
+            viz_script=submission.get("viz_script"),
+            name=submission.get("name"),
         )
         db.save_algo(algo)
         # notify(author, 'save', algo.name, algo.script, algo.viz)
@@ -59,7 +61,41 @@ def save() -> Response:
         msg = "Could not save script: %s" % e
         logger.error(msg)
         logger.exception(e)
-    return Response({"result": msg}, mimetype="application/json")
+        return {"result": "Whoops!  Saving failed.  Please report this bug."}, HTTPStatus.INTERNAL_SERVER_ERROR
+    return {"result": msg}, HTTPStatus.OK
+
+
+@app.route("/get_script_names", methods=["GET"])
+@jwta.authenticated
+def get_script_names() -> Response:
+    author: User = current_user
+    try:
+        script_names = db.get_algo_names_by(author.firebase_user_id)
+        return {"result": script_names}
+    except Exception as e:
+        msg = "Could not load script names: %s" % e
+        logger.error(msg)
+        logger.exception(e)
+        return Response(
+            status=HTTPStatus.INTERNAL_SERVER_ERROR, mimetype="application/json"
+        )
+
+
+@app.route("/load", methods=["GET"])
+@jwta.authenticated
+def load() -> Response:
+    author: User = current_user
+    try:
+        script_name = request.args.get("script_name")
+        algo = db.get_algo(author.firebase_user_id, script_name)
+        return attrs.asdict(algo), HTTPStatus.OK
+    except Exception as e:
+        msg = "Could not load script names: %s" % e
+        logger.error(msg)
+        logger.exception(e)
+        return Response(
+            status=HTTPStatus.INTERNAL_SERVER_ERROR, mimetype="application/json"
+        )
 
 
 if __name__ == "__main__":

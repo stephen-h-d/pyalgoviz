@@ -1,24 +1,29 @@
+import { BehaviorSubject } from "rxjs";
+
 const pyodideWorker = new Worker("pyodide-0.21.3/webworker.js");
 
 const callbacks = new Map();
-
-class RunResult {
-  // TODO figure out the actual type of result and error
-  public constructor(public py_error: any, public events: any) {
-  }
-}
+export const pyodide_ready = new BehaviorSubject<boolean>(false);
 
 pyodideWorker.onmessage = (event) => {
-  const { id, ...data } = event.data;
+  if (event.data.pyodide_ready !== undefined) {
+    pyodide_ready.next(true);
+    return;
+  }
+
+  const { id, result } = event.data;
   const onSuccess = callbacks.get(id);
   callbacks.delete(id);
-  const results = data["results"];
-  onSuccess(new RunResult(results.get("py_error"), results.get("events")));
+  onSuccess(result);
 };
 
-const asyncRun = (() => {
+export const asyncRun = (() => {
   let id = 0; // identify a Promise
-  return (script: string, context: object): Promise<RunResult> => {
+  // the Promise has a success value of string, which is a JSON string.
+  // we use JSON strings because the conversion between JS and Python objects
+  // is a bit wonky.  Different types need to be converted in different ways.
+  // So we bypass that and just use JSON.
+  return (script: string, context: object): Promise<string> => {
 
     // the id could be generated more carefully
     id = (id + 1) % Number.MAX_SAFE_INTEGER;
@@ -35,5 +40,3 @@ const asyncRun = (() => {
   };
 
 })();
-
-export { asyncRun };

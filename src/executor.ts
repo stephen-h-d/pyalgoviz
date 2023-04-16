@@ -1,12 +1,36 @@
 export const executorScript = `
+from __future__ import annotations
 
 import sys
 import traceback
 import time
+import json
 from io import StringIO
 
-vizOutput = ''
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from _typeshed import SupportsWrite
+
+algo_log = StringIO()
+viz_log = StringIO()
+current_log = algo_log
+
+def reset_logs():
+    global algo_log, viz_log, current_log
+    algo_log = StringIO()
+    viz_log = StringIO()
+    current_log = algo_log
+
+viz_output = ''
+
 ERROR = ''
+
+def log(
+    *values: object, sep: str | None = None, end: str | None = None, flush: bool = False
+) -> None:
+    print(*values,sep=sep,end=end,file=current_log,flush=flush)
 
 
 def number(x, y, label, value, scale=4, color='black'):
@@ -42,8 +66,8 @@ def check(primitive, param, value, expected):
 # def beep(frequency, duration):
 #     check('beep', 'frequency', frequency, NUMBER)
 #     check('beep', 'duration', duration, NUMBER)
-#     global vizOutput
-#     vizOutput += 'B(canvas, %s,%s);' % (frequency, duration)
+#     global viz_output
+#     viz_output += 'B(canvas, %s,%s);' % (frequency, duration)
 
 
 def text(x, y, txt, size=13, font='Arial', color='black'):
@@ -52,13 +76,13 @@ def text(x, y, txt, size=13, font='Arial', color='black'):
     check('text', 'size', size, NUMBER)
     check('text', 'font', font, STRING)
     check('text', 'color', color, STRING)
-    global vizOutput
-    vizOutput += 'T(canvas, %d,%d,%r,%d,%r,%r);' % (x, y, str(txt), size, font, color)
+    global viz_output
+    viz_output += 'T(canvas, %d,%d,%r,%d,%r,%r);' % (x, y, str(txt), size, font, color)
 
 
 def line(x1, y1, x2, y2, color='black', width=1):
-    global vizOutput
-    vizOutput += 'L(canvas, %s,%s,%s,%s,%r,%s);' % (x1, y1, x2, y2, color, width)
+    global viz_output
+    viz_output += 'L(canvas, %s,%s,%s,%s,%r,%s);' % (x1, y1, x2, y2, color, width)
 
 
 def rect(x, y, w, h, fill='white', border='black'):
@@ -68,8 +92,8 @@ def rect(x, y, w, h, fill='white', border='black'):
     check('rect', 'h', h, NUMBER)
     check('rect', 'fill', fill, STRING)
     check('rect', 'border', border, STRING)
-    global vizOutput
-    vizOutput += 'R(canvas, %s,%s,%s,%s,%r,%r);' % (x, y, w, h, fill, border)
+    global viz_output
+    viz_output += 'R(canvas, %s,%s,%s,%s,%r,%r);' % (x, y, w, h, fill, border)
 
 
 def circle(x, y, radius, fill='white', border='black'):
@@ -78,8 +102,8 @@ def circle(x, y, radius, fill='white', border='black'):
     check('circle', 'radius', radius, NUMBER)
     check('circle', 'fill', fill, STRING)
     check('circle', 'border', border, STRING)
-    global vizOutput
-    vizOutput += 'C(canvas, %s,%s,%s,%r,%r);' % (x, y, radius, fill, border)
+    global viz_output
+    viz_output += 'C(canvas, %s,%s,%s,%r,%r);' % (x, y, radius, fill, border)
 
 
 def arc(cx, cy, innerRadius, outerRadius, startAngle, endAngle, color='black'):
@@ -90,21 +114,22 @@ def arc(cx, cy, innerRadius, outerRadius, startAngle, endAngle, color='black'):
     check('circle', 'startAngle', startAngle, NUMBER)
     check('circle', 'endAngle', endAngle, NUMBER)
     check('circle', 'color', color, STRING)
-    global vizOutput
-    vizOutput += 'A(canvas, %s,%s,%s,%s,%s,%s,%r);' % (
+    global viz_output
+    viz_output += 'A(canvas, %s,%s,%s,%s,%s,%s,%r);' % (
         cx, cy, innerRadius, outerRadius, startAngle, endAngle, color
     )
 
 
 class Executor(object):
     def __init__(self, script, viz, showVizErrors):
-        self.error = dict(msg='', lineno=0)
+        self.error = None
         self.events = []
         self.state = []
-        self.lastLine = -1
+        self.last_line = -1
         self.viz = viz
+        self.viz_error = None
         self.showVizErrors = showVizErrors
-        self.vars = {}
+        self.vars = {"log": log}
         self.vizPrims = {
             'text': text,
             'number': number,
@@ -114,15 +139,22 @@ class Executor(object):
             # 'beep': beep,
             'circle': circle,
             'arc': arc,
-            'vizOutput': vizOutput,
+            'viz_output': viz_output,
         }
         try:
             with self:
                 exec(script, self.vars)
-                self.createEvent(self.lastLine)
-            lastViz = self.events[-1][1]
-            msg = '\\n\\nProgram finished.\\n\\nHit F9 or Ctrl-Enter to run the script again.'
-            self.events.append((self.lastLine, lastViz, msg))
+
+            # Add an extra "event" indicating the end of the program, with the output
+            # being the output from the last line
+            event = {
+                "lineno": self.last_line,
+                "viz_output": self.events[-1]["viz_output"],
+                "viz_error": self.viz_error,
+                "viz_log": None,
+                "algo_log": '\\n\\nProgram finished.\\n\\nHit F9 or Ctrl-Enter to run the script again.',
+            }
+            self.events.append(event)
         except Exception as e:
             tb = sys.exc_info()[2]
             stack = traceback.extract_tb(tb)
@@ -133,17 +165,11 @@ class Executor(object):
             msg += '-' * 70
             msg += '\\n\\n%s\\n\\n' % '\\n\\n'.join(['%s = %r' % v for v in self.state])
             msg += '=' * 70
-            self.error = dict(msg=msg, lineno=lines[-1])
-        if '__builtins__' in self.vars:
-            del self.vars['__builtins__']
+            self.error = dict(error_msg=msg, lineno=lines[-1])
 
     def __enter__(self):
         self.start = time.time()
-        # TODO remove this part.  It just doesn't work, I don't think, in Python 3, even though
-        # it did okay in Python 2.
-        # self.stdout, self.stderr = sys.stdout, sys.stderr
-        # sys.stdout = StringIO()
-        # sys.stderr = StringIO()
+        reset_logs()
         sys.settrace(self.trace)
 
     def getVars(self, frame):
@@ -158,32 +184,43 @@ class Executor(object):
             raise TimeoutError(
                 '\\n\\nScript ran for more than 10 seconds and has been canceled.' +
                 '\\n\\nShowing just the last 100 events.')
-        if frame.f_code.co_filename == '<string>' and self.lastLine != frame.f_lineno:
+        if frame.f_code.co_filename == '<string>' and self.last_line != frame.f_lineno:
             state = self.getVars(frame)
             if event != 'exception':
                 self.state = state
-            global vizOutput
-            vizOutput = ''
+            global viz_output, algo_log, viz_log, current_log
+            viz_output = ''
             for k, v in state:
                 self.vizPrims[k] = v
             self.vizPrims['__lineno__'] = frame.f_lineno
+
             try:
+                current_log = viz_log
                 exec(self.viz, self.vizPrims)
             except Exception as e:
                 if self.showVizErrors:
                     tb = traceback.extract_tb(sys.exc_info()[2])
                     lines = [0] + [lineno for filename, lineno, fn, txt in tb if
                                    filename == '<string>']
-                    self.vizError = {"line": lines[-1], "error": str(e)}
+                    self.viz_error = {"lineno": lines[-1], "error_msg": str(e)}
+            finally:
+                current_log = algo_log
+
             self.createEvent(frame.f_lineno)
-            self.lastLine = frame.f_lineno
+            self.last_line = frame.f_lineno
             return self.trace
 
     def createEvent(self, lineno):
-        # TODO use more than just vizError in output
-        # allow the user to do log or something
-        self.events.append((lineno, vizOutput, self.vizError))
-        self.vizError = None
+        # print("viz",viz_output)
+        event = {
+            "lineno": lineno,
+            "viz_output": viz_output,
+            "viz_error": self.viz_error,
+            "viz_log": viz_log.getvalue(),
+            "algo_log": algo_log.getvalue(),
+        }
+        self.events.append(event)
+        self.viz_error = None
 
     def __exit__(self, *args):
         sys.settrace(None)
@@ -199,9 +236,13 @@ author = "Unknown Author"
 # a log entry in the database
 # info('Ran %s "%s":\\n\\n%s' % (author, name, script))
 
-{
+print("num_events", len(result.events))
+
+result = {
    'py_error': result.error,
    'events': result.events,
 }
+
+json.dumps(result)
 
 `;

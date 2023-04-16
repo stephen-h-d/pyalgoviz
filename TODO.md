@@ -1,6 +1,5 @@
 ### Ready-to-implement TODOs
 
-1. run tsc --noEmit in precommit
 2. Support loading and saving all of the user's scripts
 4. Support running server-side in a sandboxed manner
 5. Support caching the results (once running server-side is implemented)
@@ -15,6 +14,7 @@
 14. Allow the user to cancel a running script
     * See https://pyodide.org/en/stable/usage/keyboard-interrupts.html -- seems straightforward enough
 15. Pare down the number of arguments by making an `Editors` class (possibly replacing `EditorsMgr`) and whatever else comes to mind.
+16. Switch to using vanilla extract
 
 ### Planning TODOs
 1. Make a plan for the layout.
