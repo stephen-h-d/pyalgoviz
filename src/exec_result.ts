@@ -12,6 +12,7 @@ export interface VizEvent {
 }
 
 export interface ExecResult {
+    // TODO actually show user the `py_error` if it is present
     py_error: PythonScriptError | null;
     events: VizEvent[];
 }

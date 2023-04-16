@@ -445,8 +445,10 @@ class Resizer {
   }
 }
 
-
-function IDE(props: { ref: Ref<HTMLDivElement | null>; getSelf: () => HTMLDivElement }) {
+function IDE(props: {
+  ref: Ref<HTMLDivElement | null>;
+  getSelf: () => HTMLDivElement;
+}) {
   const resizer = new Resizer(props.getSelf);
   const eventNavSubjects = new EventNavSubjects();
   const execResult = createSignal<ExecResult>({ py_error: null, events: [] });
@@ -477,9 +479,8 @@ arc(100,
     endAngle=n * 2 * pi/7,
     color="orange")
 `);
-  const algoLog = createSignal('algo log contents...');
-  const vizLog = createSignal('viz log contents...');
-
+  const algoLog = createSignal('');
+  const vizLog = createSignal('');
   async function run() {
     const context = {
       script: algo[0](),
@@ -492,13 +493,15 @@ arc(100,
       const result_json = await asyncRun(executorScript, context);
       setPyodideRunning(false);
       const run_result = JSON.parse(result_json) as ExecResult;
+      console.log("run_result",run_result);
+
       execResult[1](run_result);
     } catch (error) {
       console.error(error);
       setPyodideRunning(false);
     }
   }
-  const currentEventIdx = () => {
+  const eventIdx = () => {
     const result = eventNavigator.getVizEventIdxVal();
     if (result === undefined) {
       return new VizEventIdx(-1, 0);
@@ -511,8 +514,26 @@ arc(100,
     return result;
   };
 
+  createEffect(() => {
+    const currEventIdx = eventIdx();
+    const currExecResult = execResult[0]();
+
+    if (
+      currEventIdx.current != -1 &&
+      currEventIdx.current < currExecResult.events.length
+    ) {
+      console.log(`'setting algo log ${currExecResult.events[currEventIdx.current].algo_log}'`);
+      algoLog[1](currExecResult.events[currEventIdx.current].algo_log);
+      vizLog[1](currExecResult.events[currEventIdx.current].viz_log);
+    }
+  });
+
   return (
-    <div ref={props.ref as Ref<HTMLDivElement>} class={styles.ide} style={resizer.getCellStyle()}>
+    <div
+      ref={props.ref as Ref<HTMLDivElement>}
+      class={styles.ide}
+      style={resizer.getCellStyle()}
+    >
       <div class={styles.left_col}>
         <div
           class={styles.right_edge}
@@ -521,7 +542,7 @@ arc(100,
         <div class={styles.top_left_cell}>
           <TopLeftContents
             eventNavSubjects={eventNavSubjects}
-            currentEventIdx={currentEventIdx}
+            currentEventIdx={eventIdx}
             run={run}
             algo={algo}
             viz={viz}

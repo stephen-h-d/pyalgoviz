@@ -201,6 +201,9 @@ export function LoadScriptDialog(props: {
   const [scriptNames, { refetch }] = createResource(fetchScriptNames);
   const selectedSig = createSignal<string | null>(null);
 
+  // TODO at some point in the process, prompt the user if they are about
+  // to overwrite something that isn't saved
+
   createEffect(() => {
     if (props.openSig[0]()) {
       refetch();
@@ -212,7 +215,11 @@ export function LoadScriptDialog(props: {
     if (selectedScriptName !== null) {
       fetch(`api/load?script_name=${selectedScriptName}`)
         .then(response => response.json())
-        .then(data => console.log(data))
+        .then(data => {
+          console.log(data);
+          props.setAlgo(data["algo_script"]);
+          props.setViz(data["viz_script"]);
+        })
         .catch(error => console.error(error));
 
       selectedSig[1](null);
