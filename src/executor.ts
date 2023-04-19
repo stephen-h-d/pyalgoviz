@@ -127,7 +127,6 @@ class Executor(object):
         self.state = []
         self.last_line = -1
         self.viz = viz
-        self.viz_error = None
         self.showVizErrors = showVizErrors
         self.vars = {"log": log}
         self.vizPrims = {
@@ -150,7 +149,6 @@ class Executor(object):
             event = {
                 "lineno": self.last_line,
                 "viz_output": self.events[-1]["viz_output"],
-                "viz_error": self.viz_error,
                 "viz_log": None,
                 "algo_log": '\\n\\nProgram finished.\\n\\nHit F9 or Ctrl-Enter to run the script again.',
             }
@@ -198,11 +196,11 @@ class Executor(object):
                 current_log = viz_log
                 exec(self.viz, self.vizPrims)
             except Exception as e:
-                if self.showVizErrors:
-                    tb = traceback.extract_tb(sys.exc_info()[2])
-                    lines = [0] + [lineno for filename, lineno, fn, txt in tb if
+                tb = traceback.extract_tb(sys.exc_info()[2])
+                lines = [0] + [lineno for filename, lineno, fn, txt in tb if
                                    filename == '<string>']
-                    self.viz_error = {"lineno": lines[-1], "error_msg": str(e)}
+                error_msg = f"Error executing script at line {lines[-1]}.\\n{e}\\n"
+                viz_log.write(error_msg)
             finally:
                 current_log = algo_log
 
@@ -215,12 +213,10 @@ class Executor(object):
         event = {
             "lineno": lineno,
             "viz_output": viz_output,
-            "viz_error": self.viz_error,
             "viz_log": viz_log.getvalue(),
             "algo_log": algo_log.getvalue(),
         }
         self.events.append(event)
-        self.viz_error = None
 
     def __exit__(self, *args):
         sys.settrace(None)

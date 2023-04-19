@@ -491,11 +491,16 @@ arc(100,
     setPyodideRunning(true);
     try {
       const result_json = await asyncRun(executorScript, context);
-      setPyodideRunning(false);
-      const run_result = JSON.parse(result_json) as ExecResult;
-      console.log("run_result",run_result);
+      if (result_json !== undefined){
+        setPyodideRunning(false);
+        console.log("result_json",result_json);
+        const run_result = JSON.parse(result_json) as ExecResult;
+        console.log("run_result",run_result);
 
-      execResult[1](run_result);
+        execResult[1](run_result);
+      } else {
+        console.error("run result was undefined");
+      }
     } catch (error) {
       console.error(error);
       setPyodideRunning(false);
@@ -522,10 +527,17 @@ arc(100,
       currEventIdx.current != -1 &&
       currEventIdx.current < currExecResult.events.length
     ) {
-      console.log(`'setting algo log ${currExecResult.events[currEventIdx.current].algo_log}'`);
-      algoLog[1](currExecResult.events[currEventIdx.current].algo_log);
-      vizLog[1](currExecResult.events[currEventIdx.current].viz_log);
+      const vizEvent = currExecResult.events[currEventIdx.current];
+      algoLog[1](vizEvent.algo_log);
+
+      // TODO highlight the most recent line in both algo log and viz log
+      vizLog[1](vizEvent.viz_log);
+    } else if (currExecResult.py_error !== null){
+      let errorMsg = `Error executing script at line ${currExecResult.py_error.lineno}.\n`;
+      errorMsg += currExecResult.py_error.error_msg;
+      algoLog[1](errorMsg);
     }
+
   });
 
   return (
