@@ -12,7 +12,6 @@ const [user, setUser] = createSignal<User | null>(null);
 export { user, setUser };
 
 onAuthStateChanged(auth, (firebaseUser) => {
-    console.log("firebaseuser",firebaseUser);
     if (firebaseUser) {
       const { uid, email } = firebaseUser;
       // TODO decide if I really need email or username or whatever

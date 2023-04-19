@@ -120,7 +120,7 @@ declare module 'solid-js' {
 function SuccessDialog(props: { open: Signal<boolean> }) {
   return (
     <dialog open={props.open[0]()}>
-      <p>Data saved successfully.</p>
+      <p>Scripts saved successfully.</p>
       <button onClick={() => props.open[1](false)}>OK</button>
     </dialog>
   );
@@ -129,7 +129,7 @@ function SuccessDialog(props: { open: Signal<boolean> }) {
 function ErrorDialog(props: { open: Signal<boolean> }) {
   return (
     <dialog open={props.open[0]()}>
-      <p>Error saving data. Please try again.</p>
+      <p>Error saving scripts. Please try again. If that does not work, please report this bug.</p>
       <button onClick={() => props.open[1](false)}>OK</button>
     </dialog>
   );

@@ -119,6 +119,8 @@ function TopLeftContents(props: {
   playing: Accessor<boolean>;
   pyodideReady: Accessor<boolean>;
 }) {
+  // TODO add "autoplay" check box in inputs
+
   const showLoadDialogSig = createSignal<boolean>(false);
   const showLoadDialog = () => {
     showLoadDialogSig[1](true);
@@ -144,8 +146,8 @@ function TopLeftContents(props: {
   const playPauseDisabled = () =>
     props.running() || props.currentEventIdx().total == 0;
 
-  const saveDisabled = () => false; // TODO replace with isLoggedIn()
-  const loadDisabled = () => false; // TODO replace with isLoggedIn()
+  const saveDisabled = () => user() === null;
+  const loadDisabled = () =>user() === null;
 
   const range = createSignal(0.0);
 
@@ -449,7 +451,10 @@ function IDE(props: {
   ref: Ref<HTMLDivElement | null>;
   getSelf: () => HTMLDivElement;
 }) {
+  // This is currently set up via a kinda of hacky mechanism.
+  // TODO refactor this to use `use` or some better way of getting the top-level element.
   const resizer = new Resizer(props.getSelf);
+
   const eventNavSubjects = new EventNavSubjects();
   const execResult = createSignal<ExecResult>({ py_error: null, events: [] });
   const eventNavigator = new VizEventNavigator(eventNavSubjects, execResult[0]);
@@ -493,10 +498,7 @@ arc(100,
       const result_json = await asyncRun(executorScript, context);
       if (result_json !== undefined){
         setPyodideRunning(false);
-        console.log("result_json",result_json);
         const run_result = JSON.parse(result_json) as ExecResult;
-        console.log("run_result",run_result);
-
         execResult[1](run_result);
       } else {
         console.error("run result was undefined");
@@ -600,6 +602,11 @@ arc(100,
 }
 
 function Header() {
+  // We have to use an `Inner` function here in order for the component
+  // to rerender correctly.  We need to have an `if` statement that checks
+  // if the `userObj` is null for better type-checking, and the only way
+  // to do that is an `Inner` function component of sorts.
+
   function Inner() {
     const userObj = user();
     if (userObj !== null) {
@@ -613,11 +620,9 @@ function Header() {
       );
     } else {
       return (
-        <>
           <button class={styles.loginBtn} onClick={loginWithGoogle}>
             Log In
           </button>
-        </>
       );
     }
   }
