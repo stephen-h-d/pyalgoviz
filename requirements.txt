@@ -158,6 +158,8 @@ requests==2.28.1
     #   cachecontrol
     #   google-api-core
     #   google-cloud-storage
+restrictedpython==6.0
+    # via -r requirements.in
 rsa==4.9
     # via google-auth
 six==1.16.0

@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import { vanillaExtractPlugin } from '@vanilla-extract/vite-plugin';
 import solidPlugin from 'vite-plugin-solid';
+import {string} from 'rollup-plugin-string';
 
 export default defineConfig({
   server: {
@@ -17,5 +18,7 @@ export default defineConfig({
   build: {
     target: 'esnext',
   },
-  plugins: [vanillaExtractPlugin(), solidPlugin()],
+  plugins: [vanillaExtractPlugin(), solidPlugin(), string({
+    include: '**/executor.py', // TODO figure out if I can point to exactly the right file
+  })],
 });

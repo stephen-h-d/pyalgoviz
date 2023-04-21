@@ -9,8 +9,9 @@ from flask import request
 from flask import Response
 from flask_login import current_user  # type: ignore[import]
 from flask_login import LoginManager
+from google.cloud import datastore
 
-from server.db.mdb import MemoryDatabase
+from server.db.gsdb import GoogleStoreDatabase
 from server.db.models import Algorithm
 from server.db.models import User
 from server.db.models import UserId
@@ -24,8 +25,9 @@ login_manager = LoginManager()
 SECRET_KEY = os.environ.get("SECRET_KEY")
 PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT")
 
-# client = datastore.Client(project=PROJECT)
-db = MemoryDatabase.with_fake_entries()
+client = datastore.Client(project=PROJECT)
+# db = MemoryDatabase.with_fake_entries()
+db = GoogleStoreDatabase(client)
 jwta = JWTAuthenticator(db)
 
 app = Flask(__name__)

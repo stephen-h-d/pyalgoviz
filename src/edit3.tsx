@@ -22,7 +22,7 @@ import { Tab } from './Tab';
 import { VizEventNavigator, Speed, VizEventIdx } from './vizEvents';
 import { asyncRun, pyodide_ready } from './py-worker';
 import { executorScript } from './executor';
-import { ExecResult, VizEvent } from './exec_result';
+import { ExecResult, Script, VizEvent } from './exec_result';
 import { renderEvent } from './VizOutput';
 import { BehaviorSubject, Subject } from 'rxjs';
 import EnumSelect from './EnumSelect';
@@ -120,9 +120,17 @@ function TopLeftContents(props: {
   pyodideReady: Accessor<boolean>;
 }) {
   // TODO add "autoplay" check box in inputs
+  const [currentSavedScript, setCurrentSavedScript] = createSignal<Script | null>(null);
 
   const showLoadDialogSig = createSignal<boolean>(false);
   const showLoadDialog = () => {
+    // if currentSavedScript doesn't match current script
+    // set warning dialog sig true
+    // else show load dialog
+
+    // I will also need to make `doShowLoadDialog` that
+    // clicking on the warning dialog shows.
+
     showLoadDialogSig[1](true);
   };
   const showSaveDialogSig = createSignal<boolean>(false);
@@ -175,6 +183,7 @@ function TopLeftContents(props: {
         viz={props.viz[0]}
         algo={props.algo[0]}
         openSig={showSaveDialogSig}
+        savedCb={setCurrentSavedScript}
       />
       <LoadScriptDialog
         openSig={showLoadDialogSig}
@@ -203,6 +212,7 @@ function TopLeftContents(props: {
           disabled={playPauseDisabled()}
           class={styles.input}
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          // TODO make it "Play/Pause" based on whether it's running
           onclick={_e => props.eventNavSubjects.playPause$.next(null)}
         >
           Play
@@ -489,8 +499,7 @@ arc(100,
   async function run() {
     const context = {
       script: algo[0](),
-      viz: viz[0](),
-      showVizErrors: true,
+      viz: viz[0]()
     };
 
     setPyodideRunning(true);

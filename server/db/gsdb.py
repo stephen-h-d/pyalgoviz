@@ -80,7 +80,15 @@ class GoogleStoreDatabase(DatabaseProtocol):
         self._save_entity(algo_key, algo)
 
     def get_algo_names_by(self, author_id: UserId) -> list[str]:
-        raise NotImplementedError()
+        query = self._client.query(kind=EntityType.ALGORITHM.value)
+        query.add_filter("author_id", "=", author_id)
+        results = list(query.fetch())
+        algo_names = [result["name"] for result in results]
+        return algo_names
 
     def get_public_algos(self) -> list[tuple[UserId, str]]:
-        raise NotImplementedError()
+        query = self._client.query(kind=EntityType.ALGORITHM.value)
+        query.add_filter("public", "=", True)
+        results = list(query.fetch())
+        public_algos = [(result["author_id"], result["name"]) for result in results]
+        return public_algos

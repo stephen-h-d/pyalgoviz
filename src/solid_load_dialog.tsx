@@ -12,6 +12,7 @@ import {
 } from 'solid-js';
 import * as styles from './solid_load_dialog.css';
 import { postJson } from './fetchJson';
+import { Script } from './exec_result';
 
 function SelectDialogEl(props: {
   option: string;
@@ -129,7 +130,10 @@ function SuccessDialog(props: { open: Signal<boolean> }) {
 function ErrorDialog(props: { open: Signal<boolean> }) {
   return (
     <dialog open={props.open[0]()}>
-      <p>Error saving scripts. Please try again. If that does not work, please report this bug.</p>
+      <p>
+        Error saving scripts. Please try again. If that does not work, please
+        report this bug.
+      </p>
       <button onClick={() => props.open[1](false)}>OK</button>
     </dialog>
   );
@@ -139,6 +143,7 @@ export function SaveScriptDialog(props: {
   openSig: Signal<boolean>;
   algo: Accessor<string>;
   viz: Accessor<string>;
+  savedCb: (script: Script) => void;
 }) {
   const [open, setOpen] = props.openSig;
   const [name, setName] = createSignal('');
@@ -159,10 +164,16 @@ export function SaveScriptDialog(props: {
     setSaving(true);
 
     try {
+      const algo_script = props.algo();
+      const viz_script = props.viz();
       postJson({
-        algo_script: props.algo(),
-        viz_script: props.viz(),
+        algo_script,
+        viz_script,
         name: name(),
+      });
+      props.savedCb({
+        algo_script,
+        viz_script
       });
       setSaving(false);
       setOpen(false);
@@ -217,8 +228,8 @@ export function LoadScriptDialog(props: {
         .then(response => response.json())
         .then(data => {
           console.log(data);
-          props.setAlgo(data["algo_script"]);
-          props.setViz(data["viz_script"]);
+          props.setAlgo(data['algo_script']);
+          props.setViz(data['viz_script']);
         })
         .catch(error => console.error(error));
 

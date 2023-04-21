@@ -1,16 +1,21 @@
 export interface PythonScriptError {
-    lineno: number,
-    error_msg: string,
+  lineno: number;
+  error_msg: string;
 }
 
 export interface VizEvent {
-    lineno: number,
-    viz_output: string, // a JavaScript script
-    viz_log: string,
-    algo_log: string,
+  lineno: number;
+  viz_output: string; // a JavaScript script
+  viz_log: string;
+  algo_log: string;
 }
 
 export interface ExecResult {
-    py_error: PythonScriptError | null;
-    events: VizEvent[];
+  py_error: PythonScriptError | null;
+  events: VizEvent[];
+}
+
+export interface Script {
+  algo_script: string;
+  viz_script: string;
 }
