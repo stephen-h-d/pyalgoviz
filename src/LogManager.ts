@@ -1,53 +1,52 @@
-import { VizEvent } from "./exec_result";
+import { VizEvent } from './exec_result';
 
 export class LogManager {
-    private events: VizEvent[];
-    private algoLogContent: string;
-    private vizLogContent: string;
-    private algoLogIndexCache: Map<number, number>;
-    private vizLogIndexCache: Map<number, number>;
+  private events: VizEvent[];
+  private algoLogContent: string;
+  private vizLogContent: string;
+  private algoLogIndexCache: Map<number, number>;
+  private vizLogIndexCache: Map<number, number>;
 
-    constructor(events: VizEvent[]) {
-      this.events = events;
-      this.algoLogContent = '';
-      this.vizLogContent = '';
-      this.algoLogIndexCache = new Map();
-      this.vizLogIndexCache = new Map();
-      this.prebuildCaches();
-    }
+  constructor(events: VizEvent[]) {
+    this.events = events;
+    this.algoLogContent = '';
+    this.vizLogContent = '';
+    this.algoLogIndexCache = new Map();
+    this.vizLogIndexCache = new Map();
+    this.prebuildCaches();
+  }
 
-    private prebuildCaches(): void {
-      let algoLogIndex = 0;
-      let vizLogIndex = 0;
+  private prebuildCaches(): void {
+    let algoLogIndex = 0;
+    let vizLogIndex = 0;
 
-      for (let i = 0; i < this.events.length; i++) {
-        this.algoLogContent += this.events[i].algo_log + '\n';
-        this.algoLogIndexCache.set(i, algoLogIndex);
-        algoLogIndex += this.events[i].algo_log.length + 1;
+    for (let i = 0; i < this.events.length; i++) {
+      this.algoLogContent += this.events[i].algo_log;
+      algoLogIndex = this.algoLogContent.length;
+      this.algoLogIndexCache.set(i, algoLogIndex);
 
-        this.vizLogContent += this.events[i].viz_log + '\n';
-        this.vizLogIndexCache.set(i, vizLogIndex);
-        vizLogIndex += this.events[i].viz_log.length + 1;
-      }
-    }
-
-    getAlgoLogUntilIndex(index: number): string {
-      if (index < 0 || index >= this.events.length) {
-        throw new Error(`Invalid index into algo log: ${index}`);
-      }
-
-      const start = this.algoLogIndexCache.get(index) || 0;
-      const end = this.algoLogIndexCache.get(index + 1) || this.algoLogContent.length;
-      return this.algoLogContent.substring(start, end);
-    }
-
-    getVizLogUntilIndex(index: number): string {
-      if (index < 0 || index >= this.events.length) {
-        throw new Error(`Invalid index into viz log: ${index}`);
-      }
-
-      const start = this.vizLogIndexCache.get(index) || 0;
-      const end = this.vizLogIndexCache.get(index + 1) || this.vizLogContent.length;
-      return this.vizLogContent.substring(start, end);
+      this.vizLogContent += this.events[i].viz_log;
+      vizLogIndex = this.vizLogContent.length;
+      this.vizLogIndexCache.set(i, vizLogIndex);
     }
   }
+
+  getAlgoLogUntilIndex(index: number): string {
+    if (index < 0 || index >= this.events.length) {
+      throw new Error(`Invalid index into algo log: ${index}`);
+    }
+
+    const end = this.algoLogIndexCache.get(index);
+    return this.algoLogContent.substring(0, end);
+  }
+
+  getVizLogUntilIndex(index: number): string {
+    if (index < 0 || index >= this.events.length) {
+      throw new Error(`Invalid index into viz log: ${index}`);
+    }
+
+    const end = this.vizLogIndexCache.get(index);
+    console.log(`index ${index} end ${end}`);
+    return this.vizLogContent.substring(0, end);
+  }
+}
