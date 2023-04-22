@@ -10,3 +10,4 @@ pip-tools
 mypy
 flake8
 RestrictedPython
+black[d]

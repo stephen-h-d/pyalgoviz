@@ -120,7 +120,8 @@ function TopLeftContents(props: {
   pyodideReady: Accessor<boolean>;
 }) {
   // TODO add "autoplay" check box in inputs
-  const [currentSavedScript, setCurrentSavedScript] = createSignal<Script | null>(null);
+  const [currentSavedScript, setCurrentSavedScript] =
+    createSignal<Script | null>(null);
 
   const showLoadDialogSig = createSignal<boolean>(false);
   const showLoadDialog = () => {
@@ -155,7 +156,7 @@ function TopLeftContents(props: {
     props.running() || props.currentEventIdx().total == 0;
 
   const saveDisabled = () => user() === null;
-  const loadDisabled = () =>user() === null;
+  const loadDisabled = () => user() === null;
 
   const range = createSignal(0.0);
 
@@ -461,7 +462,7 @@ function IDE(props: {
   ref: Ref<HTMLDivElement | null>;
   getSelf: () => HTMLDivElement;
 }) {
-  // This is currently set up via a kinda of hacky mechanism.
+  // This is currently set up via a hacky mechanism.
   // TODO refactor this to use `use` or some better way of getting the top-level element.
   const resizer = new Resizer(props.getSelf);
 
@@ -499,18 +500,18 @@ arc(100,
   async function run() {
     const context = {
       script: algo[0](),
-      viz: viz[0]()
+      viz: viz[0](),
     };
 
     setPyodideRunning(true);
     try {
       const result_json = await asyncRun(executorScript, context);
-      if (result_json !== undefined){
+      if (result_json !== undefined) {
         setPyodideRunning(false);
         const run_result = JSON.parse(result_json) as ExecResult;
         execResult[1](run_result);
       } else {
-        console.error("run result was undefined");
+        console.error('run result was undefined');
       }
     } catch (error) {
       console.error(error);
@@ -539,16 +540,19 @@ arc(100,
       currEventIdx.current < currExecResult.events.length
     ) {
       const vizEvent = currExecResult.events[currEventIdx.current];
-      algoLog[1](vizEvent.algo_log);
+      // TODO figure out how to do this without creating an infinite recursion.
+      // also figure out how navigating to an arbitrary text element will work.
+      // (possibly by hiding the text that is not played yet?)
+      const curr = algoLog[0]();
+      algoLog[1](curr + vizEvent.algo_log);
 
       // TODO highlight the most recent line in both algo log and viz log
       vizLog[1](vizEvent.viz_log);
-    } else if (currExecResult.py_error !== null){
+    } else if (currExecResult.py_error !== null) {
       let errorMsg = `Error executing script at line ${currExecResult.py_error.lineno}.\n`;
       errorMsg += currExecResult.py_error.error_msg;
       algoLog[1](errorMsg);
     }
-
   });
 
   return (
@@ -629,9 +633,9 @@ function Header() {
       );
     } else {
       return (
-          <button class={styles.loginBtn} onClick={loginWithGoogle}>
-            Log In
-          </button>
+        <button class={styles.loginBtn} onClick={loginWithGoogle}>
+          Log In
+        </button>
       );
     }
   }

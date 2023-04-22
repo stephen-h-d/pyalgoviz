@@ -144,7 +144,7 @@ class Executor(object):
             event = {
                 "lineno": self.last_line,
                 "viz_output": self.events[-1]["viz_output"],
-                "viz_log": None,
+                "viz_log": "",
                 "algo_log": '\\n\\nProgram finished.\\n\\nHit F9 or Ctrl-Enter to run the script again.',
             }
             self.events.append(event)
@@ -211,6 +211,8 @@ class Executor(object):
             "viz_log": viz_log.getvalue(),
             "algo_log": algo_log.getvalue(),
         }
+        viz_log.truncate(0)
+        algo_log.truncate(0)
         self.events.append(event)
 
     def __exit__(self, *args):
