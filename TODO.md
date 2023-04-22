@@ -7,7 +7,9 @@
    * pyodide is not loaded
    * a script is already running in pyodide
 6. Disable all buttons except "Run":
-   * when nothing's been run or 
+   * when nothing's been run or
+7. add option to auto-play
+8. some of the TODOs in the code (need to clarify which ones)
 
 ### Planning TODOs
 1. Decide which other login ID providers to support and make TODO items for those.
@@ -21,4 +23,4 @@
 6. Disallow the user from editing while the animation is running.
 6. Disable all buttons except "Run":
    * there's been a doc change since something's been run
-   
+8. some of the TODOs in the code (need to clarify which ones)

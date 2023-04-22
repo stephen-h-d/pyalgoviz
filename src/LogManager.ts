@@ -57,6 +57,6 @@ export class LogManager {
       this.algoLogIndexCache = new Map();
       this.vizLogIndexCache = new Map();
       this.prebuildCaches();
-    } 
+    }
   }
 }
