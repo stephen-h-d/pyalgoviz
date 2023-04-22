@@ -28,6 +28,7 @@ import { BehaviorSubject, Subject } from 'rxjs';
 import EnumSelect from './EnumSelect';
 import { signInWithGoogle as loginWithGoogle, logout } from './login';
 import { user } from './authSignal';
+import { LogManager } from './LogManager';
 
 declare module 'solid-js' {
   namespace JSX {
@@ -479,6 +480,7 @@ function IDE(props: {
 for x in range(50, 500, 50):
     for y in range(50, 500, 50):
         n = y / 50
+        log(f"n {n}")
 `);
   const viz = createSignal(`
 from math import pi
@@ -495,8 +497,11 @@ arc(100,
     endAngle=n * 2 * pi/7,
     color="orange")
 `);
+
   const algoLog = createSignal('');
   const vizLog = createSignal('');
+  const logMgr = new LogManager(execResult[0]().events);
+
   async function run() {
     const context = {
       script: algo[0](),
@@ -534,20 +539,17 @@ arc(100,
   createEffect(() => {
     const currEventIdx = eventIdx();
     const currExecResult = execResult[0]();
+    logMgr.resetEvents(currExecResult.events);
 
     if (
       currEventIdx.current != -1 &&
       currEventIdx.current < currExecResult.events.length
     ) {
-      const vizEvent = currExecResult.events[currEventIdx.current];
-      // TODO figure out how to do this without creating an infinite recursion.
-      // also figure out how navigating to an arbitrary text element will work.
-      // (possibly by hiding the text that is not played yet?)
-      const curr = algoLog[0]();
-      algoLog[1](curr + vizEvent.algo_log);
-
       // TODO highlight the most recent line in both algo log and viz log
-      vizLog[1](vizEvent.viz_log);
+      const algoLogContents = logMgr.getAlgoLogUntilIndex(currEventIdx.current);
+      algoLog[1](algoLogContents);
+      const vizLogContents = logMgr.getAlgoLogUntilIndex(currEventIdx.current);
+      vizLog[1](vizLogContents);
     } else if (currExecResult.py_error !== null) {
       let errorMsg = `Error executing script at line ${currExecResult.py_error.lineno}.\n`;
       errorMsg += currExecResult.py_error.error_msg;

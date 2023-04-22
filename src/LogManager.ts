@@ -31,7 +31,7 @@ export class LogManager {
     }
   }
 
-  getAlgoLogUntilIndex(index: number): string {
+  public getAlgoLogUntilIndex(index: number): string {
     if (index < 0 || index >= this.events.length) {
       throw new Error(`Invalid index into algo log: ${index}`);
     }
@@ -40,13 +40,23 @@ export class LogManager {
     return this.algoLogContent.substring(0, end);
   }
 
-  getVizLogUntilIndex(index: number): string {
+  public getVizLogUntilIndex(index: number): string {
     if (index < 0 || index >= this.events.length) {
       throw new Error(`Invalid index into viz log: ${index}`);
     }
 
     const end = this.vizLogIndexCache.get(index);
-    console.log(`index ${index} end ${end}`);
     return this.vizLogContent.substring(0, end);
+  }
+
+  public resetEvents(events: VizEvent[]) {
+    if (this.events !== events) {
+      this.events = events;
+      this.algoLogContent = '';
+      this.vizLogContent = '';
+      this.algoLogIndexCache = new Map();
+      this.vizLogIndexCache = new Map();
+      this.prebuildCaches();
+    } 
   }
 }

@@ -1,4 +1,4 @@
-import executorCode from '../shared/executor.py';  // Import the Python module as a string
+import executorCode from '../shared/executor.py'; // Import the Python module as a string
 
 export const executorScript = `
 ${executorCode}
@@ -17,12 +17,14 @@ author = "Unknown Author"
 # info('Ran %s "%s":\\n\\n%s' % (author, name, script))
 
 print("num_events", len(result.events))
+print("fuzzywuzzy", result.events)
 
 result = {
    'py_error': result.error,
    'events': result.events,
 }
 
+print("ugh",len(json.dumps(result)))
 json.dumps(result)
 
 `;
