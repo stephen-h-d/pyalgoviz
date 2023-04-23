@@ -16,6 +16,7 @@ from server.db.models import Algorithm
 from server.db.models import User
 from server.db.models import UserId
 from server.middleware import JWTAuthenticator
+from server.run_script import run_script
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +64,9 @@ def save() -> Response:
         msg = "Could not save script: %s" % e
         logger.error(msg)
         logger.exception(e)
-        return {"result": "Whoops!  Saving failed.  Please report this bug."}, HTTPStatus.INTERNAL_SERVER_ERROR
+        return {
+            "result": "Whoops!  Saving failed.  Please report this bug."
+        }, HTTPStatus.INTERNAL_SERVER_ERROR
     return {"result": msg}, HTTPStatus.OK
 
 
@@ -98,6 +101,26 @@ def load() -> Response:
         return Response(
             status=HTTPStatus.INTERNAL_SERVER_ERROR, mimetype="application/json"
         )
+
+
+@app.route("/run", methods=["POST"])
+@jwta.authenticated
+def run() -> Response:
+    author: User = current_user
+    try:
+        data = request.get_data().decode("utf-8")
+        submission = json.loads(data)
+        algo_script = submission.get("algo_script")
+        viz_script = submission.get("viz_script")
+        result = run_script(algo_script, viz_script)
+    except Exception as e:
+        msg = "Could not save script: %s" % e
+        logger.error(msg)
+        logger.exception(e)
+        return {
+            "result": "Whoops!  Running failed.  Please report this bug."
+        }, HTTPStatus.INTERNAL_SERVER_ERROR
+    return result, HTTPStatus.OK
 
 
 if __name__ == "__main__":
