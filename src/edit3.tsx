@@ -104,8 +104,35 @@ function range_input(
 declare module 'solid-js' {
   namespace JSX {
     interface Directives {
-      // use:text_input
+      // use:range_input
       range_input: Signal<number>;
+    }
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function checkbox_input(
+  element: HTMLInputElement,
+  value: Accessor<Signal<boolean>>,
+) {
+  const [field, setField] = value();
+  createRenderEffect(() => {
+    const newValue = field();
+    if (element.checked !== newValue) {
+      element.checked = newValue;
+    }
+  });
+  element.addEventListener('input', e => {
+    const value = (e.target as HTMLInputElement).value;
+    setField(Boolean(value));
+  });
+}
+
+declare module 'solid-js' {
+  namespace JSX {
+    interface Directives {
+      // use:checkbox_input
+      checkbox_input: Signal<boolean>;
     }
   }
 }
@@ -160,6 +187,7 @@ function TopLeftContents(props: {
   const loadDisabled = () => user() === null;
 
   const range = createSignal(0.0);
+  const runLocally = createSignal(true);
 
   createEffect(() => {
     const rangePct = range[0]();
@@ -250,6 +278,13 @@ function TopLeftContents(props: {
           max={1}
           step="0.01"
         ></input>
+        <input
+          type="checkbox"
+          use:checkbox_input={runLocally}
+          name="run_local"
+          id="run_local"
+        ></input>
+        <label for="run_local">Run Locally</label>
       </div>
     </div>
   );
