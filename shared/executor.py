@@ -7,14 +7,15 @@ from io import StringIO
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    pass
+    from types import FrameType, TracebackType
+    from typing import Any, Optional
 
 algo_log = StringIO()
 viz_log = StringIO()
 current_log = algo_log
 
 
-def reset_logs():
+def reset_logs() -> None:
     global algo_log, viz_log, current_log
     algo_log = StringIO()
     viz_log = StringIO()
@@ -32,14 +33,14 @@ def log(
     print(*values, sep=sep, end=end, file=current_log, flush=flush)
 
 
-def number(x, y, label, value, scale=4, color="black"):
+def number(x: float, y: float,label: str, value: str, scale=4, color="black")->None:
     text(x, y + 10, label)
     rect(x + 20, y, value * scale, 10, color)
     text(x + 22 + value * scale, y + 10, value)
 
 
-def barchart(x, y, w, h, items, highlight=-1, scale=1, fill="black", border="black"):
-    rect(x, y, w, h, "#FDFDF0", border)
+def barchart(x: float, y: float,w: float, h: float, items: list, highlight:int=-1, scale:float=1, fill:str="black", border:str="black")->None:
+    rect(x, y,w, h, "#FDFDF0", border)
     if items:
         d = min(15, int(w / len(items)))
         offset = (w - len(items) * d) / 2
@@ -58,7 +59,7 @@ NUMBER = ("number", (int, float))
 STRING = ("string", str)
 
 
-def check(primitive, param, value, expected):
+def check(primitive: str, param:str, value:Any, expected:tuple) -> None:
     kind, typ = expected
     assert isinstance(value, typ), "expected a %s for %s.%s, instead got %s" % (
         kind,
@@ -77,22 +78,22 @@ def check(primitive, param, value, expected):
 #     viz_output += 'B(canvas, %s,%s);' % (frequency, duration)
 
 
-def text(x, y, txt, size=13, font="Arial", color="black"):
+def text(x: float, y: float, txt: str, size: int = 13, font: str = "Arial", color: str = "black") -> None:
     check("text", "x", x, NUMBER)
     check("text", "y", x, NUMBER)
     check("text", "size", size, NUMBER)
     check("text", "font", font, STRING)
     check("text", "color", color, STRING)
     global viz_output
-    viz_output += "T(canvas, %d,%d,%r,%d,%r,%r);" % (x, y, str(txt), size, font, color)
+    viz_output += "T(canvas, %d,%d,%r,%d,%r,%r);" % (x, y,str(txt), size, font, color)
 
 
-def line(x1, y1, x2, y2, color="black", width=1):
+def line(x1: float, y1: float, x2: float, y2: float, color: str = "black", width: int = 1) -> None:
     global viz_output
     viz_output += "L(canvas, %s,%s,%s,%s,%r,%s);" % (x1, y1, x2, y2, color, width)
 
 
-def rect(x, y, w, h, fill="white", border="black"):
+def rect(x: float, y: float, w: float, h: float, fill: str = "white", border: str = "black") -> None:
     check("rect", "x", x, NUMBER)
     check("rect", "y", x, NUMBER)
     check("rect", "w", w, NUMBER)
@@ -100,20 +101,20 @@ def rect(x, y, w, h, fill="white", border="black"):
     check("rect", "fill", fill, STRING)
     check("rect", "border", border, STRING)
     global viz_output
-    viz_output += "R(canvas, %s,%s,%s,%s,%r,%r);" % (x, y, w, h, fill, border)
+    viz_output += "R(canvas, %s,%s,%s,%s,%r,%r);" % (x, y,w, h, fill, border)
 
 
-def circle(x, y, radius, fill="white", border="black"):
+def circle(x: float, y: float, radius: float, fill: str = "white", border: str = "black") -> None:
     check("circle", "x", x, NUMBER)
     check("circle", "y", x, NUMBER)
     check("circle", "radius", radius, NUMBER)
     check("circle", "fill", fill, STRING)
     check("circle", "border", border, STRING)
     global viz_output
-    viz_output += "C(canvas, %s,%s,%s,%r,%r);" % (x, y, radius, fill, border)
+    viz_output += "C(canvas, %s,%s,%s,%r,%r);" % (x, y,radius, fill, border)
 
 
-def arc(cx, cy, innerRadius, outerRadius, startAngle, endAngle, color="black"):
+def arc(cx: float, cy: float, innerRadius: float, outerRadius: float, startAngle: float, endAngle: float, color: str = "black") -> None:
     check("circle", "cx", cx, NUMBER)
     check("circle", "cy", cx, NUMBER)
     check("circle", "innerRadius", innerRadius, NUMBER)
@@ -134,7 +135,7 @@ def arc(cx, cy, innerRadius, outerRadius, startAngle, endAngle, color="black"):
 
 
 class Executor(object):
-    def __init__(self, script, viz):
+    def __init__(self, script: str, viz: str) -> None:
         self.error = None
         self.events = []
         self.state = []
@@ -178,15 +179,15 @@ class Executor(object):
             msg += "=" * 70
             self.error = dict(error_msg=msg, lineno=lines[-1])
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         self.start = time.time()
         reset_logs()
         sys.settrace(self.trace)
 
-    def getVars(self, frame):
+    def getVars(self, frame: FrameType) -> List[Any]:
         return [(k, v) for k, v in sorted(frame.f_locals.items()) if "__" not in k]
 
-    def trace(self, frame, event, args):
+    def trace(self: Any, frame: FrameType, event: str, args: Optional[TracebackType]) -> Optional[str]:
         now = time.time()
         if now - self.start > 10:
             self.events = self.events[-100:]
@@ -223,7 +224,7 @@ class Executor(object):
             self.last_line = frame.f_lineno
             return self.trace
 
-    def createEvent(self, lineno):
+    def createEvent(self, lineno: int) -> None:
         event = {
             "lineno": lineno,
             "viz_output": viz_output,
@@ -236,5 +237,5 @@ class Executor(object):
         algo_log.seek(0)
         self.events.append(event)
 
-    def __exit__(self, *args):
+    def __exit__(self, *args) -> None:
         sys.settrace(None)

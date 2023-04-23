@@ -352,7 +352,7 @@ function BottomRightContents(props: {
           id={2}
           label={'Viz Log'}
           tooltip={
-            'This contains the debugging output of your visualization script (all calls to the log() function).'
+            'This contains the debugging output of your visualization script (all calls to the log() function, plus any errors encountered).'
           }
           selected={isSelected(2)}
           onTabClick={() => setSelectedTab(2)}

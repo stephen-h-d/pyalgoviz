@@ -3,6 +3,7 @@ from RestrictedPython import safe_builtins
 from RestrictedPython import safe_globals
 from RestrictedPython.Eval import default_guarded_getiter
 
+from shared.executor import Executor
 
 safe_globals = dict(__builtins__=safe_builtins)
 safe_globals["range"] = range
@@ -37,11 +38,11 @@ def run(algo_script: str, viz_script: str) -> dict:
     algo_byte_code = compile_restricted(algo_script, '<inline>', 'exec')
     compile_restricted(viz_script, '<inline>', 'exec')
     exec(algo_byte_code, safe_globals, {})
-    # result = Executor(algo_byte_code, viz_byte_code)
-    # return {
-    #     'py_error': result.error,
-    #     'events': result.events,
-    # }
+    result = Executor(algo_byte_code, viz_byte_code)
+    return {
+        'py_error': result.error,
+        'events': result.events,
+    }
 
 hmm = run(algo,viz)
 print(hmm)
