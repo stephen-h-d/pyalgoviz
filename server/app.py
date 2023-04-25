@@ -12,6 +12,7 @@ from flask_login import LoginManager
 from google.cloud import datastore
 
 from server.db.gsdb import GoogleStoreDatabase
+from server.db.mdb import MemoryDatabase
 from server.db.models import Algorithm
 from server.db.models import User
 from server.db.models import UserId
@@ -26,9 +27,9 @@ login_manager = LoginManager()
 SECRET_KEY = os.environ.get("SECRET_KEY")
 PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT")
 
-client = datastore.Client(project=PROJECT)
-# db = MemoryDatabase.with_fake_entries()
-db = GoogleStoreDatabase(client)
+# client = datastore.Client(project=PROJECT)
+db = MemoryDatabase.with_fake_entries()
+# db = GoogleStoreDatabase(client)
 jwta = JWTAuthenticator(db)
 
 app = Flask(__name__)
@@ -73,6 +74,7 @@ def save() -> Response:
 @app.route("/get_script_names", methods=["GET"])
 @jwta.authenticated
 def get_script_names() -> Response:
+    print("script names")
     author: User = current_user
     try:
         script_names = db.get_algo_names_by(author.firebase_user_id)
@@ -106,7 +108,6 @@ def load() -> Response:
 @app.route("/run", methods=["POST"])
 @jwta.authenticated
 def run() -> Response:
-    author: User = current_user
     try:
         data = request.get_data().decode("utf-8")
         submission = json.loads(data)
@@ -114,7 +115,7 @@ def run() -> Response:
         viz_script = submission.get("viz_script")
         result = run_script(algo_script, viz_script)
     except Exception as e:
-        msg = "Could not save script: %s" % e
+        msg = "Could not run script: %s" % e
         logger.error(msg)
         logger.exception(e)
         return {

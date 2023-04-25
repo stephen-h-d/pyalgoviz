@@ -1,5 +1,6 @@
 from types import CodeType
-from typing import Mapping, Any
+from typing import Any
+from typing import Mapping
 
 from RestrictedPython import compile_restricted
 from RestrictedPython import safe_builtins
@@ -8,32 +9,21 @@ from RestrictedPython.Eval import default_guarded_getiter
 
 from shared.executor import Executor
 
-safe_globals = dict(__builtins__=safe_builtins)
+
+def allowed_import(name, globals=None, locals=None, fromlist=(), level=0):
+    safe_modules = ["math"]
+    if name in safe_modules:
+        return __import__(name, globals, locals, fromlist, level)
+    else:
+        raise Exception("Don't you even think about it {0}".format(name))
+
+
+custom_builtins = dict(safe_builtins)
+custom_builtins["__import__"] = allowed_import
+
+safe_globals = dict(__builtins__=custom_builtins)
 safe_globals["range"] = range
 safe_globals["_getiter_"] = default_guarded_getiter
-
-
-algo = """
-for x in range(50, 500, 50):
-    for y in range(50, 500, 50):
-        n = y / 50
-"""
-
-viz = """
-# from math import pi
-# 
-# text(x, y, "x=%s y=%s n=%d" % (x, y, n), size=10 + n*3, font="Arial", color='red')
-# rect(450, 50, 50 + n*10, 50 + n*10, fill="brown", border="lightyellow")
-# line(50, 50, x, y, color="purple", width=6)
-# circle(300, 200, n * 25, fill="transparent", border="green")
-# arc(100,
-#     325,
-#     innerRadius=50,
-#     outerRadius=100,
-#     startAngle=(n - 1) * 2 * pi/7,
-#     endAngle=n * 2 * pi/7,
-#     color="orange")
-"""
 
 
 def run_script(algo_script: str, viz_script: str) -> dict:
@@ -45,16 +35,13 @@ def run_script(algo_script: str, viz_script: str) -> dict:
         __globals: dict[str, Any] | None = None,
         __locals: Mapping[str, Any] | None = None,
     ) -> Any:
-        safe_globals.update(__globals)
-        return exec(source, safe_globals, __locals)
+        combined_globals = safe_globals.copy()
+        if __globals:
+            combined_globals.update(__globals)
+        return exec(source, combined_globals, __locals)
 
     result = Executor(algo_byte_code, viz_byte_code, exec_fn)
     return {
         "py_error": result.error,
         "events": result.events,
     }
-
-
-hmm = run_script(algo, viz)
-print(hmm)
-...

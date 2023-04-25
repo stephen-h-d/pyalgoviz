@@ -5,7 +5,7 @@ ${executorCode}
 
 import json
 
-from js import script, viz
+from js import algo_script, viz_script
 result = Executor(
     script, viz
 )

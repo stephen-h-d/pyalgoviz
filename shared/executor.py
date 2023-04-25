@@ -234,10 +234,8 @@ class Executor(object):
     def trace(
         self: Any, frame: FrameType, event: str, args: Optional[TracebackType]
     ) -> Optional[str]:
-        print("tracing...", frame.f_code.co_filename)
         now = time.time()
         if now - self.start > 10:
-            print("whoopsie...")
             self.events = self.events[-100:]
             # TODO improve this -- not sure why only showing the last 100 events
             raise TimeoutError(
@@ -248,7 +246,6 @@ class Executor(object):
             frame.f_code.co_filename in SCRIPT_FILENAMES
             and self.last_line != frame.f_lineno
         ):
-            print("here we go...")
             state = self.getVars(frame)
             if event != "exception":
                 self.state = state
@@ -276,8 +273,6 @@ class Executor(object):
             self.createEvent(frame.f_lineno)
             self.last_line = frame.f_lineno
             return self.trace
-        else:
-            print("nothin doin")
 
     def createEvent(self, lineno: int) -> None:
         event = {

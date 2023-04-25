@@ -29,6 +29,7 @@ import EnumSelect from './EnumSelect';
 import { signInWithGoogle as loginWithGoogle, logout } from './login';
 import { user } from './authSignal';
 import { LogManager } from './LogManager';
+import { postJson } from './fetchJson';
 
 declare module 'solid-js' {
   namespace JSX {
@@ -119,12 +120,12 @@ function checkbox_input(
   createRenderEffect(() => {
     const newValue = field();
     if (element.checked !== newValue) {
+      console.log('newvalue', newValue);
       element.checked = newValue;
     }
   });
   element.addEventListener('input', e => {
-    const value = (e.target as HTMLInputElement).value;
-    setField(Boolean(value));
+    setField((e.target as HTMLInputElement).checked);
   });
 }
 
@@ -138,7 +139,7 @@ declare module 'solid-js' {
 }
 
 function TopLeftContents(props: {
-  run: () => Promise<void>;
+  run: (locally: boolean) => Promise<void>;
   algo: Signal<string>;
   viz: Signal<string>;
   eventNavSubjects: EventNavSubjects;
@@ -147,7 +148,13 @@ function TopLeftContents(props: {
   playing: Accessor<boolean>;
   pyodideReady: Accessor<boolean>;
 }) {
+  // TODO only allow running on server if logged in:
+  // 1. on frontend
+  // 2. on backend
   // TODO add "autoplay" check box in inputs
+  // TODO enable run button if "run locally" is not checked and user is logged in
+  // TODO finish checking whether the current saved script matches whether it is loaded,
+  // and if so, warn user
   const [currentSavedScript, setCurrentSavedScript] =
     createSignal<Script | null>(null);
 
@@ -225,7 +232,7 @@ function TopLeftContents(props: {
           disabled={runDisabled()}
           class={styles.input}
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          onclick={async _e => props.run()}
+          onclick={async _e => props.run(runLocally[0]())}
         >
           Run
         </button>
@@ -537,27 +544,37 @@ arc(100,
   const vizLog = createSignal('');
   const logMgr = new LogManager(execResult[0]().events);
 
-  async function run() {
-    const context = {
-      script: algo[0](),
-      viz: viz[0](),
+  async function run(locally: boolean) {
+    const toRun = {
+      algo_script: algo[0](),
+      viz_script: viz[0](),
     };
-
-    setPyodideRunning(true);
-    try {
-      const result_json = await asyncRun(executorScript, context);
-      if (result_json !== undefined) {
+    if (locally) {
+      setPyodideRunning(true);
+      try {
+        const result_json = await asyncRun(executorScript, toRun);
+        if (result_json !== undefined) {
+          setPyodideRunning(false);
+          const run_result = JSON.parse(result_json) as ExecResult;
+          execResult[1](run_result);
+        } else {
+          console.error('run result was undefined');
+        }
+      } catch (error) {
+        console.error(error);
         setPyodideRunning(false);
-        const run_result = JSON.parse(result_json) as ExecResult;
-        execResult[1](run_result);
-      } else {
-        console.error('run result was undefined');
       }
-    } catch (error) {
-      console.error(error);
-      setPyodideRunning(false);
+    } else {
+      try {
+        const run_result = (await postJson('api/run', toRun)) as ExecResult;
+        console.log("run_result",run_result);
+        execResult[1](run_result);
+      } catch (error) {
+        console.log(error);
+      }
     }
   }
+
   const eventIdx = () => {
     const result = eventNavigator.getVizEventIdxVal();
     if (result === undefined) {
@@ -583,7 +600,7 @@ arc(100,
       // TODO highlight the most recent line in both algo log and viz log
       const algoLogContents = logMgr.getAlgoLogUntilIndex(currEventIdx.current);
       algoLog[1](algoLogContents);
-      const vizLogContents = logMgr.getAlgoLogUntilIndex(currEventIdx.current);
+      const vizLogContents = logMgr.getVizLogUntilIndex(currEventIdx.current);
       vizLog[1](vizLogContents);
     } else if (currExecResult.py_error !== null) {
       let errorMsg = `Error executing script at line ${currExecResult.py_error.lineno}.\n`;

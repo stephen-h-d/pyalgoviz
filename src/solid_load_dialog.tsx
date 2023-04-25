@@ -166,7 +166,7 @@ export function SaveScriptDialog(props: {
     try {
       const algo_script = props.algo();
       const viz_script = props.viz();
-      postJson({
+      postJson('api/save',{
         algo_script,
         viz_script,
         name: name(),
