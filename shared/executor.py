@@ -170,7 +170,7 @@ SCRIPT_FILENAMES = ["<inline>", "<string>"]
 
 class Executor(object):
     def __init__(
-        self, script: str | bytes, viz: str | bytes, exec_fn: Callable | None
+        self, script: str | bytes, viz: str | bytes, exec_fn: Callable | None = None
     ) -> None:
         self.exec_fn = exec_fn
         self.error = None
