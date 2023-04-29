@@ -19,6 +19,7 @@ function checkbox_input(
 }
 
 declare module 'solid-js' {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
     interface Directives {
       // use:checkbox_input

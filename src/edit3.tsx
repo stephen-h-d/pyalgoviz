@@ -33,6 +33,7 @@ import { postJson } from './postJson';
 import { CheckBox } from './CheckBox';
 
 declare module 'solid-js' {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
     interface Directives {
       // use:editor
@@ -68,6 +69,7 @@ function editor(element: HTMLInputElement, argsAccessor: Accessor<EditorArgs>) {
 }
 
 declare module 'solid-js' {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
     interface Directives {
       // use:editor
@@ -104,6 +106,7 @@ function range_input(
 }
 
 declare module 'solid-js' {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
     interface Directives {
       // use:range_input

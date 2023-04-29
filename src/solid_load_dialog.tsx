@@ -92,9 +92,8 @@ function SelectDialog(props: {
 }
 
 const fetchScriptNames = async () => {
-  const newLocal = await fetch(`api/get_script_names`);
-  const newLocal_1 = await newLocal.json();
-  return newLocal_1;
+  const fetchResult = await fetch(`api/get_script_names`);
+  return (await fetchResult.json()) as object;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -111,6 +110,7 @@ function text_input(
 }
 
 declare module 'solid-js' {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
     interface Directives {
       // use:text_input
@@ -182,7 +182,7 @@ export function SaveScriptDialog(props: {
       setOpen(false);
       successOpen[1](true);
     } catch (error) {
-      console.error(`API call error: ${error}`);
+      console.error(`API call error: ${String(error)}`);
       setSaving(false);
       errorOpen[1](true);
     }
@@ -199,7 +199,12 @@ export function SaveScriptDialog(props: {
         >
           Cancel
         </button>
-        <button onClick={save}>Save</button>
+        <button
+          // eslint-disable-next-line @typescript-eslint/no-misused-promises
+          onClick={save}
+        >
+          Save
+        </button>
         <p>{saving() && 'Saving...'}</p>
       </dialog>
       <SuccessDialog open={successOpen} />
@@ -221,7 +226,14 @@ export function LoadScriptDialog(props: {
 
   createEffect(() => {
     if (props.openSig[0]()) {
-      refetch();
+      const result = refetch();
+
+      // TODO figure out why `refetch` returns `Promise<T> | T` and if there is a way to do this better
+      if (result instanceof Promise) {
+        result.catch(error => {
+          console.error('Error occurred while refetching:', error);
+        });
+      }
     }
   });
 
