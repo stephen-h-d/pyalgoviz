@@ -22,7 +22,7 @@ import { Tab } from './Tab';
 import { VizEventNavigator, Speed, VizEventIdx } from './vizEvents';
 import { asyncRun, pyodide_ready } from './py-worker';
 import { executorScript } from './executor';
-import { ExecResult, Script, VizEvent } from './exec_result';
+import { ExecResult, PyAlgoVizScript, VizEvent } from './exec_result';
 import { renderEvent } from './VizOutput';
 import { BehaviorSubject, Subject } from 'rxjs';
 import EnumSelect from './EnumSelect';
@@ -133,7 +133,7 @@ function TopLeftContents(props: {
   // TODO finish checking whether the current saved script matches whether it is loaded,
   // and if so, warn user
   const [currentSavedScript, setCurrentSavedScript] =
-    createSignal<Script | null>(null);
+    createSignal<PyAlgoVizScript | null>(null);
 
   const showLoadDialogSig = createSignal<boolean>(false);
   const showLoadDialog = () => {

@@ -4,7 +4,7 @@ import { setUser } from './authSignal';
 const googleProvider = new GoogleAuthProvider();
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function signInWithGoogle(_event: MouseEvent) {
+export function signInWithGoogle(_event: MouseEvent) {
   signInWithPopup(auth, googleProvider)
     .then(result => {
       // This gives you a Google Access Token. You can use it to access the Google API.

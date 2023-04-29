@@ -15,7 +15,7 @@ export interface ExecResult {
   events: VizEvent[];
 }
 
-export interface Script {
+export interface PyAlgoVizScript {
   algo_script: string;
   viz_script: string;
 }

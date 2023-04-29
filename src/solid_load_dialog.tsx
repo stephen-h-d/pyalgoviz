@@ -12,19 +12,18 @@ import {
 } from 'solid-js';
 import * as styles from './solid_load_dialog.css';
 import { postJson } from './postJson';
-import { Script } from './exec_result';
+import { PyAlgoVizScript } from './exec_result';
 import { CheckBox } from './CheckBox';
 
 function SelectDialogEl(props: {
   option: string;
   selectedSig: Signal<string | null>;
 }) {
-  const [selected, setSelected] = props.selectedSig;
   const getCl = () => {
     const classList: { [c: string]: boolean | undefined } = {};
     classList[styles.no_select] = true;
 
-    if (selected() === props.option) {
+    if (props.selectedSig[0]() === props.option) {
       classList[styles.selected_script] = true;
       classList[styles.not_selected_script] = false;
     } else {
@@ -35,10 +34,10 @@ function SelectDialogEl(props: {
     return classList;
   };
   function optionClicked(val: string) {
-    if (selected() == val) {
-      setSelected(null);
+    if (props.selectedSig[0]() == val) {
+      props.selectedSig[1](null);
     } else {
-      setSelected(val);
+      props.selectedSig[1](val);
     }
   }
 
@@ -58,13 +57,12 @@ function SelectDialog(props: {
   openSig: Signal<boolean>;
   selectedSig: Signal<string | null>;
 }) {
-  const [open, setOpen] = props.openSig;
   const innerSelectedSig = createSignal<string | null>(null);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   function setSelectedAndClose(_e: MouseEvent) {
     props.selectedSig[1](innerSelectedSig[0]());
-    setOpen(false);
+    props.openSig[1](false);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -83,7 +81,7 @@ function SelectDialog(props: {
       </button>
       <button
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        onClick={_e => setOpen(false)}
+        onClick={_e => props.openSig[1](false)}
       >
         Cancel
       </button>
@@ -144,7 +142,7 @@ export function SaveScriptDialog(props: {
   openSig: Signal<boolean>;
   algo: Accessor<string>;
   viz: Accessor<string>;
-  savedCb: (script: Script) => void;
+  savedCb: (script: PyAlgoVizScript) => void;
 }) {
   const [open, setOpen] = props.openSig;
   const [name, setName] = createSignal('');
@@ -213,6 +211,10 @@ export function SaveScriptDialog(props: {
   );
 }
 
+interface ScriptNames {
+  result: string[];
+}
+
 export function LoadScriptDialog(props: {
   openSig: Signal<boolean>;
   setAlgo: Setter<string>;
@@ -243,9 +245,9 @@ export function LoadScriptDialog(props: {
       fetch(`api/load?script_name=${selectedScriptName}`)
         .then(response => response.json())
         .then(data => {
-          console.log(data);
-          props.setAlgo(data['algo_script']);
-          props.setViz(data['viz_script']);
+          const script = data as PyAlgoVizScript;
+          props.setAlgo(script.algo_script);
+          props.setViz(script.viz_script);
         })
         .catch(error => console.error(error));
 
@@ -262,7 +264,8 @@ export function LoadScriptDialog(props: {
       return [];
     }
 
-    for (const name of scriptNames().result) {
+    const fetched = scriptNames() as ScriptNames;
+    for (const name of fetched.result) {
       names.push(name);
     }
     return names;
