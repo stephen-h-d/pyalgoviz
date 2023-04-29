@@ -135,7 +135,8 @@ function TopLeftContents(props: {
   const [currentSavedScript, setCurrentSavedScript] =
     createSignal<PyAlgoVizScript | null>(null);
 
-  const showLoadDialogSig = createSignal<boolean>(false);
+  const [showLoadDialogSig, setshowLoadDialogSig] =
+    createSignal<boolean>(false);
   const showLoadDialog = () => {
     // if currentSavedScript doesn't match current script
     // set warning dialog sig true
@@ -144,13 +145,15 @@ function TopLeftContents(props: {
     // I will also need to make `doShowLoadDialog` that
     // clicking on the warning dialog shows.
 
-    showLoadDialogSig[1](true);
+    setshowLoadDialogSig(true);
   };
-  const showSaveDialogSig = createSignal<boolean>(false);
+  const [showSaveDialogSig, setshowSaveDialogSig] =
+    createSignal<boolean>(false);
   const showSaveDialog = () => {
-    showSaveDialogSig[1](true);
+    setshowSaveDialogSig(true);
   };
-  const selectedSpeedSig = createSignal<keyof typeof Speed>('Medium (40/s)');
+  const [selectedSpeedSig, setselectedSpeedSig] =
+    createSignal<keyof typeof Speed>('Medium (40/s)');
   createEffect(() => {
     props.eventNavSubjects.speed$.next(selectedSpeedSig[0]());
   });
@@ -170,11 +173,11 @@ function TopLeftContents(props: {
   const saveDisabled = () => user() === null;
   const loadDisabled = () => user() === null;
 
-  const range = createSignal(0.0);
-  const runLocally = createSignal(true);
+  const [range, setrange] = createSignal(0.0);
+  const [runLocally, setrunLocally] = createSignal(true);
 
   createEffect(() => {
-    const rangePct = range[0]();
+    const rangePct = range();
     if (!props.playing()) {
       props.eventNavSubjects.sliderIndex$.next(rangePct);
     }
@@ -184,7 +187,7 @@ function TopLeftContents(props: {
     const currIdx = props.currentEventIdx();
     const currPct = currIdx.current / currIdx.total;
     if (props.playing()) {
-      range[1](currPct);
+      setrange(currPct);
     }
   });
 
@@ -481,7 +484,10 @@ function IDE(props: {
   const resizer = new Resizer(props.getSelf);
 
   const eventNavSubjects = new EventNavSubjects();
-  const execResult = createSignal<ExecResult>({ py_error: null, events: [] });
+  const [execResult, setexecResult] = createSignal<ExecResult>({
+    py_error: null,
+    events: [],
+  });
   const eventNavigator = new VizEventNavigator(eventNavSubjects, execResult[0]);
   const [pyodideRunning, setPyodideRunning] = createSignal(false);
   const pyodideReadyAcc = from(pyodide_ready);
@@ -511,8 +517,8 @@ arc(100,
     color="orange")
 `);
 
-  const algoLog = createSignal('');
-  const vizLog = createSignal('');
+  const [algoLog, setalgoLog] = createSignal('');
+  const [vizLog, setvizLog] = createSignal('');
   const logMgr = new LogManager(execResult[0]().events);
 
   async function run(locally: boolean) {
@@ -527,7 +533,7 @@ arc(100,
         if (result_json !== undefined) {
           setPyodideRunning(false);
           const run_result = JSON.parse(result_json) as ExecResult;
-          execResult[1](run_result);
+          setexecResult(run_result);
         } else {
           console.error('run result was undefined');
         }
@@ -539,7 +545,7 @@ arc(100,
       try {
         const run_result = (await postJson('api/run', toRun)) as ExecResult;
         console.log('run_result', run_result);
-        execResult[1](run_result);
+        setexecResult(run_result);
       } catch (error) {
         console.log(error);
       }
@@ -561,7 +567,7 @@ arc(100,
 
   createEffect(() => {
     const currEventIdx = eventIdx();
-    const currExecResult = execResult[0]();
+    const currExecResult = execResult();
     logMgr.resetEvents(currExecResult.events);
 
     if (
@@ -570,13 +576,13 @@ arc(100,
     ) {
       // TODO highlight the most recent line in both algo log and viz log
       const algoLogContents = logMgr.getAlgoLogUntilIndex(currEventIdx.current);
-      algoLog[1](algoLogContents);
+      setalgoLog(algoLogContents);
       const vizLogContents = logMgr.getVizLogUntilIndex(currEventIdx.current);
-      vizLog[1](vizLogContents);
+      setvizLog(vizLogContents);
     } else if (currExecResult.py_error !== null) {
       let errorMsg = `Error executing script at line ${currExecResult.py_error.lineno}.\n`;
       errorMsg += currExecResult.py_error.error_msg;
-      algoLog[1](errorMsg);
+      setalgoLog(errorMsg);
     }
   });
 

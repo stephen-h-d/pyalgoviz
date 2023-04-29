@@ -1,4 +1,4 @@
-import { Accessor, Signal, createRenderEffect } from 'solid-js';
+import { Accessor, Setter, Signal, createRenderEffect } from 'solid-js';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function checkbox_input(
@@ -23,12 +23,13 @@ declare module 'solid-js' {
   namespace JSX {
     interface Directives {
       // use:checkbox_input
-      checkbox_input: Signal<boolean>;
+      checkbox_input: [Accessor<boolean>, Setter<boolean>];
     }
   }
 }
 export function CheckBox(props: {
-  valueSig: Signal<boolean>;
+  value: Accessor<boolean>;
+  setValue: Setter<boolean>;
   id: string;
   label: string;
 }) {
@@ -36,7 +37,7 @@ export function CheckBox(props: {
     <>
       <input
         type="checkbox"
-        use:checkbox_input={props.valueSig}
+        use:checkbox_input={[props.value, props.setValue]}
         name={props.id}
         id={props.id}
       />
