@@ -29,6 +29,14 @@ class User:
 
 
 @attrs.define(kw_only=True)
+class Event:
+    lineno: int
+    viz_output: str
+    viz_log: str
+    algo_log: str
+
+
+@attrs.define(kw_only=True)
 class Algorithm:
     author_id: UserId
     name: str
@@ -37,7 +45,7 @@ class Algorithm:
     public: bool = False
     # not sure, but I think `events` in the old model was a way to cache a run of the
     # script for the public "all" page.
-    cached_events: list[str] = []
+    cached_events: list[Event] = []
     last_updated: datetime | None = None
 
 

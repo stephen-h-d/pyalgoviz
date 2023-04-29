@@ -10,6 +10,7 @@ from google.cloud.datastore import Key
 
 import server.db.models
 from server.db.models import Algorithm
+from server.db.models import Event
 from server.db.models import User
 from server.db.models import UserId
 from server.db.protocol import DatabaseProtocol
@@ -32,36 +33,70 @@ def _kind_for(attrs_class: type) -> str:
 T = TypeVar("T")
 
 
+def event_to_entity(event: Event) -> Entity:
+    entity = Entity(key=Key("Event"))
+    entity.update(
+        {
+            "lineno": event.lineno,
+            "viz_output": event.viz_output,
+            "viz_log": event.viz_log,
+            "algo_log": event.algo_log,
+        }
+    )
+    return entity
+
+
+def entity_to_event(entity: Entity) -> Event:
+    return Event(
+        lineno=entity["lineno"],
+        viz_output=entity["viz_output"],
+        viz_log=entity["viz_log"],
+        algo_log=entity["algo_log"],
+    )
+
+
+def entity_to_algorithm(entity: Entity) -> Algorithm:
+    return Algorithm(
+        author_id=entity["author_id"],
+        name=entity["name"],
+        algo_script=entity["algo_script"],
+        viz_script=entity["viz_script"],
+        public=entity["public"],
+        cached_events=[
+            entity_to_event(event_entity) for event_entity in entity["cached_events"]
+        ],
+        last_updated=entity["last_updated"],
+    )
+
+
 @attrs.define
 class GoogleStoreDatabase(DatabaseProtocol):
     """A database based on Google DataStore."""
 
     _client: Client
 
-    def _key_query(self, key: Key, attrs_class: type[T]) -> T | None:
+    def _key_query(self, key: Key, attrs_class: type[T]) -> dict | None:
         query = self._client.query(kind=_kind_for(attrs_class))
         query.key_filter(key, "=")
         results = list(query.fetch())
         # NOTE: We are not checking if there is more than one result -- as far as I
         # understand, there can't ever be.
         if len(results) > 0:
-            result_as_dict = dict(results[0].items())
-            return attrs_class(**result_as_dict)
+            return dict(results[0].items())
         else:
             return None
 
-    def _save_entity(self, key: Key, attrs_instance: Any) -> None:
-        entity = Entity(key)
-        entity.update(attrs.asdict(attrs_instance))
-        self._client.put(entity)
-
     def get_user(self, user_id: UserId) -> User | None:
         user_key = self._client.key(EntityType.USER.value, user_id)
-        return self._key_query(user_key, User)
+        entity = self._key_query(user_key, User)
+        print(f"user entity {entity}")
+        return User(**entity)
 
     def save_user(self, user: User) -> None:
         user_key = self._client.key(EntityType.USER.value, user.firebase_user_id)
-        self._save_entity(user_key, user)
+        entity = Entity(user_key)
+        entity.update(attrs.asdict(user))
+        self._client.put(entity)
 
     def _make_algo_key(self, author_id: UserId, algo_name: str) -> Key:
         # keys can be strings, and there can only be one key, so this is how we guarantee
@@ -72,12 +107,29 @@ class GoogleStoreDatabase(DatabaseProtocol):
 
     def get_algo(self, author_id: UserId, name: str) -> Algorithm | None:
         algo_key = self._make_algo_key(author_id, name)
-        return self._key_query(algo_key, Algorithm)
+        entity = self._key_query(algo_key, Algorithm)
+        if entity is None:
+            return None
+        return entity_to_algorithm(entity)
 
     def save_algo(self, algo: Algorithm) -> None:
         algo_key = self._make_algo_key(algo.author_id, algo.name)
         algo.last_updated = datetime.now()
-        self._save_entity(algo_key, algo)
+        entity = Entity(algo_key)
+        entity.update(
+            {
+                "author_id": algo.author_id,
+                "name": algo.name,
+                "algo_script": algo.algo_script,
+                "viz_script": algo.viz_script,
+                "public": algo.public,
+                "cached_events": [
+                    event_to_entity(event) for event in algo.cached_events
+                ],
+                "last_updated": algo.last_updated,
+            }
+        )
+        self._client.put(entity)
 
     def get_algo_names_by(self, author_id: UserId) -> list[str]:
         query = self._client.query(kind=EntityType.ALGORITHM.value)

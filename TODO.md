@@ -5,8 +5,10 @@
 
 ### Ready-to-implement TODOs
 
-1. Support running server-side in a sandboxed manner (est. 2 hrs)
 2. Support caching the results (once running server-side is implemented) (est. 2 hrs)
+   This appears to be working..?  but needs to actually be tested for real, not just assume
+   that no errors means no issues
+
 3. Make a landing page with running algorithms.  (This will likely depend on the cache) (est. 3 hrs)
 5. Disable all the buttons when: (est. 0.5 hours)
    * pyodide is not loaded

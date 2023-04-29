@@ -27,9 +27,9 @@ login_manager = LoginManager()
 SECRET_KEY = os.environ.get("SECRET_KEY")
 PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT")
 
-# client = datastore.Client(project=PROJECT)
-db = MemoryDatabase.with_fake_entries()
-# db = GoogleStoreDatabase(client)
+client = datastore.Client(project=PROJECT)
+# db = MemoryDatabase.with_fake_entries()
+db = GoogleStoreDatabase(client)
 jwta = JWTAuthenticator(db)
 
 app = Flask(__name__)
@@ -50,12 +50,20 @@ def save() -> Response:
     try:
         data = request.get_data().decode("utf-8")
         submission = json.loads(data)
+        public = submission.get("public", False)
+        print(f"public {public}")
         algo = Algorithm(
             author_id=author.get_id(),
             algo_script=submission.get("algo_script"),
             viz_script=submission.get("viz_script"),
+            public=public,
             name=submission.get("name"),
         )
+        if public:
+            res = run_script(algo.algo_script, algo.viz_script)
+            if res["py_error"] is None:
+                events = res["events"]
+                algo.cached_events = events
         db.save_algo(algo)
         # notify(author, 'save', algo.name, algo.script, algo.viz)
         msg = 'Script was successfully saved by %s as "%s"' % (author.email, algo.name)
@@ -95,6 +103,7 @@ def load() -> Response:
     try:
         script_name = request.args.get("script_name")
         algo = db.get_algo(author.firebase_user_id, script_name)
+        print(f"algo cached_events {algo.cached_events}")
         return attrs.asdict(algo), HTTPStatus.OK
     except Exception as e:
         msg = "Could not load script names: %s" % e

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from types import FrameType, TracebackType
-    from typing import Any, Optional, Callable
+    from typing import Any, Optional
 
 algo_log = StringIO()
 viz_log = StringIO()
@@ -33,24 +33,14 @@ def log(
     print(*values, sep=sep, end=end, file=current_log, flush=flush)
 
 
-def number(x: float, y: float, label: str, value: str, scale=4, color="black") -> None:
+def number(x: float, y: float,label: str, value: str, scale=4, color="black")->None:
     text(x, y + 10, label)
     rect(x + 20, y, value * scale, 10, color)
     text(x + 22 + value * scale, y + 10, value)
 
 
-def barchart(
-    x: float,
-    y: float,
-    w: float,
-    h: float,
-    items: list,
-    highlight: int = -1,
-    scale: float = 1,
-    fill: str = "black",
-    border: str = "black",
-) -> None:
-    rect(x, y, w, h, "#FDFDF0", border)
+def barchart(x: float, y: float,w: float, h: float, items: list, highlight:int=-1, scale:float=1, fill:str="black", border:str="black")->None:
+    rect(x, y,w, h, "#FDFDF0", border)
     if items:
         d = min(15, int(w / len(items)))
         offset = (w - len(items) * d) / 2
@@ -69,7 +59,7 @@ NUMBER = ("number", (int, float))
 STRING = ("string", str)
 
 
-def check(primitive: str, param: str, value: Any, expected: tuple) -> None:
+def check(primitive: str, param:str, value:Any, expected:tuple) -> None:
     kind, typ = expected
     assert isinstance(value, typ), "expected a %s for %s.%s, instead got %s" % (
         kind,
@@ -88,33 +78,22 @@ def check(primitive: str, param: str, value: Any, expected: tuple) -> None:
 #     viz_output += 'B(canvas, %s,%s);' % (frequency, duration)
 
 
-def text(
-    x: float,
-    y: float,
-    txt: str,
-    size: int = 13,
-    font: str = "Arial",
-    color: str = "black",
-) -> None:
+def text(x: float, y: float, txt: str, size: int = 13, font: str = "Arial", color: str = "black") -> None:
     check("text", "x", x, NUMBER)
     check("text", "y", x, NUMBER)
     check("text", "size", size, NUMBER)
     check("text", "font", font, STRING)
     check("text", "color", color, STRING)
     global viz_output
-    viz_output += "T(canvas, %d,%d,%r,%d,%r,%r);" % (x, y, str(txt), size, font, color)
+    viz_output += "T(canvas, %d,%d,%r,%d,%r,%r);" % (x, y,str(txt), size, font, color)
 
 
-def line(
-    x1: float, y1: float, x2: float, y2: float, color: str = "black", width: int = 1
-) -> None:
+def line(x1: float, y1: float, x2: float, y2: float, color: str = "black", width: int = 1) -> None:
     global viz_output
     viz_output += "L(canvas, %s,%s,%s,%s,%r,%s);" % (x1, y1, x2, y2, color, width)
 
 
-def rect(
-    x: float, y: float, w: float, h: float, fill: str = "white", border: str = "black"
-) -> None:
+def rect(x: float, y: float, w: float, h: float, fill: str = "white", border: str = "black") -> None:
     check("rect", "x", x, NUMBER)
     check("rect", "y", x, NUMBER)
     check("rect", "w", w, NUMBER)
@@ -122,30 +101,20 @@ def rect(
     check("rect", "fill", fill, STRING)
     check("rect", "border", border, STRING)
     global viz_output
-    viz_output += "R(canvas, %s,%s,%s,%s,%r,%r);" % (x, y, w, h, fill, border)
+    viz_output += "R(canvas, %s,%s,%s,%s,%r,%r);" % (x, y,w, h, fill, border)
 
 
-def circle(
-    x: float, y: float, radius: float, fill: str = "white", border: str = "black"
-) -> None:
+def circle(x: float, y: float, radius: float, fill: str = "white", border: str = "black") -> None:
     check("circle", "x", x, NUMBER)
     check("circle", "y", x, NUMBER)
     check("circle", "radius", radius, NUMBER)
     check("circle", "fill", fill, STRING)
     check("circle", "border", border, STRING)
     global viz_output
-    viz_output += "C(canvas, %s,%s,%s,%r,%r);" % (x, y, radius, fill, border)
+    viz_output += "C(canvas, %s,%s,%s,%r,%r);" % (x, y,radius, fill, border)
 
 
-def arc(
-    cx: float,
-    cy: float,
-    innerRadius: float,
-    outerRadius: float,
-    startAngle: float,
-    endAngle: float,
-    color: str = "black",
-) -> None:
+def arc(cx: float, cy: float, innerRadius: float, outerRadius: float, startAngle: float, endAngle: float, color: str = "black") -> None:
     check("circle", "cx", cx, NUMBER)
     check("circle", "cy", cx, NUMBER)
     check("circle", "innerRadius", innerRadius, NUMBER)
@@ -198,12 +167,9 @@ class Executor(object):
 
             # Add an extra "event" indicating the end of the program, with the output
             # being the output from the last line
-            event_viz_output = (
-                self.events[-1]["viz_output"] if len(self.events) > 0 else ""
-            )
             event = {
                 "lineno": self.last_line,
-                "viz_output": event_viz_output,
+                "viz_output": self.events[-1]["viz_output"],
                 "viz_log": "",
                 "algo_log": "Program finished.Hit F9 or Ctrl-Enter to run the script again.",
             }
@@ -212,9 +178,7 @@ class Executor(object):
             tb = sys.exc_info()[2]
             stack = traceback.extract_tb(tb)
             lines = [0] + [
-                lineno
-                for filename, lineno, fn, txt in stack
-                if filename in SCRIPT_FILENAMES
+                lineno for filename, lineno, fn, txt in stack if filename == "<string>"
             ]
             msg = "=" * 70
             msg += "Error at line %d: %s" % (lines[-1], ERROR or e)
@@ -237,7 +201,8 @@ class Executor(object):
         now = time.time()
         if now - self.start > 10:
             self.events = self.events[-100:]
-            # TODO improve this -- not sure why only showing the last 100 events
+            # TODO figure out if I can switch from  to  now that this is in a bona fide Python file.
+            # Since it is still being pasted into TS and run by Pyodide, that might not be the case.
             raise TimeoutError(
                 "Script ran for more than 10 seconds and has been canceled."
                 + "Showing just the last 100 events."
