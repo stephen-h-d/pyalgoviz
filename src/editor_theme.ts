@@ -1,7 +1,6 @@
-import { EditorView } from "codemirror";
-
+import { EditorView } from 'codemirror';
 
 export const fixedHeightEditor = EditorView.theme({
-  "&": { height: "100%" },
-  ".cm-scroller": { overflow: "auto" }
+  '&': { height: '100%' },
+  '.cm-scroller': { overflow: 'auto' },
 });

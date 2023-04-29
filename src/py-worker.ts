@@ -1,11 +1,11 @@
-import { BehaviorSubject } from "rxjs";
+import { BehaviorSubject } from 'rxjs';
 
-const pyodideWorker = new Worker("pyodide-0.21.3/webworker.js");
+const pyodideWorker = new Worker('pyodide-0.21.3/webworker.js');
 
 const callbacks = new Map();
 export const pyodide_ready = new BehaviorSubject<boolean>(false);
 
-pyodideWorker.onmessage = (event) => {
+pyodideWorker.onmessage = event => {
   if (event.data.pyodide_ready !== undefined) {
     pyodide_ready.next(true);
     return;
@@ -24,11 +24,11 @@ export const asyncRun = (() => {
   // is a bit wonky.  Different types need to be converted in different ways.
   // So we bypass that and just use JSON.
   return (script: string, context: object): Promise<string> => {
-
     // the id could be generated more carefully
     id = (id + 1) % Number.MAX_SAFE_INTEGER;
 
-    return new Promise((onSuccess) =>  { // TODO add onError / reject here?
+    return new Promise(onSuccess => {
+      // TODO add onError / reject here?
       callbacks.set(id, onSuccess);
       pyodideWorker.postMessage({
         ...context,
@@ -36,7 +36,5 @@ export const asyncRun = (() => {
         id,
       });
     });
-
   };
-
 })();

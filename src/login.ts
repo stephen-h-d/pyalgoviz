@@ -39,12 +39,12 @@ export async function signInWithGoogle(_event: MouseEvent) {
 }
 
 export async function logout() {
-    // set the user to null no matter what.  (I think that's the best approach anyway.)
-    // TODO review this
-    setUser(null);
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
+  // set the user to null no matter what.  (I think that's the best approach anyway.)
+  // TODO review this
+  setUser(null);
+  try {
+    await signOut(auth);
+  } catch (error) {
+    console.error('Error signing out:', error);
   }
+}

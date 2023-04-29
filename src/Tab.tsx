@@ -11,7 +11,8 @@ interface TabProps {
 }
 
 export const Tab = (props: TabProps) => {
-  const tabClass = () => [styles.tab, props.selected ? styles.selectedTab : ''].join(' ');
+  const tabClass = () =>
+    [styles.tab, props.selected ? styles.selectedTab : ''].join(' ');
 
   return (
     <div

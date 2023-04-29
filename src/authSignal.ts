@@ -11,12 +11,12 @@ const [user, setUser] = createSignal<User | null>(null);
 
 export { user, setUser };
 
-onAuthStateChanged(auth, (firebaseUser) => {
-    if (firebaseUser) {
-      const { uid, email } = firebaseUser;
-      // TODO decide if I really need email or username or whatever
-      setUser({ firebase_user_id:uid, email:email||'' });
-    } else {
-      setUser(null);
-    }
-  });
+onAuthStateChanged(auth, firebaseUser => {
+  if (firebaseUser) {
+    const { uid, email } = firebaseUser;
+    // TODO decide if I really need email or username or whatever
+    setUser({ firebase_user_id: uid, email: email || '' });
+  } else {
+    setUser(null);
+  }
+});

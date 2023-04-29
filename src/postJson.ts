@@ -1,6 +1,6 @@
-export async function postJson(url:string, body: object) {
+export async function postJson(url: string, body: object) {
   const response = await fetch(url, {
-    method: "POST",
+    method: 'POST',
     body: JSON.stringify(body),
     headers: {
       'Content-type': 'application/json; charset=UTF-8',
@@ -13,8 +13,6 @@ export async function postJson(url:string, body: object) {
     return await response.json();
   } else {
     console.error('API call error');
-    throw new Error(
-      `Server error: ${response.status}.}`,
-    );
+    throw new Error(`Server error: ${response.status}.}`);
   }
 }

@@ -57,9 +57,10 @@ describe('LogManager', () => {
             .join('');
           const actual = logManager.getVizLogUntilIndex(index);
 
-
-          if (expected !== actual){
-            console.log(`exepected "${expected}" actual "${actual}" events.length ${events.length}`);
+          if (expected !== actual) {
+            console.log(
+              `exepected "${expected}" actual "${actual}" events.length ${events.length}`,
+            );
           }
 
           return expected === actual;
