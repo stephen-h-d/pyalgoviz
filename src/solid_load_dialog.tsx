@@ -11,8 +11,9 @@ import {
   Setter,
 } from 'solid-js';
 import * as styles from './solid_load_dialog.css';
-import { postJson } from './fetchJson';
+import { postJson } from './postJson';
 import { Script } from './exec_result';
+import { CheckBox } from './CheckBox';
 
 function SelectDialogEl(props: {
   option: string;
@@ -147,6 +148,7 @@ export function SaveScriptDialog(props: {
 }) {
   const [open, setOpen] = props.openSig;
   const [name, setName] = createSignal('');
+  const publish = createSignal(false);
   const [saving, setSaving] = createSignal(false);
   const successOpen = createSignal(false);
   const errorOpen = createSignal(false);
@@ -166,14 +168,15 @@ export function SaveScriptDialog(props: {
     try {
       const algo_script = props.algo();
       const viz_script = props.viz();
-      postJson('api/save',{
+      await postJson('api/save', {
         algo_script,
         viz_script,
         name: name(),
+        publish: publish[0](),
       });
       props.savedCb({
         algo_script,
-        viz_script
+        viz_script,
       });
       setSaving(false);
       setOpen(false);
@@ -189,6 +192,7 @@ export function SaveScriptDialog(props: {
     <>
       <dialog open={open()}>
         <input type="text" use:text_input={[name, setName]} />
+        <CheckBox id="publish" label="Publish" valueSig={publish} />
         <button
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           onclick={_e => setOpen(false)}

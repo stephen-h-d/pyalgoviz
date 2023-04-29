@@ -29,7 +29,8 @@ import EnumSelect from './EnumSelect';
 import { signInWithGoogle as loginWithGoogle, logout } from './login';
 import { user } from './authSignal';
 import { LogManager } from './LogManager';
-import { postJson } from './fetchJson';
+import { postJson } from './postJson';
+import { CheckBox } from './CheckBox';
 
 declare module 'solid-js' {
   namespace JSX {
@@ -107,33 +108,6 @@ declare module 'solid-js' {
     interface Directives {
       // use:range_input
       range_input: Signal<number>;
-    }
-  }
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function checkbox_input(
-  element: HTMLInputElement,
-  value: Accessor<Signal<boolean>>,
-) {
-  const [field, setField] = value();
-  createRenderEffect(() => {
-    const newValue = field();
-    if (element.checked !== newValue) {
-      console.log('newvalue', newValue);
-      element.checked = newValue;
-    }
-  });
-  element.addEventListener('input', e => {
-    setField((e.target as HTMLInputElement).checked);
-  });
-}
-
-declare module 'solid-js' {
-  namespace JSX {
-    interface Directives {
-      // use:checkbox_input
-      checkbox_input: Signal<boolean>;
     }
   }
 }
@@ -285,13 +259,7 @@ function TopLeftContents(props: {
           max={1}
           step="0.01"
         ></input>
-        <input
-          type="checkbox"
-          use:checkbox_input={runLocally}
-          name="run_local"
-          id="run_local"
-        ></input>
-        <label for="run_local">Run Locally</label>
+        <CheckBox id="run_local" label="Run Locally" valueSig={runLocally} />
       </div>
     </div>
   );
@@ -567,7 +535,7 @@ arc(100,
     } else {
       try {
         const run_result = (await postJson('api/run', toRun)) as ExecResult;
-        console.log("run_result",run_result);
+        console.log('run_result', run_result);
         execResult[1](run_result);
       } catch (error) {
         console.log(error);

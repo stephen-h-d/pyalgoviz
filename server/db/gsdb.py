@@ -116,6 +116,7 @@ class GoogleStoreDatabase(DatabaseProtocol):
         algo_key = self._make_algo_key(algo.author_id, algo.name)
         algo.last_updated = datetime.now()
         entity = Entity(algo_key)
+        print(f"cached_events before updating {algo.cached_events}")
         entity.update(
             {
                 "author_id": algo.author_id,
@@ -129,6 +130,7 @@ class GoogleStoreDatabase(DatabaseProtocol):
                 "last_updated": algo.last_updated,
             }
         )
+        print(f"cached_events before saving {entity['cached_events']}")
         self._client.put(entity)
 
     def get_algo_names_by(self, author_id: UserId) -> list[str]:

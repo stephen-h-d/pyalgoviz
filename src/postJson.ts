@@ -7,6 +7,8 @@ export async function postJson(url:string, body: object) {
     },
   });
 
+  debugger;
+
   if (response.ok) {
     return await response.json();
   } else {

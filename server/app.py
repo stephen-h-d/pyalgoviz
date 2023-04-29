@@ -50,16 +50,16 @@ def save() -> Response:
     try:
         data = request.get_data().decode("utf-8")
         submission = json.loads(data)
-        public = submission.get("public", False)
-        print(f"public {public}")
+        publish = submission.get("publish", False)
+        print(f"publish {publish}")
         algo = Algorithm(
             author_id=author.get_id(),
             algo_script=submission.get("algo_script"),
             viz_script=submission.get("viz_script"),
-            public=public,
+            public=publish,
             name=submission.get("name"),
         )
-        if public:
+        if publish:
             res = run_script(algo.algo_script, algo.viz_script)
             if res["py_error"] is None:
                 events = res["events"]
