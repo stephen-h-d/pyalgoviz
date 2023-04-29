@@ -7,8 +7,8 @@ export class LogManager {
   private algoLogIndexCache: Map<number, number>;
   private vizLogIndexCache: Map<number, number>;
 
-  constructor(events: VizEvent[]) {
-    this.events = events;
+  constructor() {
+    this.events = [];
     this.algoLogContent = '';
     this.vizLogContent = '';
     this.algoLogIndexCache = new Map();

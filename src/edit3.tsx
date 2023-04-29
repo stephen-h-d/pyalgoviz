@@ -43,7 +43,8 @@ declare module 'solid-js' {
 }
 
 interface EditorArgs {
-  contents: Signal<string>;
+  contents: Accessor<string>;
+  setContents?: Setter<string>;
   extensions: Array<Extension>;
   textReadOnly: boolean;
 }
@@ -51,13 +52,12 @@ interface EditorArgs {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function editor(element: HTMLInputElement, argsAccessor: Accessor<EditorArgs>) {
   const args = argsAccessor();
-  const [contents, setContents] = args.contents;
 
-  const editor = new Editor(element, contents(), args.extensions);
+  const editor = new Editor(element, args.contents(), args.extensions);
   editor.setReadOnly(args.textReadOnly);
 
   createEffect(() => {
-    const newText = contents();
+    const newText = args.contents();
 
     // if not read-only, we need to make sure the editor doesn't have focus
     if (args.textReadOnly || !element.contains(document.activeElement)) {
@@ -65,7 +65,10 @@ function editor(element: HTMLInputElement, argsAccessor: Accessor<EditorArgs>) {
     }
   });
 
-  editor.subscribe(setContents);
+  // TODO improve this, by combining the presence of `setContents` with whether it's readonly
+  if (args.setContents !== undefined) {
+    editor.subscribe(args.setContents);
+  }
 }
 
 declare module 'solid-js' {
@@ -117,8 +120,10 @@ declare module 'solid-js' {
 
 function TopLeftContents(props: {
   run: (locally: boolean) => Promise<void>;
-  algo: Signal<string>;
-  viz: Signal<string>;
+  algo: Accessor<string>;
+  setAlgo: Setter<string>;
+  viz: Accessor<string>;
+  setViz: Setter<string>;
   eventNavSubjects: EventNavSubjects;
   currentEventIdx: Accessor<VizEventIdx>;
   running: Accessor<boolean>;
@@ -132,37 +137,25 @@ function TopLeftContents(props: {
   // TODO enable run button if "run locally" is not checked and user is logged in
   // TODO finish checking whether the current saved script matches whether it is loaded,
   // and if so, warn user
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentSavedScript, setCurrentSavedScript] =
     createSignal<PyAlgoVizScript | null>(null);
 
-  const [showLoadDialogSig, setshowLoadDialogSig] =
-    createSignal<boolean>(false);
-  const showLoadDialog = () => {
-    // if currentSavedScript doesn't match current script
-    // set warning dialog sig true
-    // else show load dialog
+  // if currentSavedScript doesn't match current script
+  // set warning dialog sig true
+  // else show load dialog
 
-    // I will also need to make `doShowLoadDialog` that
-    // clicking on the warning dialog shows.
+  // I will also need to make `doShowLoadDialog` that
+  // clicking on the warning dialog shows.
+  const [showLoadDialog, setShowLoadDialog] = createSignal<boolean>(false);
 
-    setshowLoadDialogSig(true);
-  };
-  const [showSaveDialogSig, setshowSaveDialogSig] =
-    createSignal<boolean>(false);
-  const showSaveDialog = () => {
-    setshowSaveDialogSig(true);
-  };
-  const [selectedSpeedSig, setselectedSpeedSig] =
+  const [showDaveDialog, setShowSaveDialog] = createSignal<boolean>(false);
+  const [selectedSpeed, setSelectedSpeed] =
     createSignal<keyof typeof Speed>('Medium (40/s)');
   createEffect(() => {
-    props.eventNavSubjects.speed$.next(selectedSpeedSig[0]());
+    props.eventNavSubjects.speed$.next(selectedSpeed());
   });
-
-  const editorArgs: EditorArgs = {
-    contents: props.algo,
-    extensions: [basicSetup, fixedHeightEditor, python()],
-    textReadOnly: false,
-  };
 
   const runDisabled = () => props.running() || !props.pyodideReady();
   const prevDisabled = () => !props.currentEventIdx().canGoPrev();
@@ -173,7 +166,7 @@ function TopLeftContents(props: {
   const saveDisabled = () => user() === null;
   const loadDisabled = () => user() === null;
 
-  const [range, setrange] = createSignal(0.0);
+  const [range, setRange] = createSignal(0.0);
   const [runLocally, setrunLocally] = createSignal(true);
 
   createEffect(() => {
@@ -187,9 +180,18 @@ function TopLeftContents(props: {
     const currIdx = props.currentEventIdx();
     const currPct = currIdx.current / currIdx.total;
     if (props.playing()) {
-      setrange(currPct);
+      setRange(currPct);
     }
   });
+
+  const editorArgs: EditorArgs = {
+    // eslint-disable-next-line solid/reactivity
+    contents: props.algo,
+    // eslint-disable-next-line solid/reactivity
+    setContents: props.setAlgo,
+    extensions: [basicSetup, fixedHeightEditor, python()],
+    textReadOnly: false,
+  };
 
   return (
     <div class={styles.top_left_contents}>
@@ -197,82 +199,89 @@ function TopLeftContents(props: {
         <div use:editor={editorArgs} class={styles.editor} />
       </div>
       <SaveScriptDialog
-        viz={props.viz[0]}
-        algo={props.algo[0]}
-        openSig={showSaveDialogSig}
+        viz={props.viz}
+        algo={props.algo}
+        open={showDaveDialog}
+        setOpen={setShowSaveDialog}
         savedCb={setCurrentSavedScript}
       />
       <LoadScriptDialog
-        openSig={showLoadDialogSig}
-        setAlgo={props.algo[1]}
-        setViz={props.viz[1]}
+        open={showLoadDialog}
+        setOpen={setShowLoadDialog}
+        setAlgo={props.setAlgo}
+        setViz={props.setViz}
       />
       <div class={styles.inputs}>
         <button
           disabled={runDisabled()}
           class={styles.input}
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          onClick={async _e => props.run(runLocally[0]())}
+          // eslint-disable-next-line @typescript-eslint/no-misused-promises
+          onClick={() => props.run(runLocally())}
         >
           Run
         </button>
-        <EnumSelect enumObject={Speed} signal={selectedSpeedSig} />
+        <EnumSelect
+          enumObject={Speed}
+          selected={selectedSpeed}
+          setSelected={setSelectedSpeed}
+        />
         <button
           disabled={prevDisabled()}
           class={styles.input}
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          onClick={_e => props.eventNavSubjects.prev$.next(null)}
+          onClick={() => props.eventNavSubjects.prev$.next(null)}
         >
           Prev
         </button>
         <button
           disabled={playPauseDisabled()}
           class={styles.input}
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           // TODO make it "Play/Pause" based on whether it's running
-          onClick={_e => props.eventNavSubjects.playPause$.next(null)}
+          onClick={() => props.eventNavSubjects.playPause$.next(null)}
         >
           Play
         </button>
         <button
           disabled={nextDisabled()}
           class={styles.input}
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          onClick={_e => props.eventNavSubjects.next$.next(null)}
+          onClick={() => props.eventNavSubjects.next$.next(null)}
         >
           Next
         </button>
         <button
           disabled={saveDisabled()}
           class={styles.input}
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          onClick={_e => showSaveDialog()}
+          onClick={() => setShowSaveDialog(true)}
         >
           Save
         </button>
         <button
           disabled={loadDisabled()}
           class={styles.input}
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          onClick={_e => showLoadDialog()}
+          onClick={() => setShowLoadDialog(true)}
         >
           Load
         </button>
         <input
           type="range"
-          use:range_input={range}
+          use:range_input={[range, setRange]}
           min={0}
           max={1}
           step="0.01"
         />
-        <CheckBox id="run_local" label="Run Locally" valueSig={runLocally} />
+        <CheckBox
+          id="run_local"
+          label="Run Locally"
+          value={runLocally}
+          setValue={setrunLocally}
+        />
       </div>
     </div>
   );
 }
 
-function BottomLeftContents(props: { viz: Signal<string> }) {
+function BottomLeftContents(props: { viz: Accessor<string> }) {
   const editorArgs: EditorArgs = {
+    // eslint-disable-next-line solid/reactivity
     contents: props.viz,
     extensions: [basicSetup, fixedHeightEditor, python()],
     textReadOnly: false,
@@ -315,19 +324,23 @@ interface Tab {
 }
 
 function BottomRightContents(props: {
-  vizLog: Signal<string>;
-  algoLog: Signal<string>;
+  vizLog: Accessor<string>;
+  setVizLog: Setter<string>;
+  algoLog: Accessor<string>;
+  setAlgoLog: Setter<string>;
 }) {
   const [hoveredTab, setHoveredTab] = createSignal<number | null>(null);
   const [selectedTab, setSelectedTab] = createSignal<number>(1);
 
   const algoLogArgs: EditorArgs = {
+    // eslint-disable-next-line solid/reactivity
     contents: props.algoLog,
     extensions: [minimalSetup, fixedHeightEditor],
     textReadOnly: true,
   };
 
   const vizLogArgs: EditorArgs = {
+    // eslint-disable-next-line solid/reactivity
     contents: props.vizLog,
     extensions: [minimalSetup, fixedHeightEditor],
     textReadOnly: true,
@@ -336,6 +349,7 @@ function BottomRightContents(props: {
   createEffect(() => {
     if (hoveredTab()) {
       // TODO replace this with something better
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       const newLocal = document.getElementById(`tooltip-${hoveredTab()}`);
       if (newLocal !== null) {
         newLocal.classList.add(styles.showTooltip);
@@ -400,10 +414,13 @@ class Resizer {
   private col_2_width: Accessor<number>;
 
   public constructor(private mainDivAcc: Accessor<HTMLDivElement>) {
+    // eslint-disable-next-line solid/reactivity
     [this.cell_11_height, this.set_cell_11_height] = createSignal(40);
     this.cell_12_height = () => 100 - this.cell_11_height();
+    // eslint-disable-next-line solid/reactivity
     [this.cell_21_height, this.set_cell_21_height] = createSignal(70);
     this.cell_22_height = () => 100 - this.cell_21_height();
+    // eslint-disable-next-line solid/reactivity
     [this.col_1_width, this.set_col_1_width] = createSignal(50);
     this.col_2_width = () => 100 - this.col_1_width();
   }
@@ -481,6 +498,7 @@ function IDE(props: {
 }) {
   // This is currently set up via a hacky mechanism.
   // TODO refactor this to use `use` or some better way of getting the top-level element.
+  // eslint-disable-next-line solid/reactivity
   const resizer = new Resizer(props.getSelf);
 
   const eventNavSubjects = new EventNavSubjects();
@@ -488,20 +506,20 @@ function IDE(props: {
     py_error: null,
     events: [],
   });
-  const eventNavigator = new VizEventNavigator(eventNavSubjects, execResult[0]);
+  const eventNavigator = new VizEventNavigator(eventNavSubjects, execResult);
   const [pyodideRunning, setPyodideRunning] = createSignal(false);
   const pyodideReadyAcc = from(pyodide_ready);
   const pyodideReady = () => {
     return pyodideReadyAcc() === true;
   };
 
-  const algo = createSignal(`
+  const [algo, setAlgo] = createSignal(`
 for x in range(50, 500, 50):
     for y in range(50, 500, 50):
         n = y / 50
         log(f"n {n}")
 `);
-  const viz = createSignal(`
+  const [viz, setViz] = createSignal(`
 from math import pi
 
 text(x, y, "x=%s y=%s n=%d" % (x, y, n), size=10 + n*3, font="Arial", color='red')
@@ -517,14 +535,13 @@ arc(100,
     color="orange")
 `);
 
-  const [algoLog, setalgoLog] = createSignal('');
+  const [algoLog, setAlgoLog] = createSignal('');
   const [vizLog, setvizLog] = createSignal('');
-  const logMgr = new LogManager(execResult[0]().events);
 
   async function run(locally: boolean) {
     const toRun = {
-      algo_script: algo[0](),
-      viz_script: viz[0](),
+      algo_script: algo(),
+      viz_script: viz(),
     };
     if (locally) {
       setPyodideRunning(true);
@@ -565,6 +582,7 @@ arc(100,
     return result;
   };
 
+  const logMgr = new LogManager();
   createEffect(() => {
     const currEventIdx = eventIdx();
     const currExecResult = execResult();
@@ -576,13 +594,13 @@ arc(100,
     ) {
       // TODO highlight the most recent line in both algo log and viz log
       const algoLogContents = logMgr.getAlgoLogUntilIndex(currEventIdx.current);
-      setalgoLog(algoLogContents);
+      setAlgoLog(algoLogContents);
       const vizLogContents = logMgr.getVizLogUntilIndex(currEventIdx.current);
       setvizLog(vizLogContents);
     } else if (currExecResult.py_error !== null) {
       let errorMsg = `Error executing script at line ${currExecResult.py_error.lineno}.\n`;
       errorMsg += currExecResult.py_error.error_msg;
-      setalgoLog(errorMsg);
+      setAlgoLog(errorMsg);
     }
   });
 
@@ -604,6 +622,8 @@ arc(100,
             run={run}
             algo={algo}
             viz={viz}
+            setAlgo={setAlgo}
+            setViz={setViz}
             running={pyodideRunning}
             pyodideReady={pyodideReady}
             playing={eventNavigator.playingAcc()}
@@ -634,7 +654,12 @@ arc(100,
           />
         </div>
         <div class={styles.bottom_right_cell}>
-          <BottomRightContents algoLog={algoLog} vizLog={vizLog} />
+          <BottomRightContents
+            algoLog={algoLog}
+            setAlgoLog={setAlgoLog}
+            vizLog={vizLog}
+            setVizLog={setvizLog}
+          />
           <div
             class={styles.top_edge}
             onMouseDown={resizer.resize_cell_21_listener()}
@@ -654,15 +679,21 @@ function Header() {
   function Inner() {
     const userObj = user();
     if (userObj !== null) {
+      // eslint-disable-next-line solid/components-return-once
       return (
         <>
           <span>{userObj.email}</span>
-          <button class={styles.logoutBtn} onClick={logout}>
+          <button
+            class={styles.logoutBtn}
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
+            onClick={logout}
+          >
             Log Out
           </button>
         </>
       );
     } else {
+      // eslint-disable-next-line solid/components-return-once
       return (
         <button class={styles.loginBtn} onClick={loginWithGoogle}>
           Log In
