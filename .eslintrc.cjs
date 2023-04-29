@@ -8,9 +8,10 @@ module.exports = {
         "plugin:@typescript-eslint/recommended-requiring-type-checking",
         "plugin:prettier/recommended",
         "prettier",
+        "plugin:solid/recommended",
       ],
       "plugins": [
-        "@typescript-eslint"
+        "@typescript-eslint", "solid"
     ],
     "overrides": [
     ],

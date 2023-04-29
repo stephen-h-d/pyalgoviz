@@ -188,7 +188,7 @@ function TopLeftContents(props: {
   return (
     <div class={styles.top_left_contents}>
       <div class={styles.editor_wrapper}>
-        <div use:editor={editorArgs} class={styles.editor}></div>
+        <div use:editor={editorArgs} class={styles.editor} />
       </div>
       <SaveScriptDialog
         viz={props.viz[0]}
@@ -206,16 +206,16 @@ function TopLeftContents(props: {
           disabled={runDisabled()}
           class={styles.input}
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          onclick={async _e => props.run(runLocally[0]())}
+          onClick={async _e => props.run(runLocally[0]())}
         >
           Run
         </button>
-        <EnumSelect enumObject={Speed} signal={selectedSpeedSig}></EnumSelect>
+        <EnumSelect enumObject={Speed} signal={selectedSpeedSig} />
         <button
           disabled={prevDisabled()}
           class={styles.input}
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          onclick={_e => props.eventNavSubjects.prev$.next(null)}
+          onClick={_e => props.eventNavSubjects.prev$.next(null)}
         >
           Prev
         </button>
@@ -224,7 +224,7 @@ function TopLeftContents(props: {
           class={styles.input}
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           // TODO make it "Play/Pause" based on whether it's running
-          onclick={_e => props.eventNavSubjects.playPause$.next(null)}
+          onClick={_e => props.eventNavSubjects.playPause$.next(null)}
         >
           Play
         </button>
@@ -232,7 +232,7 @@ function TopLeftContents(props: {
           disabled={nextDisabled()}
           class={styles.input}
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          onclick={_e => props.eventNavSubjects.next$.next(null)}
+          onClick={_e => props.eventNavSubjects.next$.next(null)}
         >
           Next
         </button>
@@ -240,7 +240,7 @@ function TopLeftContents(props: {
           disabled={saveDisabled()}
           class={styles.input}
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          onclick={_e => showSaveDialog()}
+          onClick={_e => showSaveDialog()}
         >
           Save
         </button>
@@ -248,7 +248,7 @@ function TopLeftContents(props: {
           disabled={loadDisabled()}
           class={styles.input}
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          onclick={_e => showLoadDialog()}
+          onClick={_e => showLoadDialog()}
         >
           Load
         </button>
@@ -258,7 +258,7 @@ function TopLeftContents(props: {
           min={0}
           max={1}
           step="0.01"
-        ></input>
+        />
         <CheckBox id="run_local" label="Run Locally" valueSig={runLocally} />
       </div>
     </div>
@@ -275,7 +275,7 @@ function BottomLeftContents(props: { viz: Signal<string> }) {
   return (
     <div class={styles.bottom_left_contents}>
       <div class={styles.editor_wrapper}>
-        <div use:editor={editorArgs} class={styles.editor}></div>
+        <div use:editor={editorArgs} class={styles.editor} />
       </div>
     </div>
   );
@@ -299,7 +299,7 @@ function vizrenderer(
 }
 
 function TopRightContents(props: RendererArgs) {
-  return <div class={styles.top_right_contents} use:vizrenderer={props}></div>;
+  return <div class={styles.top_right_contents} use:vizrenderer={props} />;
 }
 
 interface Tab {
@@ -371,10 +371,10 @@ function BottomRightContents(props: {
         />
       </div>
       <div hidden={selectedTab() !== 1} class={styles.editor_wrapper}>
-        <div use:editor={algoLogArgs} class={styles.editor}></div>
+        <div use:editor={algoLogArgs} class={styles.editor} />
       </div>
       <div hidden={selectedTab() !== 2} class={styles.editor_wrapper}>
-        <div use:editor={vizLogArgs} class={styles.editor}></div>
+        <div use:editor={vizLogArgs} class={styles.editor} />
       </div>
     </div>
   );
@@ -586,8 +586,8 @@ arc(100,
       <div class={styles.left_col}>
         <div
           class={styles.right_edge}
-          onmousedown={resizer.resize_col_listener.bind(resizer)}
-        ></div>
+          onMouseDown={resizer.resize_col_listener.bind(resizer)}
+        />
         <div class={styles.top_left_cell}>
           <TopLeftContents
             eventNavSubjects={eventNavSubjects}
@@ -601,35 +601,35 @@ arc(100,
           />
           <div
             class={styles.bottom_edge}
-            onmousedown={resizer.resize_cell_11_listener()}
-          ></div>
+            onMouseDown={resizer.resize_cell_11_listener()}
+          />
         </div>
         <div class={styles.bottom_left_cell}>
           <BottomLeftContents viz={viz} />
           <div
             class={styles.top_edge}
-            onmousedown={resizer.resize_cell_11_listener()}
-          ></div>
+            onMouseDown={resizer.resize_cell_11_listener()}
+          />
         </div>
       </div>
       <div class={styles.right_col}>
         <div
           class={styles.left_edge}
-          onmousedown={resizer.resize_col_listener.bind(resizer)}
-        ></div>
+          onMouseDown={resizer.resize_col_listener.bind(resizer)}
+        />
         <div class={styles.top_right_cell}>
           <TopRightContents currentEvent={eventNavigator.getEventVal()} />
           <div
             class={styles.bottom_edge}
-            onmousedown={resizer.resize_cell_21_listener()}
-          ></div>
+            onMouseDown={resizer.resize_cell_21_listener()}
+          />
         </div>
         <div class={styles.bottom_right_cell}>
           <BottomRightContents algoLog={algoLog} vizLog={vizLog} />
           <div
             class={styles.top_edge}
-            onmousedown={resizer.resize_cell_21_listener()}
-          ></div>
+            onMouseDown={resizer.resize_cell_21_listener()}
+          />
         </div>
       </div>
     </div>

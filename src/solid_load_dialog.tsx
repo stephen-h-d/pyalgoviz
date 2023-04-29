@@ -195,7 +195,7 @@ export function SaveScriptDialog(props: {
         <CheckBox id="publish" label="Publish" valueSig={publish} />
         <button
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          onclick={_e => setOpen(false)}
+          onClick={_e => setOpen(false)}
         >
           Cancel
         </button>
@@ -261,6 +261,6 @@ export function LoadScriptDialog(props: {
       selectedSig={selectedSig}
       openSig={props.openSig}
       options={scriptNamesList()}
-    ></SelectDialog>
+    />
   );
 }

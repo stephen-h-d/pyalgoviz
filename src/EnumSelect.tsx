@@ -1,4 +1,4 @@
-import { Signal } from 'solid-js';
+import { Signal, For } from 'solid-js';
 
 type EnumSelectProps<T> = {
   enumObject: T;
@@ -20,9 +20,7 @@ function EnumSelect<T extends Record<string, number>>(
 
   return (
     <select value={selected()} onInput={handleChange}>
-      {enumKeys.map(key => (
-        <option value={key}>{key}</option>
-      ))}
+      <For each={enumKeys}>{key => <option value={key}>{key}</option>}</For>
     </select>
   );
 }

@@ -38,7 +38,7 @@ export function CheckBox(props: {
         use:checkbox_input={props.valueSig}
         name={props.id}
         id={props.id}
-      ></input>
+      />
       <label for={props.id}>{props.label}</label>
     </>
   );
