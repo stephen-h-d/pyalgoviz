@@ -16,6 +16,7 @@
     "skipLibCheck": true,
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
+    "typeRoots": ["./node_modules/@types", "./types"],
   },
-  "include": ["src"]
+  "include": ["src/**/*", "types/**/*"]
 }

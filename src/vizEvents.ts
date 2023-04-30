@@ -1,4 +1,10 @@
-import { Accessor, createEffect, createSignal, observable } from 'solid-js';
+import {
+  Accessor,
+  Setter,
+  createEffect,
+  createSignal,
+  observable,
+} from 'solid-js';
 import { ExecResult, VizEvent } from './exec_result';
 import { filter, from, Observable, take, takeUntil, timer } from 'rxjs';
 
@@ -61,16 +67,22 @@ export class VizEventIdx {
 
 export class VizEventIdxSig {
   private event_idx = new VizEventIdx(-1, 0);
-  private subject = createSignal(this.event_idx);
+  private readonly subject: Accessor<VizEventIdx>;
+  private readonly setSubject: Setter<VizEventIdx>;
+
+  public constructor() {
+    // eslint-disable-next-line solid/reactivity
+    [this.subject, this.setSubject] = createSignal(this.event_idx);
+  }
 
   public val(): VizEventIdx {
-    return this.subject[0]();
+    return this.subject();
   }
 
   public reset(total?: number) {
     const new_total = total === undefined ? this.event_idx.total : total;
     this.event_idx = new VizEventIdx(-1, new_total);
-    this.subject[1](this.event_idx);
+    this.setSubject(this.event_idx);
   }
 
   public canGoNext() {
@@ -84,7 +96,7 @@ export class VizEventIdxSig {
       );
     } else {
       this.event_idx = this.event_idx.next();
-      this.subject[1](this.event_idx);
+      this.setSubject(this.event_idx);
     }
   }
 
@@ -99,7 +111,7 @@ export class VizEventIdxSig {
       );
     } else {
       this.event_idx = this.event_idx.prev();
-      this.subject[1](this.event_idx);
+      this.setSubject(this.event_idx);
     }
   }
 
@@ -110,7 +122,7 @@ export class VizEventIdxSig {
       let newIdx = Math.round(pct * this.event_idx.total);
       newIdx = Math.min(Math.max(0, newIdx), this.event_idx.total);
       this.event_idx = this.event_idx.goTo(newIdx);
-      this.subject[1](this.event_idx);
+      this.setSubject(this.event_idx);
     }
   }
 
@@ -120,18 +132,27 @@ export class VizEventIdxSig {
 }
 
 export class VizEventNavigator {
-  private readonly current_event = createSignal<VizEvent | null>(null);
+  private readonly currentEvent: Accessor<VizEvent | null>;
+  private readonly setCurrentEvent: Setter<VizEvent | null>;
 
   private event_idx_subject = new VizEventIdxSig();
   private exec_result: ExecResult = { py_error: null, events: [] };
   private event_timer$: Observable<number> | null = null;
 
-  private readonly playing = createSignal(false);
+  private readonly playing: Accessor<boolean>;
+  private readonly setPlaying: Setter<boolean>;
 
   public constructor(
     private readonly inputs_clicked: EventNavObservables,
     private readonly exec_result$: Accessor<ExecResult>,
   ) {
+    // eslint-disable-next-line solid/reactivity
+    [this.currentEvent, this.setCurrentEvent] = createSignal<VizEvent | null>(
+      null,
+    );
+    // eslint-disable-next-line solid/reactivity
+    [this.playing, this.setPlaying] = createSignal(false);
+
     this.inputs_clicked.prev$.subscribe(
       this.event_idx_subject.goPrev.bind(this.event_idx_subject),
     );
@@ -156,22 +177,22 @@ export class VizEventNavigator {
 
   private nextEventIdx(event_idx: VizEventIdx) {
     if (event_idx.current > 0) {
-      this.current_event[1](this.exec_result.events[event_idx.current]);
+      this.setCurrentEvent(this.exec_result.events[event_idx.current]);
     } else {
-      this.current_event[1](null);
+      this.setCurrentEvent(null);
     }
   }
 
   public playingAcc(): Accessor<boolean> {
-    return this.playing[0];
+    return this.playing;
   }
 
   private playPause() {
-    if (this.playing[0]()) {
-      this.playing[1](false);
+    if (this.playing()) {
+      this.setPlaying(false);
     } else {
-      this.playing[1](true);
-      const playing$ = from(observable(this.playing[0]));
+      this.setPlaying(true);
+      const playing$ = from(observable(this.playing));
       const notPlaying = playing$.pipe(filter(val => !val));
       const speed = this.inputs_clicked.speed$.getValue();
       const rate_per_s = Speed[speed.valueOf() as keyof typeof Speed];
@@ -189,7 +210,7 @@ export class VizEventNavigator {
       this.event_timer$.subscribe({
         next: this.event_idx_subject.goNext.bind(this.event_idx_subject),
         complete: () => {
-          this.playing[1](false);
+          this.setPlaying(false);
         },
       });
     }
@@ -205,10 +226,10 @@ export class VizEventNavigator {
   }
 
   public getEventVal(): Accessor<VizEvent | null> {
-    return this.current_event[0];
+    return this.currentEvent;
   }
 
   public getPlaying$(): Accessor<boolean> {
-    return this.playing[0];
+    return this.playing;
   }
 }

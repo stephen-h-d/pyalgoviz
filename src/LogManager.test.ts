@@ -19,7 +19,8 @@ describe('LogManager', () => {
           if (events.length === 0) return true; // Skip empty events array
 
           index = index % events.length; // Ensure index is within bounds
-          const logManager = new LogManager(events);
+          const logManager = new LogManager();
+          logManager.resetEvents(events);
 
           const expected = events
             .slice(0, index + 1)
@@ -49,7 +50,8 @@ describe('LogManager', () => {
           if (events.length === 0) return true; // Skip empty events array
 
           index = index % events.length; // Ensure index is within bounds
-          const logManager = new LogManager(events);
+          const logManager = new LogManager();
+          logManager.resetEvents(events);
 
           const expected = events
             .slice(0, index + 1)

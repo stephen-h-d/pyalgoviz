@@ -5,8 +5,6 @@ function EnumSelect<T extends Record<string, number>>(props: {
   selected: Accessor<keyof T & string>;
   setSelected: Setter<keyof T & string>;
 }) {
-  const enumKeys = Object.keys(props.enumObject);
-
   const handleChange = (e: Event) => {
     if (e.target !== null) {
       const target = e.target as HTMLSelectElement;
@@ -16,7 +14,9 @@ function EnumSelect<T extends Record<string, number>>(props: {
 
   return (
     <select value={props.selected()} onInput={handleChange}>
-      <For each={enumKeys}>{key => <option value={key}>{key}</option>}</For>
+      <For each={Object.keys(props.enumObject)}>
+        {key => <option value={key}>{key}</option>}
+      </For>
     </select>
   );
 }

@@ -19,7 +19,7 @@ function T(
     .attr('x', x)
     .attr('y', y)
     .text(txt)
-    .attr('font-size', '' + size + 'px')
+    .attr('font-size', String(size) + 'px')
     .attr('font-family', font)
     .attr('fill', color);
 }
@@ -111,7 +111,7 @@ function A(
   canvas
     .append('path')
     .attr('d', arcToAdd(arcData))
-    .attr('transform', 'translate(' + x + ',' + y + ')')
+    .attr('transform', 'translate(' + String(x) + ',' + String(y) + ')')
     .attr('fill', color);
 }
 
@@ -126,13 +126,13 @@ export function renderEvent(
     const svg = select(div).append('svg').attr('width', w).attr('height', h);
     const canvas = svg
       .append('g')
-      .attr('transform', 'scale(' + RENDERING_SCALE + ')');
+      .attr('transform', 'scale(' + String(RENDERING_SCALE) + ')');
 
     try {
       eval(event.viz_output);
     } catch (e) {
       T(canvas, 100, 100, 'INTERNAL ERROR: ', 15, 'Arial', 'red');
-      T(canvas, 100, 120, '' + e, 15, 'Arial', 'red');
+      T(canvas, 100, 120, '' + String(e), 15, 'Arial', 'red');
       T(canvas, 100, 140, '' + event.viz_output, 15, 'Arial', 'black');
     }
   }

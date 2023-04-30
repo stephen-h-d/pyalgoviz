@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { BehaviorSubject } from 'rxjs';
 
 const pyodideWorker = new Worker('pyodide-0.21.3/webworker.js');
 
-const callbacks = new Map();
+const callbacks = new Map<number, (arg: string) => void>();
 export const pyodide_ready = new BehaviorSubject<boolean>(false);
 
 pyodideWorker.onmessage = event => {
@@ -12,9 +14,11 @@ pyodideWorker.onmessage = event => {
   }
 
   const { id, result } = event.data;
-  const onSuccess = callbacks.get(id);
-  callbacks.delete(id);
-  onSuccess(result);
+  const onSuccess = callbacks.get(id as number);
+  if (onSuccess !== undefined) {
+    callbacks.delete(id as number);
+    onSuccess(result as string);
+  }
 };
 
 export const asyncRun = (() => {

@@ -10,7 +10,7 @@ export async function postJson(url: string, body: object) {
   debugger;
 
   if (response.ok) {
-    return await response.json();
+    return (await response.json()) as object;
   } else {
     console.error('API call error');
     throw new Error(`Server error: ${response.status}.}`);
