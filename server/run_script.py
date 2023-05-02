@@ -1,3 +1,4 @@
+# type: ignore
 from types import CodeType
 from typing import Any
 from typing import Mapping
@@ -21,7 +22,7 @@ def allowed_import(name, globals=None, locals=None, fromlist=(), level=0):
 custom_builtins = dict(safe_builtins)
 custom_builtins["__import__"] = allowed_import
 
-safe_globals = dict(__builtins__=custom_builtins)
+safe_globals = dict(__builtins__=custom_builtins)  # noqa
 safe_globals["range"] = range
 safe_globals["_getiter_"] = default_guarded_getiter
 

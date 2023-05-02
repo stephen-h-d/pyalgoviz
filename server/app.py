@@ -12,12 +12,11 @@ from flask_login import LoginManager
 from google.cloud import datastore
 
 from server.db.gsdb import GoogleStoreDatabase
-from server.db.mdb import MemoryDatabase
 from server.db.models import Algorithm
 from server.db.models import User
 from server.db.models import UserId
 from server.middleware import JWTAuthenticator
-from server.run_script import run_script
+from server.run_script import run_script  # type: ignore[attr-defined]
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +102,6 @@ def load() -> Response:
     try:
         script_name = request.args.get("script_name")
         algo = db.get_algo(author.firebase_user_id, script_name)
-        print(f"algo cached_events {algo.cached_events}")
         return attrs.asdict(algo), HTTPStatus.OK
     except Exception as e:
         msg = "Could not load script names: %s" % e

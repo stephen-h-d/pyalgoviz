@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime
 
 import attrs
@@ -41,7 +43,7 @@ class MemoryDatabase(DatabaseProtocol):
         return [(algo.author_id, algo.name) for algo in self.algos.values()]
 
     @classmethod
-    def with_fake_entries(cls):  #
+    def with_fake_entries(cls) -> MemoryDatabase:
         user_id = "1jfsBKaFvEeM5PxP6GCzVadvrq33"
         user = User(user_id, "stephendause@gmail.com")
         algo = Algorithm(

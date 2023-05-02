@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any
 from typing import TypeVar
 
 import attrs
@@ -89,7 +88,9 @@ class GoogleStoreDatabase(DatabaseProtocol):
     def get_user(self, user_id: UserId) -> User | None:
         user_key = self._client.key(EntityType.USER.value, user_id)
         entity = self._key_query(user_key, User)
-        print(f"user entity {entity}")
+        if entity is None:
+            return None
+
         return User(**entity)
 
     def save_user(self, user: User) -> None:
@@ -124,9 +125,7 @@ class GoogleStoreDatabase(DatabaseProtocol):
                 "algo_script": algo.algo_script,
                 "viz_script": algo.viz_script,
                 "public": algo.public,
-                "cached_events": [
-                    event_to_entity(event) for event in algo.cached_events
-                ],
+                "cached_events": [event_to_entity(event) for event in algo.cached_events],
                 "last_updated": algo.last_updated,
             }
         )
