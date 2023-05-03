@@ -44,8 +44,10 @@ class Algorithm:
     viz_script: str
     public: bool = False
     # not sure, but I think `events` in the old model was a way to cache a run of the
-    # script for the public "all" page.
-    cached_events: list[Event] = []
+    # script for the public "all" page. I made the `Event` attrs class above, but since they are stored as JSON when
+    # returned to the frontend and as an Entity (which is easier to create via a dictionary), I am just using
+    # the `dict[str, str | int]` annotation/approach for now.
+    cached_events: list[dict[str, str | int]] = []
     last_updated: datetime | None = None
 
 

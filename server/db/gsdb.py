@@ -9,7 +9,6 @@ from google.cloud.datastore import Key
 
 import server.db.models
 from server.db.models import Algorithm
-from server.db.models import Event
 from server.db.models import User
 from server.db.models import UserId
 from server.db.protocol import DatabaseProtocol
@@ -18,6 +17,7 @@ from server.db.protocol import DatabaseProtocol
 class EntityType(Enum):
     USER = "User"
     ALGORITHM = "Algorithm"
+    EVENT = "Event"
 
 
 def _kind_for(attrs_class: type) -> str:
@@ -32,21 +32,8 @@ def _kind_for(attrs_class: type) -> str:
 T = TypeVar("T")
 
 
-def event_to_entity(event: Event) -> Entity:
-    entity = Entity(key=Key("Event"))
-    entity.update(
-        {
-            "lineno": event.lineno,
-            "viz_output": event.viz_output,
-            "viz_log": event.viz_log,
-            "algo_log": event.algo_log,
-        }
-    )
-    return entity
-
-
-def entity_to_event(entity: Entity) -> Event:
-    return Event(
+def entity_to_event(entity: Entity) -> dict[str, str | int]:
+    return dict(
         lineno=entity["lineno"],
         viz_output=entity["viz_output"],
         viz_log=entity["viz_log"],
@@ -73,6 +60,11 @@ class GoogleStoreDatabase(DatabaseProtocol):
     """A database based on Google DataStore."""
 
     _client: Client
+
+    def _event_to_entity(self, event_dict: dict[str, str | int]) -> Entity:
+        entity = Entity(key=self._client.key(EntityType.EVENT.value))
+        entity.update(event_dict)
+        return entity
 
     def _key_query(self, key: Key, attrs_class: type[T]) -> dict | None:
         query = self._client.query(kind=_kind_for(attrs_class))
@@ -117,7 +109,6 @@ class GoogleStoreDatabase(DatabaseProtocol):
         algo_key = self._make_algo_key(algo.author_id, algo.name)
         algo.last_updated = datetime.now()
         entity = Entity(algo_key)
-        print(f"cached_events before updating {algo.cached_events}")
         entity.update(
             {
                 "author_id": algo.author_id,
@@ -125,7 +116,9 @@ class GoogleStoreDatabase(DatabaseProtocol):
                 "algo_script": algo.algo_script,
                 "viz_script": algo.viz_script,
                 "public": algo.public,
-                "cached_events": [event_to_entity(event) for event in algo.cached_events],
+                "cached_events": [
+                    self._event_to_entity(event) for event in algo.cached_events
+                ],
                 "last_updated": algo.last_updated,
             }
         )
