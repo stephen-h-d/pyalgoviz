@@ -135,6 +135,7 @@ class GoogleStoreDatabase(DatabaseProtocol):
     def get_public_algos(self) -> list[tuple[UserId, str]]:
         query = self._client.query(kind=EntityType.ALGORITHM.value)
         query.add_filter("public", "=", True)
-        results = list(query.fetch())
-        public_algos = [(result["author_id"], result["name"]) for result in results]
-        return public_algos
+        return list(query.fetch())
+        # results = list(query.fetch())
+        # public_algos = [(result["author_id"], result["name"]) for result in results]
+        # return public_algos

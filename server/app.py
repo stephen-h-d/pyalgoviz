@@ -78,13 +78,26 @@ def save() -> Response:
     return {"result": msg}, HTTPStatus.OK
 
 
-@app.route("/get_script_names", methods=["GET"])
+@app.route("/script_names", methods=["GET"])
 @jwta.authenticated
 def get_script_names() -> Response:
-    print("script names")
     author: User = current_user
     try:
         script_names = db.get_algo_names_by(author.firebase_user_id)
+        return {"result": script_names}
+    except Exception as e:
+        msg = "Could not load script names: %s" % e
+        logger.error(msg)
+        logger.exception(e)
+        return Response(
+            status=HTTPStatus.INTERNAL_SERVER_ERROR, mimetype="application/json"
+        )
+
+
+@app.route("/public_scripts", methods=["GET"])
+def get_public_scripts() -> Response:
+    try:
+        script_names = db.get_public_algos()
         return {"result": script_names}
     except Exception as e:
         msg = "Could not load script names: %s" % e

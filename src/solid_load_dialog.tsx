@@ -105,7 +105,7 @@ function SelectDialog(props: {
 }
 
 const fetchScriptNames = async () => {
-  const fetchResult = await fetch(`api/get_script_names`);
+  const fetchResult = await fetch('api/script_names');
   return (await fetchResult.json()) as object;
 };
 
