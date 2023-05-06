@@ -55,6 +55,13 @@ def entity_to_algorithm(entity: Entity) -> Algorithm:
     )
 
 
+def algo_for_public_viewing(algo: Entity) -> Entity:
+    email = algo["author_id"]["email"]
+    del algo["author_id"]
+    algo["author_email"] = email
+    return algo
+
+
 @attrs.define
 class GoogleStoreDatabase(DatabaseProtocol):
     """A database based on Google DataStore."""
@@ -135,7 +142,5 @@ class GoogleStoreDatabase(DatabaseProtocol):
     def get_public_algos(self) -> list[tuple[UserId, str]]:
         query = self._client.query(kind=EntityType.ALGORITHM.value)
         query.add_filter("public", "=", True)
-        return list(query.fetch())
-        # results = list(query.fetch())
-        # public_algos = [(result["author_id"], result["name"]) for result in results]
-        # return public_algos
+        results = list(query.fetch())
+        return [algo_for_public_viewing(algo) for algo in results]

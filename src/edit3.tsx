@@ -24,19 +24,19 @@ import { asyncRun, pyodide_ready } from './py-worker';
 import { executorScript } from './executor';
 import { ExecResult, PyAlgoVizScript, VizEvent } from './exec_result';
 import { renderEvent } from './VizOutput';
-import { BehaviorSubject, Subject } from 'rxjs';
 import EnumSelect from './EnumSelect';
 import { signInWithGoogle as loginWithGoogle, logout } from './login';
 import { user } from './authSignal';
 import { LogManager } from './LogManager';
 import { postJson } from './postJson';
 import { CheckBox } from './CheckBox';
+import { EventNavSubjects } from './EventNavSubjects';
 
 declare module 'solid-js' {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
     interface Directives {
-      // use:editor
+      // use:vizrenderer
       vizrenderer: { currentEvent: Accessor<VizEvent | null> };
     }
   }
@@ -79,15 +79,6 @@ declare module 'solid-js' {
       editor: EditorArgs;
     }
   }
-}
-
-class EventNavSubjects {
-  public readonly prev$: Subject<null> = new Subject();
-  public readonly playPause$: Subject<null> = new Subject();
-  public readonly next$: Subject<null> = new Subject();
-  public readonly speed$: BehaviorSubject<keyof typeof Speed> =
-    new BehaviorSubject('Medium' as keyof typeof Speed);
-  public readonly sliderIndex$: Subject<number> = new Subject();
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -501,8 +492,8 @@ function IDE(props: {
   // eslint-disable-next-line solid/reactivity
   const resizer = new Resizer(props.getSelf);
 
-  const eventNavSubjects = new EventNavSubjects();
-  const [execResult, setexecResult] = createSignal<ExecResult>({
+  const eventNavSubjects: EventNavSubjects = new EventNavSubjects();
+  const [execResult, setExecResult] = createSignal<ExecResult>({
     py_error: null,
     events: [],
   });
@@ -550,7 +541,7 @@ arc(100,
         if (result_json !== undefined) {
           setPyodideRunning(false);
           const run_result = JSON.parse(result_json) as ExecResult;
-          setexecResult(run_result);
+          setExecResult(run_result);
         } else {
           console.error('run result was undefined');
         }
@@ -562,7 +553,7 @@ arc(100,
       try {
         const run_result = (await postJson('api/run', toRun)) as ExecResult;
         console.log('run_result', run_result);
-        setexecResult(run_result);
+        setExecResult(run_result);
       } catch (error) {
         console.log(error);
       }

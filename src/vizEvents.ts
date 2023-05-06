@@ -6,7 +6,7 @@ import {
   observable,
 } from 'solid-js';
 import { ExecResult, VizEvent } from './exec_result';
-import { filter, from, Observable, take, takeUntil, timer } from 'rxjs';
+import { filter, from, Observable, take, takeUntil, tap, timer } from 'rxjs';
 
 export interface ObservableWithValue<T> extends Observable<T> {
   getValue(): T;
@@ -188,6 +188,10 @@ export class VizEventNavigator {
   }
 
   private playPause() {
+    console.log('Playing status:', this.playing());
+    console.log('Event index subject:', this.event_idx_subject);
+    console.log('Events remaining:', this.event_idx_subject.eventsRemaining());
+
     if (this.playing()) {
       this.setPlaying(false);
     } else {
