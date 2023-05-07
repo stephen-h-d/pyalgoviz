@@ -13,13 +13,9 @@ const fetchScripts = async () => {
 };
 
 interface ScriptDemoInfo {
-  algo_script: string;
-  author_id: string;
-  cached_events: VizEvent[];
-  last_updated: string;
+  author_email: string;
   name: string;
-  public: boolean;
-  viz_script: string;
+  cached_events: VizEvent[];
 }
 
 interface Scripts {

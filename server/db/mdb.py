@@ -5,6 +5,7 @@ from datetime import datetime
 import attrs
 
 from server.db.models import Algorithm
+from server.db.models import ScriptDemoInfo
 from server.db.models import User
 from server.db.models import UserId
 from server.db.protocol import DatabaseProtocol
@@ -32,22 +33,30 @@ class MemoryDatabase(DatabaseProtocol):
         return self.algos.get(algo_key)
 
     def save_algo(self, algo: Algorithm) -> None:
-        algo_key = self._make_algo_key(algo.author_id, algo.name)
+        algo_key = self._make_algo_key(algo.author.firebase_user_id, algo.name)
         algo.last_updated = datetime.now()
         self.algos[algo_key] = algo
 
     def get_algo_names_by(self, author_id: UserId) -> list[str]:
-        return [algo.name for algo in self.algos.values() if algo.author_id == author_id]
+        return [
+            algo.name
+            for algo in self.algos.values()
+            if algo.author.firebase_user_id == author_id
+        ]
 
-    def get_public_algos(self) -> list[tuple[UserId, str]]:
-        return [(algo.author_id, algo.name) for algo in self.algos.values()]
+    def get_public_algos(self) -> list[ScriptDemoInfo]:
+        return [
+            ScriptDemoInfo.from_algorithm(algo)
+            for algo in self.algos.values()
+            if algo.public is True
+        ]
 
     @classmethod
     def with_fake_entries(cls) -> MemoryDatabase:
-        user_id = "1jfsBKaFvEeM5PxP6GCzVadvrq33"
+        user_id = "userid_f00barf00"
         user = User(user_id, "stephendause@gmail.com")
         algo = Algorithm(
-            author_id=user_id, name="foo", algo_script="", viz_script="", public=False
+            author=user, name="foo", algo_script="", viz_script="", public=False
         )
         algo_key = cls._make_algo_key(user_id, "foo")
         return cls({user_id: user}, {algo_key: algo})

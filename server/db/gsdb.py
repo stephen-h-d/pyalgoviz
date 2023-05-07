@@ -9,6 +9,8 @@ from google.cloud.datastore import Key
 
 import server.db.models
 from server.db.models import Algorithm
+from server.db.models import Event
+from server.db.models import ScriptDemoInfo
 from server.db.models import User
 from server.db.models import UserId
 from server.db.protocol import DatabaseProtocol
@@ -32,8 +34,8 @@ def _kind_for(attrs_class: type) -> str:
 T = TypeVar("T")
 
 
-def entity_to_event(entity: Entity) -> dict[str, str | int]:
-    return dict(
+def entity_to_event(entity: Entity) -> Event:
+    return Event(
         lineno=entity["lineno"],
         viz_output=entity["viz_output"],
         viz_log=entity["viz_log"],
@@ -43,7 +45,7 @@ def entity_to_event(entity: Entity) -> dict[str, str | int]:
 
 def entity_to_algorithm(entity: Entity) -> Algorithm:
     return Algorithm(
-        author_id=entity["author_id"],
+        author=entity["author"],
         name=entity["name"],
         algo_script=entity["algo_script"],
         viz_script=entity["viz_script"],
@@ -55,22 +57,15 @@ def entity_to_algorithm(entity: Entity) -> Algorithm:
     )
 
 
-def algo_for_public_viewing(algo: Entity) -> Entity:
-    email = algo["author_id"]["email"]
-    del algo["author_id"]
-    algo["author_email"] = email
-    return algo
-
-
 @attrs.define
 class GoogleStoreDatabase(DatabaseProtocol):
     """A database based on Google DataStore."""
 
     _client: Client
 
-    def _event_to_entity(self, event_dict: dict[str, str | int]) -> Entity:
+    def _event_to_entity(self, event: Event) -> Entity:
         entity = Entity(key=self._client.key(EntityType.EVENT.value))
-        entity.update(event_dict)
+        entity.update(attrs.asdict(event))
         return entity
 
     def _key_query(self, key: Key, attrs_class: type[T]) -> dict | None:
@@ -113,12 +108,12 @@ class GoogleStoreDatabase(DatabaseProtocol):
         return entity_to_algorithm(entity)
 
     def save_algo(self, algo: Algorithm) -> None:
-        algo_key = self._make_algo_key(algo.author_id, algo.name)
+        algo_key = self._make_algo_key(algo.author.firebase_user_id, algo.name)
         algo.last_updated = datetime.now()
         entity = Entity(algo_key)
         entity.update(
             {
-                "author_id": algo.author_id,
+                "author": algo.author,
                 "name": algo.name,
                 "algo_script": algo.algo_script,
                 "viz_script": algo.viz_script,
@@ -129,7 +124,6 @@ class GoogleStoreDatabase(DatabaseProtocol):
                 "last_updated": algo.last_updated,
             }
         )
-        print(f"cached_events before saving {entity['cached_events']}")
         self._client.put(entity)
 
     def get_algo_names_by(self, author_id: UserId) -> list[str]:
@@ -139,8 +133,8 @@ class GoogleStoreDatabase(DatabaseProtocol):
         algo_names = [result["name"] for result in results]
         return algo_names
 
-    def get_public_algos(self) -> list[tuple[UserId, str]]:
+    def get_public_algos(self) -> list[ScriptDemoInfo]:
         query = self._client.query(kind=EntityType.ALGORITHM.value)
         query.add_filter("public", "=", True)
         results = list(query.fetch())
-        return [algo_for_public_viewing(algo) for algo in results]
+        return [ScriptDemoInfo.from_algorithm(algo) for algo in results]

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime
 
 import attrs
@@ -38,17 +40,33 @@ class Event:
 
 @attrs.define(kw_only=True)
 class Algorithm:
-    author_id: UserId
+    author: User
     name: str
     algo_script: str
     viz_script: str
     public: bool = False
     # not sure, but I think `events` in the old model was a way to cache a run of the
-    # script for the public "all" page. I made the `Event` attrs class above, but since they are stored as JSON when
-    # returned to the frontend and as an Entity (which is easier to create via a dictionary), I am just using
-    # the `dict[str, str | int]` annotation/approach for now.
-    cached_events: list[dict[str, str | int]] = []
+    # script for the public "all" page. Assuming that for now.
+    cached_events: list[Event] = []
     last_updated: datetime | None = None
+
+
+@attrs.define(kw_only=True)
+class ScriptDemoInfo:
+    author_email: str
+    name: str
+    cached_events: list[Event]
+
+    @classmethod
+    def from_algorithm(cls, algo: Algorithm) -> ScriptDemoInfo:
+        if algo.public is False:
+            raise ValueError(f"Only public algorithms can be used as script demos")
+
+        return cls(
+            author_email=algo.author.email,
+            name=algo.name,
+            cached_events=algo.cached_events,
+        )
 
 
 @attrs.define

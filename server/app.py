@@ -50,9 +50,8 @@ def save() -> Response:
         data = request.get_data().decode("utf-8")
         submission = json.loads(data)
         publish = submission.get("publish", False)
-        print(f"publish {publish}")
         algo = Algorithm(
-            author_id=author.get_id(),
+            author=author,
             algo_script=submission.get("algo_script"),
             viz_script=submission.get("viz_script"),
             public=publish,

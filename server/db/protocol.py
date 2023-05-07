@@ -1,6 +1,7 @@
 from typing import Protocol
 
 from server.db.models import Algorithm
+from server.db.models import ScriptDemoInfo
 from server.db.models import User
 from server.db.models import UserId
 
@@ -21,5 +22,5 @@ class DatabaseProtocol(Protocol):
     def get_algo_names_by(self, author_id: UserId) -> list[str]:
         ...
 
-    def get_public_algos(self) -> list[tuple[UserId, str]]:
+    def get_public_algos(self) -> list[ScriptDemoInfo]:
         ...
