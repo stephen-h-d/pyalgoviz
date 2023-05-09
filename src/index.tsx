@@ -61,11 +61,11 @@ const ScriptDemo = (props: { events: VizEvent[] }) => {
   const eventNavSubjects: EventNavSubjects = new EventNavSubjects();
   // the event navigator expects an `Accessor`, so we make a signal even though
   // it won't ever change here
-  const [execResult, setExecResult] = createSignal<ExecResult>({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [execResult, _setExecResult] = createSignal<ExecResult>({
     py_error: null,
     events: props.events,
   });
-  console.log('props.events', props.events);
 
   const eventNavigator: VizEventNavigator = new VizEventNavigator(
     eventNavSubjects,
