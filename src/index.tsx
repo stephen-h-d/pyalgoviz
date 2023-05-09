@@ -1,6 +1,11 @@
 import { render } from 'solid-js/web';
-import { Accessor, createEffect, createResource, createSignal } from 'solid-js';
-import { For } from 'solid-js/web';
+import {
+  Accessor,
+  For,
+  createEffect,
+  createResource,
+  createSignal,
+} from 'solid-js';
 import * as styles from './index.css';
 import { EventNavSubjects } from './EventNavSubjects';
 import { VizEvent, ExecResult } from './exec_result';

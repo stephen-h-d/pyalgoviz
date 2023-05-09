@@ -6,7 +6,7 @@ import {
   observable,
 } from 'solid-js';
 import { ExecResult, VizEvent } from './exec_result';
-import { filter, from, Observable, take, takeUntil, tap, timer } from 'rxjs';
+import { filter, from, Observable, take, takeUntil, timer } from 'rxjs';
 
 export interface ObservableWithValue<T> extends Observable<T> {
   getValue(): T;
