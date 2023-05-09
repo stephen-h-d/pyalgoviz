@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from types import FrameType, TracebackType
-    from typing import Any, Optional
+    from typing import Any, Optional, Callable
 
 algo_log = StringIO()
 viz_log = StringIO()
@@ -169,17 +169,10 @@ def arc(
 SCRIPT_FILENAMES = ["<inline>", "<string>"]
 
 
-class Bob:
-    def __init__(self, script, viz, exec_fn):
-        print("bob")
-
-
 class Executor(object):
-    # def __init__(
-    #     self, script: str | bytes, viz: str | bytes, exec_fn: Callable | None = None
-    # ) -> None:
-    def __init__(self, script, viz, exec_fn):
-        print("sdfgsdf")
+    def __init__(
+        self, script: str | bytes, viz: str | bytes, exec_fn: Callable | None = None
+    ) -> None:
         self.exec_fn = exec_fn
         self.error = None
         self.events = []
@@ -199,12 +192,10 @@ class Executor(object):
             "viz_output": viz_output,
         }
         try:
-            print("reached here -1")
             with self:
                 if self.exec_fn is None:
                     self.exec_fn = exec
                 self.exec_fn(script, self.vars)
-            print("reached here 0")
 
             # Add an extra "event" indicating the end of the program, with the output
             # being the output from the last line
@@ -295,3 +286,17 @@ class Executor(object):
 
     def __exit__(self, *args) -> None:
         sys.settrace(None)
+
+
+def run_client_side() -> str:
+    import json
+    from js import algo_script, viz_script
+
+    result = Executor(algo_script, viz_script, None)
+
+    result = {
+        "py_error": result.error,
+        "events": result.events,
+    }
+
+    return json.dumps(result)
