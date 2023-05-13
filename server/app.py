@@ -11,10 +11,10 @@ from flask_login import current_user  # type: ignore[import]
 from flask_login import LoginManager
 from google.cloud import datastore
 
-from server.db.gsdb import GoogleStoreDatabase
 from server.db.models import Algorithm
 from server.db.models import User
 from server.db.models import UserId
+from server.db.protocol import DatabaseProtocol
 from server.middleware import JWTAuthenticator
 from server.run_script import run_script  # type: ignore[attr-defined]
 
@@ -25,15 +25,24 @@ login_manager = LoginManager()
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
 PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT")
+USE_GOOGLE_DB = os.environ.get("USE_GOOGLE_DB", "False")
 
-client = datastore.Client(project=PROJECT)
-# db = MemoryDatabase.with_fake_entries()
-db = GoogleStoreDatabase(client)
+db: DatabaseProtocol
+
+if USE_GOOGLE_DB == "True":
+    from server.db.gsdb import GoogleStoreDatabase
+
+    client = datastore.Client(project=PROJECT)
+    db = GoogleStoreDatabase(client)
+else:
+    from server.db.mdb import MemoryDatabase
+
+    db = MemoryDatabase.with_fake_entries()
+
 jwta = JWTAuthenticator(db)
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
-# app.wsgi_app = NDBMiddleware(app.wsgi_app)
 login_manager.init_app(app)
 
 
@@ -96,8 +105,10 @@ def get_script_names() -> Response:
 @app.route("/public_scripts", methods=["GET"])
 def get_public_scripts() -> Response:
     try:
-        script_names = db.get_public_algos()
-        return {"result": script_names}
+        script_demo_info_list = [
+            attrs.asdict(demo_info) for demo_info in db.get_public_algos()
+        ]
+        return {"result": script_demo_info_list}
     except Exception as e:
         msg = "Could not load script names: %s" % e
         logger.error(msg)

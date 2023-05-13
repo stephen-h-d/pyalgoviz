@@ -98,6 +98,9 @@ const ScriptDemos = () => {
     }
 
     const fetched = scripts() as Scripts;
+
+    console.log(fetched.result);
+
     for (const scriptInfo of fetched.result) {
       scriptInfoList.push(scriptInfo);
       console.log(scriptInfo);

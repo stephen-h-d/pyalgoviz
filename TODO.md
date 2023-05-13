@@ -17,6 +17,7 @@
    * when nothing's been run or
 7. add option to auto-play (est. 0.5 hours)
 8. some of the TODOs in the code (need to clarify which ones)
+9. log out user when token expired (currently shows as logged in even though the token fails)
 
 ### Ready-to-implement TODOs post-launch
 4. Tell the user when Pyodide is loading, when it is done loading, when the code is running, and when it is done running.
