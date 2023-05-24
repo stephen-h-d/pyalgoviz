@@ -103,14 +103,28 @@ def text(
     check("text", "font", font, STRING)
     check("text", "color", color, STRING)
     global viz_output
-    viz_output += "T(canvas, %d,%d,%r,%d,%r,%r);" % (x, y, str(txt), size, font, color)
+    viz_output += "T(canvas, %d,%d,%r,%d,%r,%r, boundingBoxes);" % (
+        x,
+        y,
+        str(txt),
+        size,
+        font,
+        color,
+    )
 
 
 def line(
     x1: float, y1: float, x2: float, y2: float, color: str = "black", width: int = 1
 ) -> None:
     global viz_output
-    viz_output += "L(canvas, %s,%s,%s,%s,%r,%s);" % (x1, y1, x2, y2, color, width)
+    viz_output += "L(canvas, %s,%s,%s,%s,%r,%s, boundingBoxes);" % (
+        x1,
+        y1,
+        x2,
+        y2,
+        color,
+        width,
+    )
 
 
 def rect(
@@ -123,7 +137,14 @@ def rect(
     check("rect", "fill", fill, STRING)
     check("rect", "border", border, STRING)
     global viz_output
-    viz_output += "R(canvas, %s,%s,%s,%s,%r,%r);" % (x, y, w, h, fill, border)
+    viz_output += "R(canvas, %s,%s,%s,%s,%r,%r, boundingBoxes);" % (
+        x,
+        y,
+        w,
+        h,
+        fill,
+        border,
+    )
 
 
 def circle(
@@ -135,7 +156,13 @@ def circle(
     check("circle", "fill", fill, STRING)
     check("circle", "border", border, STRING)
     global viz_output
-    viz_output += "C(canvas, %s,%s,%s,%r,%r);" % (x, y, radius, fill, border)
+    viz_output += "C(canvas, %s,%s,%s,%r,%r, boundingBoxes);" % (
+        x,
+        y,
+        radius,
+        fill,
+        border,
+    )
 
 
 def arc(
@@ -155,7 +182,7 @@ def arc(
     check("circle", "endAngle", endAngle, NUMBER)
     check("circle", "color", color, STRING)
     global viz_output
-    viz_output += "A(canvas, %s,%s,%s,%s,%s,%s,%r);" % (
+    viz_output += "A(canvas, %s,%s,%s,%s,%s,%s,%r, boundingBoxes);" % (
         cx,
         cy,
         innerRadius,

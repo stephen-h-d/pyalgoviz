@@ -144,7 +144,7 @@ export class VizEventNavigator {
 
   public constructor(
     private readonly inputs_clicked: EventNavObservables,
-    private readonly exec_result$: Accessor<ExecResult>,
+    private readonly exec_result_arg: Accessor<ExecResult> | ExecResult,
   ) {
     // eslint-disable-next-line solid/reactivity
     [this.currentEvent, this.setCurrentEvent] = createSignal<VizEvent | null>(
@@ -161,9 +161,15 @@ export class VizEventNavigator {
     );
     this.inputs_clicked.playPause$.subscribe(this.playPause.bind(this));
     this.inputs_clicked.sliderIndex$.subscribe(this.handleSliderPct.bind(this));
-    createEffect(() => {
-      this.nextEvents(this.exec_result$());
-    });
+
+    if (typeof exec_result_arg === 'object') {
+      this.nextEvents(exec_result_arg);
+    } else {
+      createEffect(() => {
+        this.nextEvents(exec_result_arg());
+      });
+    }
+
     createEffect(() => {
       this.nextEventIdx(this.event_idx_subject.val());
     });
@@ -171,11 +177,10 @@ export class VizEventNavigator {
 
   private handleSliderPct(index: number) {
     this.event_idx_subject.goTo(index);
-    // TODO update output... for whatever reason, it isn't being updated rn
-    // (note from future: not sure if this still true)
   }
 
   private nextEventIdx(event_idx: VizEventIdx) {
+    console.log('next event idx', event_idx);
     if (event_idx.current > 0) {
       this.setCurrentEvent(this.exec_result.events[event_idx.current]);
     } else {
@@ -204,6 +209,7 @@ export class VizEventNavigator {
       console.log('delay', delay);
 
       if (this.event_idx_subject.eventsRemaining() === 0) {
+        console.log('resetting event idx');
         this.event_idx_subject.reset();
       }
 

@@ -40,7 +40,6 @@ function vizrenderer(
 
   createEffect(() => {
     const event = args.currentEvent();
-    debugger;
     renderEvent(div, event);
   });
 }
@@ -59,20 +58,17 @@ declare module 'solid-js' {
 
 const ScriptDemo = (props: { events: VizEvent[] }) => {
   const eventNavSubjects: EventNavSubjects = new EventNavSubjects();
-  // the event navigator expects an `Accessor`, so we make a signal even though
-  // it won't ever change here
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [execResult, _setExecResult] = createSignal<ExecResult>({
-    py_error: null,
-    events: props.events,
-  });
 
   const eventNavigator: VizEventNavigator = new VizEventNavigator(
     eventNavSubjects,
-    execResult,
+    {
+      py_error: null,
+      events: props.events,
+    },
   );
 
   eventNavSubjects.speed$.next('Extra Slow (1/s)');
+  // TODO hook this up to be an onHover event.  Reset it when hover leaves
   eventNavSubjects.playPause$.next(null);
 
   return (

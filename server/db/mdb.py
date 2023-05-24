@@ -66,6 +66,7 @@ class MemoryDatabase(DatabaseProtocol):
         )
         algo_key = cls._make_algo_key(user_id, "foo")
 
+        # TODO change these cached events to contain boundingBoxes
         cached_events = [
             {
                 "algo_log": "",
