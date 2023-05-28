@@ -9,7 +9,7 @@ import {
 import * as styles from './index.css';
 import { EventNavSubjects } from './EventNavSubjects';
 import { VizEvent, ExecResult } from './exec_result';
-import { renderEvent } from './VizOutput';
+import { getBBox, renderEvent } from './VizOutput';
 import { VizEventNavigator } from './vizEvents';
 
 const fetchScripts = async () => {
@@ -29,6 +29,7 @@ interface Scripts {
 
 interface RendererArgs {
   currentEvent: Accessor<VizEvent | null>;
+  bBox: DOMRect;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -40,24 +41,26 @@ function vizrenderer(
 
   createEffect(() => {
     const event = args.currentEvent();
-    renderEvent(div, event);
+    console.log('args.bBox', args.bBox);
+    renderEvent(div, event, args.bBox);
   });
 }
 
-// NOTE: RendererArgs are vizrenderer are also in `edit.tsx`.  They are duplicated
+// NOTE: RendererArgs and vizrenderer are also in `edit.tsx`.  They are duplicated
 // because of a weird bug with importing declared modules.  TODO fix this
-declare module 'solid-js' {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace JSX {
-    interface Directives {
-      // use:vizrenderer
-      vizrenderer: { currentEvent: Accessor<VizEvent | null> };
-    }
-  }
-}
+// declare module 'solid-js' {
+//   // eslint-disable-next-line @typescript-eslint/no-namespace
+//   namespace JSX {
+//     interface Directives {
+//       // use:vizrenderer
+//       vizrenderer: RendererArgs;
+//     }
+//   }
+// }
 
 const ScriptDemo = (props: { events: VizEvent[] }) => {
   const eventNavSubjects: EventNavSubjects = new EventNavSubjects();
+  const bBox = getBBox(props.events);
 
   const eventNavigator: VizEventNavigator = new VizEventNavigator(
     eventNavSubjects,
@@ -67,18 +70,15 @@ const ScriptDemo = (props: { events: VizEvent[] }) => {
     },
   );
 
-  eventNavSubjects.speed$.next('Extra Slow (1/s)');
+  eventNavSubjects.speed$.next('Slow (20/s)');
   // TODO hook this up to be an onHover event.  Reset it when hover leaves
   eventNavSubjects.playPause$.next(null);
 
-  return (
-    <div
-      class={styles.rectangle}
-      use:vizrenderer={{
-        currentEvent: eventNavigator.getEventVal(),
-      }}
-    />
-  );
+  const rendererArgs = {
+    currentEvent: eventNavigator.getEventVal(),
+    bBox,
+  };
+  return <div class={styles.rectangle} use:vizrenderer={rendererArgs} />;
 };
 
 const ScriptDemos = () => {

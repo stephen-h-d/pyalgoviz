@@ -70,6 +70,7 @@ def save() -> Response:
             res = run_script(algo.algo_script, algo.viz_script)
             if res["py_error"] is None:
                 events = res["events"]
+                print(f"first 100 events {events[0:100]}")
                 algo.cached_events = events
         db.save_algo(algo)
         # notify(author, 'save', algo.name, algo.script, algo.viz)

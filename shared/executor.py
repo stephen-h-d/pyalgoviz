@@ -103,7 +103,7 @@ def text(
     check("text", "font", font, STRING)
     check("text", "color", color, STRING)
     global viz_output
-    viz_output += "T(canvas, %d,%d,%r,%d,%r,%r, boundingBoxes);" % (
+    viz_output += "T(canvas, %d,%d,%r,%d,%r,%r);" % (
         x,
         y,
         str(txt),
@@ -117,7 +117,7 @@ def line(
     x1: float, y1: float, x2: float, y2: float, color: str = "black", width: int = 1
 ) -> None:
     global viz_output
-    viz_output += "L(canvas, %s,%s,%s,%s,%r,%s, boundingBoxes);" % (
+    viz_output += "L(canvas, %s,%s,%s,%s,%r,%s);" % (
         x1,
         y1,
         x2,
@@ -137,7 +137,7 @@ def rect(
     check("rect", "fill", fill, STRING)
     check("rect", "border", border, STRING)
     global viz_output
-    viz_output += "R(canvas, %s,%s,%s,%s,%r,%r, boundingBoxes);" % (
+    viz_output += "R(canvas, %s,%s,%s,%s,%r,%r);" % (
         x,
         y,
         w,
@@ -156,7 +156,7 @@ def circle(
     check("circle", "fill", fill, STRING)
     check("circle", "border", border, STRING)
     global viz_output
-    viz_output += "C(canvas, %s,%s,%s,%r,%r, boundingBoxes);" % (
+    viz_output += "C(canvas, %s,%s,%s,%r,%r);" % (
         x,
         y,
         radius,
@@ -182,7 +182,7 @@ def arc(
     check("circle", "endAngle", endAngle, NUMBER)
     check("circle", "color", color, STRING)
     global viz_output
-    viz_output += "A(canvas, %s,%s,%s,%s,%s,%s,%r, boundingBoxes);" % (
+    viz_output += "A(canvas, %s,%s,%s,%s,%s,%s,%r);" % (
         cx,
         cy,
         innerRadius,
