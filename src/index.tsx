@@ -1,16 +1,12 @@
 import { render } from 'solid-js/web';
-import {
-  Accessor,
-  For,
-  createEffect,
-  createResource,
-  createSignal,
-} from 'solid-js';
+import { Accessor, For, createEffect, createResource } from 'solid-js';
 import * as styles from './index.css';
 import { EventNavSubjects } from './EventNavSubjects';
-import { VizEvent, ExecResult } from './exec_result';
+import { VizEvent } from './exec_result';
 import { getBBox, renderEvent } from './VizOutput';
 import { VizEventNavigator } from './vizEvents';
+import { fromEvent, Observable } from 'rxjs';
+import { debounceTime, distinctUntilChanged, map } from 'rxjs/operators';
 
 const fetchScripts = async () => {
   const fetchResult = await fetch('api/public_scripts');
@@ -30,6 +26,38 @@ interface Scripts {
 interface RendererArgs {
   currentEvent: Accessor<VizEvent | null>;
   bBox: DOMRect;
+  eventNavSubjects: EventNavSubjects;
+}
+
+function isMouseInsideDiv(div: HTMLDivElement): Observable<boolean> {
+  // Create an Observable that emits events whenever the mouse moves
+  const mouseMoves$ = fromEvent<MouseEvent>(document, 'mousemove');
+
+  // Apply the debounceTime operator to limit how often the event is processed
+  const debouncedMouseMoves$ = mouseMoves$.pipe(debounceTime(100));
+
+  // Map the mousemove event to a boolean indicating whether the mouse is inside the div
+  const isInside$ = debouncedMouseMoves$.pipe(
+    map(event => {
+      // Get mouse position
+      const mouseX = event.clientX;
+      const mouseY = event.clientY;
+
+      // Get div position
+      const divRect = div.getBoundingClientRect();
+
+      // Check if mouse position is inside the div
+      return (
+        mouseX >= divRect.left &&
+        mouseX <= divRect.right &&
+        mouseY >= divRect.top &&
+        mouseY <= divRect.bottom
+      );
+    }),
+    distinctUntilChanged(),
+  );
+
+  return isInside$;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -39,9 +67,14 @@ function vizrenderer(
 ) {
   const args = argsAccessor();
 
+  const eventNavSubjects = args.eventNavSubjects;
+
+  isMouseInsideDiv(div).subscribe(value => {
+    eventNavSubjects.playPause$.next(value);
+  });
+
   createEffect(() => {
     const event = args.currentEvent();
-    console.log('args.bBox', args.bBox);
     renderEvent(div, event, args.bBox);
   });
 }
@@ -60,25 +93,30 @@ function vizrenderer(
 
 const ScriptDemo = (props: { events: VizEvent[] }) => {
   const eventNavSubjects: EventNavSubjects = new EventNavSubjects();
+  // This next line should be fine, as the events don't change, so we ignore the warning
+  // eslint-disable-next-line solid/reactivity
   const bBox = getBBox(props.events);
+
+  eventNavSubjects.speed$.next('Slow (20/s)');
 
   const eventNavigator: VizEventNavigator = new VizEventNavigator(
     eventNavSubjects,
     {
       py_error: null,
+      // This next line should be fine, as the events don't change, so we ignore the warning
+      // eslint-disable-next-line solid/reactivity
       events: props.events,
     },
   );
 
-  eventNavSubjects.speed$.next('Slow (20/s)');
-  // TODO hook this up to be an onHover event.  Reset it when hover leaves
-  eventNavSubjects.playPause$.next(null);
-
   const rendererArgs = {
     currentEvent: eventNavigator.getEventVal(),
     bBox,
+    eventNavSubjects,
   };
-  return <div class={styles.rectangle} use:vizrenderer={rendererArgs} />;
+  return (
+    <div id="blah" class={styles.rectangle} use:vizrenderer={rendererArgs} />
+  );
 };
 
 const ScriptDemos = () => {
@@ -95,11 +133,8 @@ const ScriptDemos = () => {
 
     const fetched = scripts() as Scripts;
 
-    console.log(fetched.result);
-
     for (const scriptInfo of fetched.result) {
       scriptInfoList.push(scriptInfo);
-      console.log(scriptInfo);
     }
     return scriptInfoList;
   };

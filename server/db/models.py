@@ -60,7 +60,7 @@ class ScriptDemoInfo:
     @classmethod
     def from_algorithm(cls, algo: Algorithm) -> ScriptDemoInfo:
         if algo.public is False:
-            raise ValueError(f"Only public algorithms can be used as script demos")
+            raise ValueError("Only public algorithms can be used as script demos")
 
         return cls(
             author_email=algo.author.email,

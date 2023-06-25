@@ -23,7 +23,7 @@ export const Speed = {
 
 export interface EventNavObservables {
   readonly prev$: Observable<null>;
-  readonly playPause$: Observable<null>;
+  readonly playPause$: Observable<boolean | null>;
   readonly next$: Observable<null>;
   readonly speed$: ObservableWithValue<keyof typeof Speed>;
   readonly sliderIndex$: Observable<number>;
@@ -192,14 +192,17 @@ export class VizEventNavigator {
     return this.playing;
   }
 
-  private playPause() {
-    console.log('Playing status:', this.playing());
-    console.log('Event index subject:', this.event_idx_subject);
-    console.log('Events remaining:', this.event_idx_subject.eventsRemaining());
+  private playPause(value: boolean | null) {
+    console.log('fudge Playing status:', this.playing());
+    console.log('fudge Event index subject:', this.event_idx_subject);
+    console.log(
+      'fudge Events remaining:',
+      this.event_idx_subject.eventsRemaining(),
+    );
 
-    if (this.playing()) {
+    if (this.playing() && (value === null || value === false)) {
       this.setPlaying(false);
-    } else {
+    } else if (!this.playing() && (value === null || value === true)) {
       this.setPlaying(true);
       const playing$ = from(observable(this.playing));
       const notPlaying = playing$.pipe(filter(val => !val));

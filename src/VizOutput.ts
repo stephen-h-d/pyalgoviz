@@ -1,8 +1,6 @@
 import { Selection, select, arc } from 'd3';
 import { VizEvent } from './exec_result';
-const EDITOR_WIDTH = 600; // TODO make this more dynamic
-const EDITOR_HEIGHT = 450; // TODO make this more dynamic
-const RENDERING_SCALE = 1.0; // TODO make this more dynamic
+const RENDERING_SCALE = 1.0; // TODO make this more dynamic?
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function T(
@@ -193,7 +191,9 @@ export function renderEvent(
   return new DOMRect(0, 0, 500, 500);
 }
 
+// Returns the bounding box for all of these events
 export function getBBox(events: (VizEvent | null | undefined)[]) {
+  // Render all of the events and find the biggest box
   const div = document.createElement('div');
   div.style.opacity = '0';
   document.body.appendChild(div);
@@ -201,6 +201,5 @@ export function getBBox(events: (VizEvent | null | undefined)[]) {
   for (const event of events) {
     bBoxes.push(renderEvent(div, event));
   }
-  console.log('bBoxes', bBoxes);
   return encompassingBoundingBox(bBoxes);
 }
