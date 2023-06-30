@@ -1,7 +1,8 @@
 import { defineConfig } from 'vite';
 import { vanillaExtractPlugin } from '@vanilla-extract/vite-plugin';
 import solidPlugin from 'vite-plugin-solid';
-import {string} from 'rollup-plugin-string';
+import { string } from 'rollup-plugin-string';
+import { resolve } from 'path';
 
 export default defineConfig({
   server: {
@@ -17,8 +18,18 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        public: resolve(__dirname, 'public/edit3.html'),
+      },
+    },
   },
-  plugins: [vanillaExtractPlugin(), solidPlugin(), string({
-    include: '**/executor.py', // TODO figure out if I can point to exactly the right file
-  })],
+  plugins: [
+    vanillaExtractPlugin(),
+    solidPlugin(),
+    string({
+      include: '**/executor.py', // TODO figure out if I can point to exactly the right file
+    }),
+  ],
 });

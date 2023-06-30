@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { BehaviorSubject } from 'rxjs';
 
-const pyodideWorker = new Worker('pyodide-0.21.3/webworker.js');
+const pyodideWorker = new Worker('/pyodide-0.21.3/webworker.js');
 
 const callbacks = new Map<number, (arg: string) => void>();
 export const pyodide_ready = new BehaviorSubject<boolean>(false);
