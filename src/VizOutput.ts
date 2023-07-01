@@ -136,6 +136,14 @@ function encompassingBoundingBox(rects: DOMRect[]): DOMRect {
   return result;
 }
 
+// This is a hack to make these functions be used and therefore included
+// in the bundler. I don't know of a less hacky way that also does not
+// result in TSC / linter warnings about unused code.
+console.trace(L);
+console.trace(A);
+console.trace(R);
+console.trace(C);
+
 export function renderEvent(
   div: HTMLDivElement,
   event: VizEvent | null | undefined,
