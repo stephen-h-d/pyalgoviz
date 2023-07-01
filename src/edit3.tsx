@@ -25,8 +25,6 @@ import { executorScript } from './executor';
 import { ExecResult, PyAlgoVizScript, VizEvent } from './exec_result';
 import { renderEvent } from './VizOutput';
 import EnumSelect from './EnumSelect';
-import { signInWithGoogle as loginWithGoogle, logout } from './login';
-import { user } from './authSignal';
 import { LogManager } from './LogManager';
 import { postJson } from './postJson';
 import { CheckBox } from './CheckBox';
@@ -154,8 +152,8 @@ function TopLeftContents(props: {
   const playPauseDisabled = () =>
     props.running() || props.currentEventIdx().total == 0;
 
-  const saveDisabled = () => user() === null;
-  const loadDisabled = () => user() === null;
+  const saveDisabled = () => true;
+  const loadDisabled = () => true;
 
   const [range, setRange] = createSignal(0.0);
   const [runLocally, setrunLocally] = createSignal(true);
@@ -667,37 +665,10 @@ function Header() {
   // if the `userObj` is null for better type-checking, and the only way
   // to do that is an `Inner` function component of sorts.
 
-  function Inner() {
-    const userObj = user();
-    if (userObj !== null) {
-      // eslint-disable-next-line solid/components-return-once
-      return (
-        <>
-          <span>{userObj.email}</span>
-          <button
-            class={styles.logoutBtn}
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-            onClick={logout}
-          >
-            Log Out
-          </button>
-        </>
-      );
-    } else {
-      // eslint-disable-next-line solid/components-return-once
-      return (
-        <button class={styles.loginBtn} onClick={loginWithGoogle}>
-          Log In
-        </button>
-      );
-    }
-  }
-
   return (
     <>
       <div class={styles.header}>
         <div class={styles.headerContent}>Header</div>
-        {Inner()}
       </div>
     </>
   );

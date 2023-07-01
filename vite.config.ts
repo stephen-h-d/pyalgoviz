@@ -5,6 +5,7 @@ import { string } from 'rollup-plugin-string';
 import { resolve } from 'path';
 
 export default defineConfig({
+  base: '/pyalgoviz',
   server: {
     port: 3000,
     // see https://vitejs.dev/config/server-options.html#server-proxy
