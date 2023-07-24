@@ -2,21 +2,22 @@ import json
 import logging
 import os
 from http import HTTPStatus
+from pathlib import Path
 
 import attrs
 from flask import Flask
 from flask import request
 from flask import Response
+from flask import send_file
 from flask_login import current_user  # type: ignore[import]
 from flask_login import LoginManager
 from google.cloud import datastore
-
-from server.db.models import Algorithm
-from server.db.models import User
-from server.db.models import UserId
-from server.db.protocol import DatabaseProtocol
-from server.middleware import JWTAuthenticator
-from server.run_script import run_script  # type: ignore[attr-defined]
+from main.db.models import Algorithm
+from main.db.models import User
+from main.db.models import UserId
+from main.db.protocol import DatabaseProtocol
+from main.middleware import JWTAuthenticator
+from main.run_script import run_script  # type: ignore[attr-defined]
 
 logger = logging.getLogger(__name__)
 
@@ -30,18 +31,18 @@ USE_GOOGLE_DB = os.environ.get("USE_GOOGLE_DB", "False")
 db: DatabaseProtocol
 
 if USE_GOOGLE_DB == "True":
-    from server.db.gsdb import GoogleStoreDatabase
+    from main.db.gsdb import GoogleStoreDatabase
 
     client = datastore.Client(project=PROJECT)
     db = GoogleStoreDatabase(client)
 else:
-    from server.db.mdb import MemoryDatabase
+    from main.db.mdb import MemoryDatabase
 
     db = MemoryDatabase.with_fake_entries()
 
 jwta = JWTAuthenticator(db)
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="public")
 app.secret_key = SECRET_KEY
 login_manager.init_app(app)
 
@@ -49,6 +50,20 @@ login_manager.init_app(app)
 @login_manager.user_loader
 def load_user(user_id: UserId) -> User | None:
     return db.get_user(user_id)
+
+
+@app.route("/")
+def serve_static():
+    path_to_file = Path(app.static_folder) / "bob.txt"
+    print(f"welp / {path_to_file}")
+    return send_file(path_to_file)
+
+
+@app.route("/edit/bob.txt")
+def serve_static_2():
+    path_to_file = Path(app.static_folder) / "bob.txt"
+    print(f"welp /edit/bob.txt {path_to_file}")
+    return send_file(path_to_file)
 
 
 @app.route("/save", methods=["POST"])

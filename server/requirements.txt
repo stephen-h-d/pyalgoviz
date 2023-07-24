@@ -102,6 +102,8 @@ grpcio==1.50.0
     #   grpcio-status
 grpcio-status==1.50.0
     # via google-api-core
+gunicorn==21.2.0
+    # via -r requirements.in
 httplib2==0.21.0
     # via
     #   google-api-python-client
@@ -140,6 +142,7 @@ packaging==23.1
     # via
     #   black
     #   build
+    #   gunicorn
 pathspec==0.11.1
     # via black
 pep517==0.13.0

@@ -1,9 +1,9 @@
 from typing import Protocol
 
-from server.db.models import Algorithm
-from server.db.models import ScriptDemoInfo
-from server.db.models import User
-from server.db.models import UserId
+from main.db.models import Algorithm
+from main.db.models import ScriptDemoInfo
+from main.db.models import User
+from main.db.models import UserId
 
 
 class DatabaseProtocol(Protocol):

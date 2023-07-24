@@ -60,9 +60,15 @@ To run the backend server locally:
 
 ```
 cd server
-export FLASK_APP=app.py
+export FLASK_APP=main.py
 export SECRET_KEY=`openssl rand -base64 32`
 export GOOGLE_CLOUD_PROJECT=pyalgoviz-361922
 export PYTHONUNBUFFERED=1
 flask run
+```
+
+To run the backend server in a Docker container:
+```
+sudo docker build -t pyalgoviz-backend .
+sudo docker run -p 5000:80 -e PORT=80 pyalgoviz-backend
 ```

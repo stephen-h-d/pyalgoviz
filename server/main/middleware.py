@@ -26,9 +26,8 @@ from flask import Response
 from flask_login import current_user  # type: ignore[import]
 from flask_login import login_user
 from google.cloud import datastore
-
-from server.db.models import User
-from server.db.protocol import DatabaseProtocol
+from main.db.models import User
+from main.db.protocol import DatabaseProtocol
 
 a = TypeVar("a")
 

@@ -4,13 +4,12 @@ from datetime import datetime
 from typing import cast
 
 import attrs
-
-from server.db.models import Algorithm
-from server.db.models import Event
-from server.db.models import ScriptDemoInfo
-from server.db.models import User
-from server.db.models import UserId
-from server.db.protocol import DatabaseProtocol
+from main.db.models import Algorithm
+from main.db.models import Event
+from main.db.models import ScriptDemoInfo
+from main.db.models import User
+from main.db.models import UserId
+from main.db.protocol import DatabaseProtocol
 
 
 @attrs.define

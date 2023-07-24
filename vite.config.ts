@@ -9,7 +9,7 @@ export default defineConfig({
     // see https://vitejs.dev/config/server-options.html#server-proxy
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://pyalgoviz-backend-kfy32uqpsa-uc.a.run.app',
         changeOrigin: true,
         rewrite: path => path.replace(/^\/api/, ''),
       },

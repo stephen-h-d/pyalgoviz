@@ -9,3 +9,4 @@ public/pyodide-0.21.3/
 pnpm-lock.yaml
 src/generated/*.ts
 generator/ts-out
+server/main/public

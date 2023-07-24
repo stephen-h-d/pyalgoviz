@@ -1,4 +1,4 @@
-import executorCode from '../shared/executor.py'; // Import the Python module as a string
+import executorCode from '../server/shared/executor.py'; // Import the Python module as a string
 
 export const executorScript = `
 ${executorCode}
