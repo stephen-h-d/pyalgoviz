@@ -143,9 +143,6 @@ export function renderEvent(
   // This is necessary to make the view consistent across the different viz outputs (see getBBox)
   bBox?: DOMRect,
 ): DOMRect {
-  // TODO make a version of this that just renders to a hidden element
-  // and then calculates the maximum canvas box
-
   div.textContent = '';
   if (event !== null && event !== undefined) {
     const svg = select(div).append('svg');
@@ -192,7 +189,7 @@ export function renderEvent(
 }
 
 // Returns the bounding box for all of these events
-export function getBBox(events: (VizEvent | null | undefined)[]) {
+export function getSetupInfo(events: (VizEvent | null | undefined)[]) {
   // Render all of the events and find the biggest box
   const div = document.createElement('div');
   div.style.opacity = '0';

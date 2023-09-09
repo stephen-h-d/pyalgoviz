@@ -105,7 +105,7 @@ function SelectDialog(props: {
 }
 
 const fetchScriptNames = async () => {
-  const fetchResult = await fetch('api/script_names');
+  const fetchResult = await fetch('/api/script_names');
   return (await fetchResult.json()) as object;
 };
 
@@ -187,7 +187,7 @@ export function SaveScriptDialog(props: {
     try {
       const algo_script = props.algo();
       const viz_script = props.viz();
-      await postJson('api/save', {
+      await postJson('/api/save', {
         algo_script,
         viz_script,
         name: name(),
@@ -269,7 +269,7 @@ export function LoadScriptDialog(props: {
   createEffect(() => {
     const selectedScriptName = selectedSig();
     if (selectedScriptName !== null) {
-      fetch(`api/load?script_name=${selectedScriptName}`)
+      fetch(`/api/load?script_name=${selectedScriptName}`)
         .then(response => response.json())
         // eslint-disable-next-line solid/reactivity
         .then(data => {

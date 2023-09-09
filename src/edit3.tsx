@@ -551,7 +551,7 @@ arc(100,
       }
     } else {
       try {
-        const run_result = (await postJson('api/run', toRun)) as ExecResult;
+        const run_result = (await postJson('/api/run', toRun)) as ExecResult;
         console.log('run_result', run_result);
         setExecResult(run_result);
       } catch (error) {

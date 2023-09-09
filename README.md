@@ -59,7 +59,8 @@ pip-sync
 To run the backend server locally:
 
 ```
-cd server
+cd server/main
+export FLASK_DEBUG=1
 export FLASK_APP=main.py
 export SECRET_KEY=`openssl rand -base64 32`
 export GOOGLE_CLOUD_PROJECT=pyalgoviz-361922

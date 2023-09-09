@@ -5,7 +5,7 @@
 4. some of the TODOs in the code (need to clarify which ones)
 5. figure out how to deploy
 
-### Ready-to-implement TODOs
+### Ready-to-implement TODOs pre-launch
 
 1. Render the first event that actually has something in the demo / landing page
 5. Disable all the buttons when: (est. 0.5 hours)
@@ -15,6 +15,11 @@
    * when nothing's been run or
 7. add option to auto-play (est. 0.5 hours)
 9. log out user when token expired (currently shows as logged in even though the token fails)
+10. Make a bash script that:
+  1. `pnpm run build`
+  2. `cp -r dist server/main/public/`
+  3. if "-d" argument is passed, for deploy, `(cd server && gcloud run deploy)`
+
 
 ### Ready-to-implement TODOs post-launch
 4. Tell the user when Pyodide is loading, when it is done loading, when the code is running, and when it is done running.

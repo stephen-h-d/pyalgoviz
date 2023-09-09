@@ -3,13 +3,15 @@ import { Accessor, For, createEffect, createResource } from 'solid-js';
 import * as styles from './index.css';
 import { EventNavSubjects } from './EventNavSubjects';
 import { VizEvent } from './exec_result';
-import { getBBox, renderEvent } from './VizOutput';
+import { getSetupInfo, renderEvent } from './VizOutput';
 import { VizEventNavigator } from './vizEvents';
 import { fromEvent, Observable } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map } from 'rxjs/operators';
 
 const fetchScripts = async () => {
-  const fetchResult = await fetch('api/public_scripts');
+  console.log('fetching...');
+  const fetchResult = await fetch('/api/public_scripts');
+  console.log('fetchResult', fetchResult);
   return (await fetchResult.json()) as object;
 };
 
@@ -95,7 +97,7 @@ const ScriptDemo = (props: { events: VizEvent[] }) => {
   const eventNavSubjects: EventNavSubjects = new EventNavSubjects();
   // This next line should be fine, as the events don't change, so we ignore the warning
   // eslint-disable-next-line solid/reactivity
-  const bBox = getBBox(props.events);
+  const bBox = getSetupInfo(props.events);
 
   eventNavSubjects.speed$.next('Slow (20/s)');
 
