@@ -12,7 +12,7 @@ export default defineConfig({
         // target: 'https://pyalgoviz-backend-kfy32uqpsa-uc.a.run.app',
         target: 'http://localhost:5000',
         changeOrigin: true,
-        rewrite: path => path.replace(/^\/api/, ''),
+        // rewrite: path => path.replace(/^\/api/, ''),
       },
     },
   },
