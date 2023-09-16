@@ -118,8 +118,11 @@ class GoogleStoreDatabase(DatabaseProtocol):
                 "algo_script": algo.algo_script,
                 "viz_script": algo.viz_script,
                 "public": algo.public,
+                # filter out events with no viz output, since cached events are just for display on the front page
                 "cached_events": [
-                    self._event_to_entity(event) for event in algo.cached_events
+                    self._event_to_entity(event)
+                    for event in algo.cached_events
+                    if event.viz_output != ""
                 ],
                 "last_updated": algo.last_updated,
             }

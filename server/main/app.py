@@ -6,10 +6,11 @@ from pathlib import Path
 
 import attrs
 import flask
-from flask import Flask, send_from_directory
+from flask import Flask
 from flask import request
 from flask import Response
 from flask import send_file
+from flask import send_from_directory
 from flask_login import current_user  # type: ignore[import]
 from flask_login import LoginManager
 from google.cloud import datastore
@@ -39,7 +40,7 @@ if USE_GOOGLE_DB == "True":
 else:
     from main.db.mdb import MemoryDatabase
 
-    db = MemoryDatabase.with_fake_entries()
+    db = MemoryDatabase.load_cached_demo_db()
 
 jwta = JWTAuthenticator(db)
 
@@ -60,13 +61,15 @@ def serve_static():
     print(f"serve_static / {path_to_file}")
     return send_file(path_to_file)
 
-@app.route('/assets/<path:filename>')
+
+@app.route("/assets/<path:filename>")
 def serve_assets(filename):
     path_to_dir = Path(app.static_folder) / "dist" / "assets"
     print(f"serve_assets /assets/ {path_to_dir}")
     return send_from_directory(path_to_dir, filename)
 
-@app.route("/api/save", methods=["POST","OPTIONS"])
+
+@app.route("/api/save", methods=["POST", "OPTIONS"])
 @jwta.authenticated
 def save() -> Response:
     author: User = current_user
@@ -102,7 +105,7 @@ def save() -> Response:
     return {"result": msg}, HTTPStatus.OK
 
 
-@app.route("/api/script_names", methods=["GET","OPTIONS"])
+@app.route("/api/script_names", methods=["GET", "OPTIONS"])
 @jwta.authenticated
 def get_script_names() -> Response:
     author: User = current_user
@@ -118,9 +121,9 @@ def get_script_names() -> Response:
         )
 
 
-@app.route("/api/public_scripts", methods=["GET","OPTIONS"])
+@app.route("/api/public_scripts", methods=["GET", "OPTIONS"])
 def get_public_scripts() -> Response:
-    print("get_public_scripts");
+    print("get_public_scripts")
     try:
         script_demo_info_list = [
             attrs.asdict(demo_info) for demo_info in db.get_public_algos()
@@ -135,7 +138,7 @@ def get_public_scripts() -> Response:
         )
 
 
-@app.route("/api/load", methods=["GET","OPTIONS"])
+@app.route("/api/load", methods=["GET", "OPTIONS"])
 @jwta.authenticated
 def load() -> Response:
     author: User = current_user
@@ -152,7 +155,7 @@ def load() -> Response:
         )
 
 
-@app.route("/api/run", methods=["POST","OPTIONS"])
+@app.route("/api/run", methods=["POST", "OPTIONS"])
 @jwta.authenticated
 def run() -> Response:
     try:
