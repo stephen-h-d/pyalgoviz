@@ -180,7 +180,6 @@ export class VizEventNavigator {
   }
 
   private nextEventIdx(event_idx: VizEventIdx) {
-    console.log('next event idx', event_idx);
     if (event_idx.current > 0) {
       this.setCurrentEvent(this.exec_result.events[event_idx.current]);
     } else {
@@ -193,13 +192,6 @@ export class VizEventNavigator {
   }
 
   private playPause(value: boolean | null) {
-    console.log('fudge Playing status:', this.playing());
-    console.log('fudge Event index subject:', this.event_idx_subject);
-    console.log(
-      'fudge Events remaining:',
-      this.event_idx_subject.eventsRemaining(),
-    );
-
     if (this.playing() && (value === null || value === false)) {
       this.setPlaying(false);
     } else if (!this.playing() && (value === null || value === true)) {
@@ -209,7 +201,6 @@ export class VizEventNavigator {
       const speed = this.inputs_clicked.speed$.getValue();
       const rate_per_s = Speed[speed.valueOf() as keyof typeof Speed];
       const delay = (1 / rate_per_s) * 1000;
-      console.log('delay', delay);
 
       if (this.event_idx_subject.eventsRemaining() === 0) {
         console.log('resetting event idx');

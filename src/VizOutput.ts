@@ -139,11 +139,11 @@ function encompassingBoundingBox(rects: DOMRect[]): DOMRect {
 export function renderEvent(
   div: HTMLDivElement,
   event: VizEvent | null | undefined,
-  // the bounding box to use for the viewbox; if undefined, just use the bounding box of the canvas.
-  // This is necessary to make the view consistent across the different viz outputs (see getBBox)
   bBox?: DOMRect,
-): DOMRect {
+): [DOMRect, number] {
   div.textContent = '';
+  let numberOfElements = 0;
+
   if (event !== null && event !== undefined) {
     const svg = select(div).append('svg');
     const canvas = svg
@@ -157,12 +157,14 @@ export function renderEvent(
       T(canvas, 100, 100, 'INTERNAL ERROR: ', 15, 'Arial', 'red');
       T(canvas, 100, 120, '' + String(e), 15, 'Arial', 'red');
       T(canvas, 100, 140, '' + event.viz_output, 15, 'Arial', 'black');
-      return new DOMRect(0, 0, 500, 500);
+      return [new DOMRect(0, 0, 500, 500), numberOfElements];
     }
+
+    numberOfElements = canvas.selectAll("*").size();
 
     const node = canvas.node();
     if (node === undefined || node === null) {
-      return new DOMRect(0, 0, 500, 500);
+      return [new DOMRect(0, 0, 500, 500), numberOfElements];
     }
 
     svg.attr('width', '500').attr('height', '500');
@@ -183,20 +185,36 @@ export function renderEvent(
       svg.attr('viewBox', viewbox);
     }
 
-    return canvasBox;
+    return [canvasBox, numberOfElements];
   }
-  return new DOMRect(0, 0, 500, 500);
+  return [new DOMRect(0, 0, 500, 500), numberOfElements];
 }
 
-// Returns the bounding box for all of these events
-export function getSetupInfo(events: (VizEvent | null | undefined)[]) {
+
+// Returns the bounding box for all of these events as well as a filtered list
+// of events that are non-empty if includeEmpties is false (otherwise the list
+// is the same as the input list)
+export function getSetupInfo(
+  events: (VizEvent | null | undefined)[],
+  includeEmpties: boolean,
+): [DOMRect, (VizEvent | null | undefined)[]] {
   // Render all of the events and find the biggest box
   const div = document.createElement('div');
   div.style.opacity = '0';
   document.body.appendChild(div);
-  const bBoxes = [];
+  const bBoxes: DOMRect[] = [];
+  const filteredEvents: (VizEvent | null | undefined)[] = [];
+
   for (const event of events) {
-    bBoxes.push(renderEvent(div, event));
+    const [bBox, numberOfElements] = renderEvent(div, event);
+    if (includeEmpties || numberOfElements > 0) {
+      bBoxes.push(bBox);
+      filteredEvents.push(event);
+    }
   }
-  return encompassingBoundingBox(bBoxes);
+
+  // Remove the temporary div from the body
+  document.body.removeChild(div);
+
+  return [encompassingBoundingBox(bBoxes), filteredEvents];
 }

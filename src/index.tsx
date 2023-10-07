@@ -97,7 +97,7 @@ const ScriptDemo = (props: { events: VizEvent[] }) => {
   const eventNavSubjects: EventNavSubjects = new EventNavSubjects();
   // This next line should be fine, as the events don't change, so we ignore the warning
   // eslint-disable-next-line solid/reactivity
-  const bBox = getSetupInfo(props.events);
+  const [bBox, filteredEvents] = getSetupInfo(props.events, false);
 
   eventNavSubjects.speed$.next('Slow (20/s)');
 
@@ -105,9 +105,10 @@ const ScriptDemo = (props: { events: VizEvent[] }) => {
     eventNavSubjects,
     {
       py_error: null,
-      // This next line should be fine, as the events don't change, so we ignore the warning
+      // This next line should be fine, as the events don't change, so we ignore the warning.
+      // We also cast the events because we know they are only VizEvents
       // eslint-disable-next-line solid/reactivity
-      events: props.events,
+      events: filteredEvents as VizEvent[],
     },
   );
 
