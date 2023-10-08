@@ -32,7 +32,7 @@ USE_GOOGLE_DB = os.environ.get("USE_GOOGLE_DB", "False")
 
 db: DatabaseProtocol
 
-if USE_GOOGLE_DB == "True":
+if USE_GOOGLE_DB.lower() == "true":
     from main.db.gsdb import GoogleStoreDatabase
 
     client = datastore.Client(project=PROJECT)

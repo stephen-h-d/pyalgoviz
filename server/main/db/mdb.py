@@ -14,6 +14,7 @@ from main.db.models import ScriptDemoInfo
 from main.db.models import User
 from main.db.models import UserId
 from main.db.protocol import DatabaseProtocol
+
 # Function to convert dictionary back to attrs object
 # def dict_to_attrs(class_type, d):
 #     field_types = {f.name: f.type for f in attrs.fields(class_type)}
@@ -128,7 +129,7 @@ class MemoryDatabase(DatabaseProtocol):
 
     @classmethod
     def load_cached_demo_db(cls) -> MemoryDatabase:
-        with open("cached_demo_db.json", "r") as f:
+        with open("main/cached_demo_db.json", "r") as f:
             loaded_dict = json.load(f)
 
         print(f"wth")

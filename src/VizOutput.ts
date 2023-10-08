@@ -3,7 +3,7 @@ import { VizEvent } from './exec_result';
 const RENDERING_SCALE = 1.0; // TODO make this more dynamic?
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function T(
+export function T(
   canvas: Selection<SVGGElement, unknown, null, undefined>,
   x: number,
   y: number,
@@ -23,7 +23,7 @@ function T(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function L(
+export function L(
   canvas: Selection<SVGGElement, unknown, null, undefined>,
   x1: number,
   y1: number,
@@ -43,7 +43,7 @@ function L(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function R(
+export function R(
   canvas: Selection<SVGGElement, unknown, null, undefined>,
   x: number,
   y: number,
@@ -63,7 +63,7 @@ function R(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function C(
+export function C(
   canvas: Selection<SVGGElement, unknown, null, undefined>,
   x: number,
   y: number,
@@ -81,7 +81,7 @@ function C(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function A(
+export function A(
   canvas: Selection<SVGGElement, unknown, null, undefined>,
   x: number,
   y: number,
@@ -190,6 +190,9 @@ export function renderEvent(
   return [new DOMRect(0, 0, 500, 500), numberOfElements];
 }
 
+// all other attempts at preventing these functions from being removed by
+// the tree-shaking process failed, so I'm just going to log them here
+console.log(T, L, R, C, A);
 
 // Returns the bounding box for all of these events as well as a filtered list
 // of events that are non-empty if includeEmpties is false (otherwise the list

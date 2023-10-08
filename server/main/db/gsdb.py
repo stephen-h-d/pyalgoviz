@@ -3,6 +3,7 @@ from enum import Enum
 from typing import TypeVar
 
 import attrs
+import main.db.models
 from google.cloud.datastore import Client
 from google.cloud.datastore import Entity
 from google.cloud.datastore import Key
@@ -13,8 +14,6 @@ from main.db.models import User
 from main.db.models import UserId
 from main.db.protocol import DatabaseProtocol
 
-import server.db.models
-
 
 class EntityType(Enum):
     USER = "User"
@@ -24,9 +23,9 @@ class EntityType(Enum):
 
 def _kind_for(attrs_class: type) -> str:
     match attrs_class:
-        case server.db.models.User:
+        case main.db.models.User:
             return EntityType.USER.value
-        case server.db.models.Algorithm:
+        case main.db.models.Algorithm:
             return EntityType.ALGORITHM.value
     raise ValueError(f"Unknown attrs_class: {attrs_class}")
 

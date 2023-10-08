@@ -4,6 +4,7 @@ import solidPlugin from 'vite-plugin-solid';
 import { string } from 'rollup-plugin-string';
 
 export default defineConfig({
+  // NOTE: the `server` part only applies to running the development server
   server: {
     port: 3000,
     // see https://vitejs.dev/config/server-options.html#server-proxy

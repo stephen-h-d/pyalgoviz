@@ -70,6 +70,6 @@ flask run
 
 To run the backend server in a Docker container:
 ```
-sudo docker build -t pyalgoviz-backend .
-sudo docker run -p 5000:80 -e PORT=80 pyalgoviz-backend
+sudo docker build -t pyalgoviz-server .
+sudo docker run -p 5000:80 -e PORT=80 pyalgoviz-server
 ```
