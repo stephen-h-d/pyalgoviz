@@ -726,7 +726,7 @@ function Footer() {
   return <div class={styles.footer}>Footer</div>;
 }
 
-function App() {
+export function Edit() {
   return (
     <div class={styles.app}>
       <Header />
@@ -735,13 +735,3 @@ function App() {
     </div>
   );
 }
-
-const rootDiv = document.getElementById('root');
-
-if (rootDiv === null) {
-  throw Error('Fatal error: root div is null');
-}
-
-rootDiv.textContent = '';
-rootDiv.className = styles.global;
-render(() => <App />, rootDiv);
