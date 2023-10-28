@@ -270,10 +270,14 @@ function TopLeftContents(props: {
   );
 }
 
-function BottomLeftContents(props: { viz: Accessor<string> }) {
+function BottomLeftContents(props: {
+  viz: Accessor<string>;
+  setViz: Setter<string>;
+}) {
   const editorArgs: EditorArgs = {
     // eslint-disable-next-line solid/reactivity
     contents: props.viz,
+    setContents: props.setViz,
     extensions: [basicSetup, fixedHeightEditor, python()],
     textReadOnly: false,
   };
@@ -625,7 +629,7 @@ arc(100,
           />
         </div>
         <div class={styles.bottom_left_cell}>
-          <BottomLeftContents viz={viz} />
+          <BottomLeftContents viz={viz} setViz={setViz} />
           <div
             class={styles.top_edge}
             onMouseDown={resizer.resize_cell_11_listener()}

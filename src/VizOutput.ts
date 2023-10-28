@@ -3,7 +3,7 @@ import { VizEvent } from './exec_result';
 const RENDERING_SCALE = 1.0; // TODO make this more dynamic?
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function T(
+export function drawText(
   canvas: Selection<SVGGElement, unknown, null, undefined>,
   x: number,
   y: number,
@@ -23,7 +23,7 @@ export function T(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function L(
+export function drawLine(
   canvas: Selection<SVGGElement, unknown, null, undefined>,
   x1: number,
   y1: number,
@@ -43,7 +43,7 @@ export function L(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function R(
+export function drawRect(
   canvas: Selection<SVGGElement, unknown, null, undefined>,
   x: number,
   y: number,
@@ -63,7 +63,7 @@ export function R(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function C(
+export function drawCircle(
   canvas: Selection<SVGGElement, unknown, null, undefined>,
   x: number,
   y: number,
@@ -81,7 +81,7 @@ export function C(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function A(
+export function drawArc(
   canvas: Selection<SVGGElement, unknown, null, undefined>,
   x: number,
   y: number,
@@ -151,12 +151,13 @@ export function renderEvent(
       .attr('transform', 'scale(' + String(RENDERING_SCALE) + ')');
 
     try {
+      console.log(event.viz_output);
       eval(event.viz_output);
     } catch (e) {
       console.error(e);
-      T(canvas, 100, 100, 'INTERNAL ERROR: ', 15, 'Arial', 'red');
-      T(canvas, 100, 120, '' + String(e), 15, 'Arial', 'red');
-      T(canvas, 100, 140, '' + event.viz_output, 15, 'Arial', 'black');
+      drawText(canvas, 100, 100, 'INTERNAL ERROR: ', 15, 'Arial', 'red');
+      drawText(canvas, 100, 120, '' + String(e), 15, 'Arial', 'red');
+      drawText(canvas, 100, 140, '' + event.viz_output, 15, 'Arial', 'black');
       return [new DOMRect(0, 0, 500, 500), numberOfElements];
     }
 
@@ -192,7 +193,7 @@ export function renderEvent(
 
 // all other attempts at preventing these functions from being removed by
 // the tree-shaking process failed, so I'm just going to log them here
-console.log(T, L, R, C, A);
+console.log(drawText, drawLine, drawRect, drawCircle, drawArc);
 
 // Returns the bounding box for all of these events as well as a filtered list
 // of events that are non-empty if includeEmpties is false (otherwise the list

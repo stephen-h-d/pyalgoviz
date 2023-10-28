@@ -5,7 +5,6 @@ from http import HTTPStatus
 from pathlib import Path
 
 import attrs
-import flask
 from flask import Flask
 from flask import request
 from flask import Response
@@ -60,13 +59,6 @@ def serve_static():
     path_to_file = Path(app.static_folder) / "dist" / "index.html"
     print(f"serve_static / {path_to_file}")
     return send_file(path_to_file)
-
-
-@app.route("/assets/<path:filename>")
-def serve_assets(filename):
-    path_to_dir = Path(app.static_folder) / "dist" / "assets"
-    print(f"serve_assets /assets/ {path_to_dir}")
-    return send_from_directory(path_to_dir, filename)
 
 
 @app.route("/api/save", methods=["POST", "OPTIONS"])
@@ -172,6 +164,17 @@ def run() -> Response:
             "result": "Whoops!  Running failed.  Please report this bug."
         }, HTTPStatus.INTERNAL_SERVER_ERROR
     return result, HTTPStatus.OK
+
+
+@app.route("/<path:filename>")
+def serve_static_assets(filename):
+    if filename.startswith("api/"):
+        # If the path starts with "api/", let Flask continue to look for other matching routes
+        return Response(status=404)
+
+    path_to_dir = Path(app.static_folder) / "dist"
+    sub_path = Path(filename)
+    return send_from_directory(path_to_dir, sub_path)
 
 
 if __name__ == "__main__":

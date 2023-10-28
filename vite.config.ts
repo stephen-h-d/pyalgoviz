@@ -19,6 +19,14 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
+    minify: 'terser',
+    terserOptions: {
+      mangle: {
+        // keep the functions used for drawing. these are needed by the python
+        // script that creates the JavaScript script
+        reserved: ['drawText', 'drawLine', 'drawRect', 'drawCircle', 'drawArc'],
+      },
+    },
   },
   plugins: [
     vanillaExtractPlugin(),
