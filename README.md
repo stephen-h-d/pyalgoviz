@@ -51,7 +51,15 @@ To install the Python backend API environment:
 ```
 pyenv virtualenv 3.10.8 pyalgoviz_api
 pip install pip-tools
+cd server/
 pip-sync
+```
+
+In addition, to work with Google Cloud:
+```
+sudo snap install google-cloud-sdk --classic
+gcloud config set project pyalgoviz-361922
+gcloud auth application-default login
 ```
 
 #### Running
@@ -61,11 +69,11 @@ To run the backend server locally:
 ```
 cd server/main
 export FLASK_DEBUG=1
-export FLASK_APP=app.py
+export FLASK_APP=main/app.py
 export SECRET_KEY=`openssl rand -base64 32`
 export GOOGLE_CLOUD_PROJECT=pyalgoviz-361922
 export PYTHONUNBUFFERED=1
-flask run
+python -m flask run 
 ```
 
 To run the backend server in a Docker container:
