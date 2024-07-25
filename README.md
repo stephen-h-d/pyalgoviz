@@ -67,7 +67,7 @@ gcloud auth application-default login
 To run the backend server locally:
 
 ```
-cd server/main
+cd server/
 export FLASK_DEBUG=1
 export FLASK_APP=main/app.py
 export SECRET_KEY=`openssl rand -base64 32`
