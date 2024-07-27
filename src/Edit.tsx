@@ -10,7 +10,6 @@ import {
   createRenderEffect,
   Ref,
 } from 'solid-js';
-import { render } from 'solid-js/web';
 import { LoadScriptDialog, SaveScriptDialog } from './solid_load_dialog';
 import * as styles from './edit3.css';
 import { Extension } from '@codemirror/state';

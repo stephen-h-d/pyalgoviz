@@ -19,6 +19,8 @@ To run the frontend app locally:
 pnpm run dev
 ```
 
+You can then go to localhost:3000 to view the frontend. If the backend server is running, API requests will be routed through the proxy as defined in vite.config.ts.
+
 To run tsc as a static analyzer (i.e. it does not compile; it just does
 type-checking):
 
@@ -67,6 +69,8 @@ gcloud auth application-default login
 To run the backend server locally:
 
 ```
+./build.sh # this builds the frontend and puts its contents in the server's public folder.
+
 cd server/
 export FLASK_DEBUG=1
 export FLASK_APP=main/app.py
