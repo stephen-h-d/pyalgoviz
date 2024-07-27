@@ -13,7 +13,7 @@
 3. add option to auto-play (est. 0.5 hours)
 4. log out user when token expired (currently shows as logged in even though the token fails)
 5. add a "save" vs. "save as" distinction
-6. change play/pause button based on whether it's playing or paused.
+6. use play/pause/next/prev icons, not text
 7. Write basic manual tests.
 
 ### Ready-to-implement TODOs post-launch

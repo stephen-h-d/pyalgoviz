@@ -57,6 +57,7 @@ export class Editor {
     val: LinesToHighlight,
     tr: Transaction,
   ): LinesToHighlight {
+    console.log(val,tr);
     for (const effect of tr.effects) {
       if (effect.is(this.linesToHighlightEffect)) {
         return effect.value;

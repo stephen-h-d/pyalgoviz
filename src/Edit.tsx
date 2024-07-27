@@ -225,10 +225,9 @@ function TopLeftContents(props: {
         <button
           disabled={playPauseDisabled()}
           class={styles.input}
-          // TODO make it "Play/Pause" based on whether it's running
           onClick={() => props.eventNavSubjects.playPause$.next(null)}
         >
-          Play
+          {props.playing() ? "Pause": "Play"}
         </button>
         <button
           disabled={nextDisabled()}
