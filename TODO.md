@@ -12,9 +12,11 @@
    * when nothing's been run or
 3. add option to auto-play (est. 0.5 hours)
 4. log out user when token expired (currently shows as logged in even though the token fails)
-5. add a "save" vs. "save as" distinction
+5. add a "save" vs. "save as" distinction (as opposed to effectively always "saving as")
 6. use play/pause/next/prev icons, not text
 7. Write basic manual tests.
+8. Fill in Header and Footer content
+9. Add the ability to load public/published Algos
 
 ### Ready-to-implement TODOs post-launch
 1. Tell the user when Pyodide is loading, when it is done loading, when the code is running, and when it is done running.

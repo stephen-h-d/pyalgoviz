@@ -112,6 +112,7 @@ function TopLeftContents(props: {
   run: (locally: boolean) => Promise<void>;
   algo: Accessor<string>;
   setAlgo: Setter<string>;
+  setAlgoName: Setter<String>;
   viz: Accessor<string>;
   setViz: Setter<string>;
   eventNavSubjects: EventNavSubjects;
@@ -132,6 +133,12 @@ function TopLeftContents(props: {
   const [currentSavedScript, setCurrentSavedScript] =
     createSignal<PyAlgoVizScript | null>(null);
 
+  const setCurrentSavedScriptInfo = (script: PyAlgoVizScript, algoName: string) => {
+    console.log("setting algo name", algoName);
+    setCurrentSavedScript(script);
+    props.setAlgoName(algoName);
+  };
+
   // if currentSavedScript doesn't match current script
   // set warning dialog sig true
   // else show load dialog
@@ -140,7 +147,7 @@ function TopLeftContents(props: {
   // clicking on the warning dialog shows.
   const [showLoadDialog, setShowLoadDialog] = createSignal<boolean>(false);
 
-  const [showDaveDialog, setShowSaveDialog] = createSignal<boolean>(false);
+  const [showSaveDialog, setShowSaveDialog] = createSignal<boolean>(false);
   const [selectedSpeed, setSelectedSpeed] =
     createSignal<keyof typeof Speed>('Medium (40/s)');
   createEffect(() => {
@@ -191,9 +198,9 @@ function TopLeftContents(props: {
       <SaveScriptDialog
         viz={props.viz}
         algo={props.algo}
-        open={showDaveDialog}
+        open={showSaveDialog}
         setOpen={setShowSaveDialog}
-        savedCb={setCurrentSavedScript}
+        savedCb={setCurrentSavedScriptInfo}
       />
       <LoadScriptDialog
         open={showLoadDialog}
@@ -488,6 +495,7 @@ class Resizer {
 function IDE(props: {
   ref: Ref<HTMLDivElement | null>;
   getSelf: () => HTMLDivElement;
+  setAlgoName: Setter<string>;
 }) {
   // This is currently set up via a hacky mechanism.
   // TODO refactor this to use `use` or some better way of getting the top-level element.
@@ -616,6 +624,7 @@ arc(100,
             algo={algo}
             viz={viz}
             setAlgo={setAlgo}
+            setAlgoName={props.setAlgoName}
             setViz={setViz}
             running={pyodideRunning}
             pyodideReady={pyodideReady}
@@ -663,7 +672,9 @@ arc(100,
   );
 }
 
-function Header() {
+function Header(props: {
+  algoName: string,
+}) {
   // We have to use an `Inner` function here in order for the component
   // to rerender correctly.  We need to have an `if` statement that checks
   // if the `userObj` is null for better type-checking, and the only way
@@ -698,14 +709,16 @@ function Header() {
   return (
     <>
       <div class={styles.header}>
-        <div class={styles.headerContent}>Header</div>
+        <div class={styles.headerContent}>{props.algoName}</div>
         {Inner()}
       </div>
     </>
   );
 }
 
-function Content() {
+function Content(props: {
+  setAlgoName: Setter<String>
+}) {
   // must disable prefer-const because `ideDiv` is used, but TSC/ESLint don't see that
   // eslint-disable-next-line prefer-const
   let ideDiv: HTMLDivElement | null = null;
@@ -719,7 +732,7 @@ function Content() {
 
   return (
     <div class={styles.content}>
-      <IDE ref={ideDiv} getSelf={getSelf} />
+      <IDE ref={ideDiv} getSelf={getSelf} setAlgoName={props.setAlgoName} />
     </div>
   );
 }
@@ -729,10 +742,12 @@ function Footer() {
 }
 
 export function Edit() {
+  const [algoName, setAlgoName] = createSignal("ergh");
+
   return (
     <div class={styles.app}>
-      <Header />
-      <Content />
+      <Header algoName={algoName()} />
+      <Content setAlgoName={setAlgoName} />
       <Footer />
     </div>
   );

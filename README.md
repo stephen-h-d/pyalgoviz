@@ -70,14 +70,7 @@ To run the backend server locally:
 
 ```
 ./build.sh # this builds the frontend and puts its contents in the server's public folder.
-
-cd server/
-export FLASK_DEBUG=1
-export FLASK_APP=main/app.py
-export SECRET_KEY=`openssl rand -base64 32`
-export GOOGLE_CLOUD_PROJECT=pyalgoviz-361922
-export PYTHONUNBUFFERED=1
-python -m flask run 
+./run_backend.sh # this runs the backend server
 ```
 
 To run the backend server in a Docker container:

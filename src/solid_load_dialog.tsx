@@ -138,7 +138,7 @@ function SuccessDialog(props: {
 }) {
   return (
     <dialog open={props.open()}>
-      <p>Scripts saved successfully.</p>
+      <p>Script saved successfully.</p>
       <button onClick={() => props.setOpen(false)}>OK</button>
     </dialog>
   );
@@ -164,9 +164,9 @@ export function SaveScriptDialog(props: {
   setOpen: Setter<boolean>;
   algo: Accessor<string>;
   viz: Accessor<string>;
-  savedCb: (script: PyAlgoVizScript) => void;
+  savedCb: (script: PyAlgoVizScript, algoName: string) => void;
 }) {
-  const [name, setName] = createSignal('');
+  const [algoName, setAlgoName] = createSignal('');
   const [publish, setPublish] = createSignal(false);
   const [saving, setSaving] = createSignal(false);
   const [successOpen, setSuccessOpen] = createSignal(false);
@@ -176,7 +176,7 @@ export function SaveScriptDialog(props: {
     // when the dialog just becomes open, we need to reset the name.
     // TODO add a "save" vs. "save as" distinction
     if (props.open()) {
-      setName('');
+      setAlgoName('');
     }
   });
 
@@ -187,16 +187,17 @@ export function SaveScriptDialog(props: {
     try {
       const algo_script = props.algo();
       const viz_script = props.viz();
+      const name = algoName();
       await postJson('/api/save', {
         algo_script,
         viz_script,
-        name: name(),
+        name,
         publish: publish(),
       });
       props.savedCb({
         algo_script,
         viz_script,
-      });
+      },name);
       setSaving(false);
       props.setOpen(false);
       setSuccessOpen(true);
@@ -210,7 +211,7 @@ export function SaveScriptDialog(props: {
   return (
     <>
       <dialog open={props.open()}>
-        <input type="text" use:text_input={[name, setName]} />
+        <input type="text" use:text_input={[algoName, setAlgoName]} />
         <CheckBox
           id="publish"
           label="Publish"
