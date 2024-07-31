@@ -104,9 +104,13 @@ function SelectDialog(props: {
   );
 }
 
+interface ScriptNames {
+  result: string[];
+}
+
 const fetchScriptNames = async () => {
   const fetchResult = await fetch('/api/script_names');
-  return (await fetchResult.json()) as object;
+  return (await fetchResult.json()) as ScriptNames;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -159,6 +163,21 @@ function ErrorDialog(props: {
   );
 }
 
+function DuplicateNameDialog(props: {
+  open: Accessor<boolean>;
+  setOpen: Setter<boolean>;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <dialog open={props.open()}>
+      <p>A script with this name already exists. Do you want to overwrite it?</p>
+      <button onClick={props.onConfirm}>Yes</button>
+      <button onClick={props.onCancel}>No</button>
+    </dialog>
+  );
+}
+
 export function SaveScriptDialog(props: {
   open: Accessor<boolean>;
   setOpen: Setter<boolean>;
@@ -166,22 +185,52 @@ export function SaveScriptDialog(props: {
   viz: Accessor<string>;
   savedCb: (script: PyAlgoVizScript, algoName: string) => void;
 }) {
+  const [scriptNames, { refetch }] = createResource(fetchScriptNames);
   const [algoName, setAlgoName] = createSignal('');
   const [publish, setPublish] = createSignal(false);
   const [saving, setSaving] = createSignal(false);
   const [successOpen, setSuccessOpen] = createSignal(false);
   const [errorOpen, setErrorOpen] = createSignal(false);
+  const [duplicateOpen, setDuplicateOpen] = createSignal(false);
 
   createEffect(() => {
-    // when the dialog just becomes open, we need to reset the name.
-    // TODO add a "save" vs. "save as" distinction
     if (props.open()) {
       setAlgoName('');
     }
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const scriptNamesList = () => {
+    const names = [];
+    if (scriptNames.loading || scriptNames.error) {
+      if (scriptNames.error !== undefined) {
+        console.error('Error loading script names', scriptNames.error);
+      }
+      return [];
+    }
+
+    const fetched = scriptNames() as ScriptNames;
+    for (const name of fetched.result) {
+      names.push(name);
+    }
+    return names;
+  };
+
+
   const save = async (_event: MouseEvent) => {
+    const name = algoName();
+
+    await refetch();
+    const scriptNamesResult = scriptNamesList();
+
+    if (scriptNamesResult.includes(name)) {
+      setDuplicateOpen(true);
+      return;
+    }
+
+    saveScript();
+  };
+
+  const saveScript = async () => {
     setSaving(true);
 
     try {
@@ -208,6 +257,15 @@ export function SaveScriptDialog(props: {
     }
   };
 
+  const handleConfirmOverwrite = () => {
+    setDuplicateOpen(false);
+    saveScript();
+  };
+
+  const handleCancelOverwrite = () => {
+    setDuplicateOpen(false);
+  };
+
   return (
     <>
       <dialog open={props.open()}>
@@ -218,29 +276,26 @@ export function SaveScriptDialog(props: {
           value={publish}
           setValue={setPublish}
         />
-        <button
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          onClick={_e => props.setOpen(false)}
-        >
+        <button onClick={() => props.setOpen(false)}>
           Cancel
         </button>
-        <button
-          // eslint-disable-next-line @typescript-eslint/no-misused-promises
-          onClick={save}
-        >
+        <button onClick={save}>
           Save
         </button>
         <p>{saving() && 'Saving...'}</p>
       </dialog>
       <SuccessDialog open={successOpen} setOpen={setSuccessOpen} />
       <ErrorDialog open={errorOpen} setOpen={setErrorOpen} />
+      <DuplicateNameDialog 
+        open={duplicateOpen} 
+        setOpen={setDuplicateOpen} 
+        onConfirm={handleConfirmOverwrite} 
+        onCancel={handleCancelOverwrite} 
+      />
     </>
   );
 }
 
-interface ScriptNames {
-  result: string[];
-}
 
 export function LoadScriptDialog(props: {
   open: Accessor<boolean>;
