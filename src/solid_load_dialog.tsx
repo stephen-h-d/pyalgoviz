@@ -136,7 +136,7 @@ declare module 'solid-js' {
   }
 }
 
-function SuccessDialog(props: {
+export function SuccessDialog(props: {
   open: Accessor<boolean>;
   setOpen: Setter<boolean>;
 }) {
@@ -148,7 +148,7 @@ function SuccessDialog(props: {
   );
 }
 
-function ErrorDialog(props: {
+export function ErrorDialog(props: {
   open: Accessor<boolean>;
   setOpen: Setter<boolean>;
 }) {

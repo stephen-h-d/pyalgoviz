@@ -10,7 +10,7 @@ import {
   createRenderEffect,
   Ref,
 } from 'solid-js';
-import { LoadScriptDialog, SaveScriptDialog } from './solid_load_dialog';
+import { ErrorDialog, LoadScriptDialog, SaveScriptDialog, SuccessDialog } from './solid_load_dialog';
 import * as styles from './edit3.css';
 import { Extension } from '@codemirror/state';
 import { Editor } from './editor';
@@ -112,6 +112,7 @@ function TopLeftContents(props: {
   run: (locally: boolean) => Promise<void>;
   algo: Accessor<string>;
   setAlgo: Setter<string>;
+  algoName: Accessor<string>;
   setAlgoName: Setter<String>;
   viz: Accessor<string>;
   setViz: Setter<string>;
@@ -132,6 +133,9 @@ function TopLeftContents(props: {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentSavedScript, setCurrentSavedScript] =
     createSignal<PyAlgoVizScript | null>(null);
+  // the success/error dialogs for saving (as opposed to "saving as")
+  const [successOpen, setSuccessOpen] = createSignal(false);
+  const [errorOpen, setErrorOpen] = createSignal(false);
 
   const setCurrentSavedScriptInfo = (script: PyAlgoVizScript, algoName: string) => {
     console.log("setting algo name", algoName);
@@ -139,9 +143,10 @@ function TopLeftContents(props: {
     props.setAlgoName(algoName);
   };
 
-  // if currentSavedScript doesn't match current script
+  // TODO if currentSavedScript doesn't match current script
   // set warning dialog sig true
   // else show load dialog
+  // also TODO if currentSavedScript does match current script, make "Save" button disabled
 
   // I will also need to make `doShowLoadDialog` that
   // clicking on the warning dialog shows.
@@ -160,7 +165,8 @@ function TopLeftContents(props: {
   const playPauseDisabled = () =>
     props.running() || props.currentEventIdx().total == 0;
 
-  const saveDisabled = () => user() === null;
+  const saveDisabled = () => user() === null && props.algoName() !== '';
+  const saveAsDisabled = () => user() === null;
   const loadDisabled = () => user() === null;
 
   const [range, setRange] = createSignal(0.0);
@@ -180,6 +186,28 @@ function TopLeftContents(props: {
       setRange(currPct);
     }
   });
+
+  const saveScript = async () => {
+    try {
+      const algo_script = props.algo();
+      const viz_script = props.viz();
+      const name = props.algoName();
+      await postJson('/api/save', {
+        algo_script,
+        viz_script,
+        name,
+        publish: publish(),// TODO use previous value one way or another
+      });
+      setCurrentSavedScript({
+        algo_script,
+        viz_script,
+      });
+      setSuccessOpen(true);
+    } catch (error) {
+      console.error(`API call error: ${String(error)}`);
+      setErrorOpen(true);
+    }
+  };
 
   const editorArgs: EditorArgs = {
     // eslint-disable-next-line solid/reactivity
@@ -208,6 +236,8 @@ function TopLeftContents(props: {
         setAlgo={props.setAlgo}
         setViz={props.setViz}
       />
+      <SuccessDialog open={successOpen} setOpen={setSuccessOpen} />
+      <ErrorDialog open={errorOpen} setOpen={setErrorOpen} />
       <div class={styles.inputs}>
         <button
           disabled={runDisabled()}
@@ -249,6 +279,13 @@ function TopLeftContents(props: {
           onClick={() => setShowSaveDialog(true)}
         >
           Save
+        </button>
+        <button
+          disabled={saveAsDisabled()}
+          class={styles.input}
+          onClick={() => setShowSaveDialog(true)}
+        >
+          Save As...
         </button>
         <button
           disabled={loadDisabled()}
@@ -495,6 +532,7 @@ class Resizer {
 function IDE(props: {
   ref: Ref<HTMLDivElement | null>;
   getSelf: () => HTMLDivElement;
+  algoName: Accessor<string>;
   setAlgoName: Setter<string>;
 }) {
   // This is currently set up via a hacky mechanism.
@@ -624,6 +662,7 @@ arc(100,
             algo={algo}
             viz={viz}
             setAlgo={setAlgo}
+            algoName={props.algoName}
             setAlgoName={props.setAlgoName}
             setViz={setViz}
             running={pyodideRunning}
@@ -706,10 +745,12 @@ function Header(props: {
     }
   }
 
+  const nameToDisplay = props.algoName === '' ? 'Untitled' : props.algoName;
+
   return (
     <>
       <div class={styles.header}>
-        <div class={styles.headerContent}>{props.algoName}</div>
+        <div class={styles.headerContent}>{nameToDisplay}</div>
         {Inner()}
       </div>
     </>
@@ -717,6 +758,7 @@ function Header(props: {
 }
 
 function Content(props: {
+  algoName: Accessor<string>;
   setAlgoName: Setter<String>
 }) {
   // must disable prefer-const because `ideDiv` is used, but TSC/ESLint don't see that
@@ -732,7 +774,7 @@ function Content(props: {
 
   return (
     <div class={styles.content}>
-      <IDE ref={ideDiv} getSelf={getSelf} setAlgoName={props.setAlgoName} />
+      <IDE ref={ideDiv} getSelf={getSelf} setAlgoName={props.setAlgoName} algoName={props.algoName} />
     </div>
   );
 }
@@ -742,12 +784,12 @@ function Footer() {
 }
 
 export function Edit() {
-  const [algoName, setAlgoName] = createSignal("ergh");
+  const [algoName, setAlgoName] = createSignal("");
 
   return (
     <div class={styles.app}>
       <Header algoName={algoName()} />
-      <Content setAlgoName={setAlgoName} />
+      <Content setAlgoName={setAlgoName} algoName={algoName}  />
       <Footer />
     </div>
   );
