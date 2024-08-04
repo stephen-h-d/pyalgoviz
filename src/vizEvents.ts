@@ -203,7 +203,7 @@ export class VizEventNavigator {
       const delay = (1 / rate_per_s) * 1000;
 
       if (this.event_idx_subject.eventsRemaining() === 0) {
-        console.log('resetting event idx');
+        // console.log('resetting event idx');
         this.event_idx_subject.reset();
       }
 

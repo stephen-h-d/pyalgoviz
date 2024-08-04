@@ -9,9 +9,9 @@ import { fromEvent, Observable } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map } from 'rxjs/operators';
 
 const fetchScripts = async () => {
-  console.log('fetching...');
+  // console.log('fetching...');
   const fetchResult = await fetch('/api/public_scripts');
-  console.log('fetchResult', fetchResult);
+  // console.log('fetchResult', fetchResult);
   return (await fetchResult.json()) as object;
 };
 

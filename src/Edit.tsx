@@ -10,6 +10,7 @@ import {
   createRenderEffect,
   Ref,
 } from 'solid-js';
+import isEqual from 'lodash/isEqual';
 import { ErrorDialog, LoadScriptDialog, SaveScriptDialog, SuccessDialog } from './solid_load_dialog';
 import * as styles from './edit3.css';
 import { Extension } from '@codemirror/state';
@@ -171,7 +172,13 @@ function TopLeftContents(props: {
       viz_script: props.viz(),
     };
   }
-  const saveDisabled = () => user() === null && props.algoName() !== '' && currentSavedScript() !== currentScript();
+  const saveDisabled = () => {
+    const currentSaved = currentSavedScript();
+    const current = currentScript();
+    const scriptsAreEqual = isEqual(currentSaved, current);
+    // console.log('currentSaved', currentSaved, 'current', current, 'user', user(), 'algoName', props.algoName(), 'scriptsAreEqual', scriptsAreEqual);
+    return user() === null || props.algoName() === '' || scriptsAreEqual;
+  };
   const saveAsDisabled = () => user() === null;
   const loadDisabled = () => user() === null;
 

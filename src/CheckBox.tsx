@@ -9,7 +9,7 @@ function checkbox_input(
   createRenderEffect(() => {
     const newValue = field();
     if (element.checked !== newValue) {
-      console.log('newvalue', newValue);
+      // console.log('newvalue', newValue);
       element.checked = newValue;
     }
   });

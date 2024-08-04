@@ -32,7 +32,7 @@ auth.onAuthStateChanged(
     }
   },
   function (error) {
-    console.log(error);
+    console.error(error);
     alert('Unable to log in: ' + String(error));
   },
 );
