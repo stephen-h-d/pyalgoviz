@@ -138,7 +138,6 @@ function TopLeftContents(props: {
   const [errorOpen, setErrorOpen] = createSignal(false);
 
   const setCurrentSavedScriptInfo = (script: PyAlgoVizScript, algoName: string) => {
-    console.log("setting algo name", algoName);
     setCurrentSavedScript(script);
     props.setAlgoName(algoName);
   };
@@ -146,7 +145,7 @@ function TopLeftContents(props: {
   // TODO if currentSavedScript doesn't match current script
   // set warning dialog sig true
   // else show load dialog
-  // also TODO if currentSavedScript does match current script, make "Save" button disabled
+  // also TODO 
 
   // I will also need to make `doShowLoadDialog` that
   // clicking on the warning dialog shows.
@@ -162,10 +161,17 @@ function TopLeftContents(props: {
   const runDisabled = () => props.running() || !props.pyodideReady();
   const prevDisabled = () => !props.currentEventIdx().canGoPrev();
   const nextDisabled = () => !props.currentEventIdx().canGoNext();
+  // if currentSavedScript does match current script, make "Save" button disabled
   const playPauseDisabled = () =>
     props.running() || props.currentEventIdx().total == 0;
 
-  const saveDisabled = () => user() === null && props.algoName() !== '';
+  const currentScript = () => {
+    return {
+      algo_script: props.algo(),
+      viz_script: props.viz(),
+    };
+  }
+  const saveDisabled = () => user() === null && props.algoName() !== '' && currentSavedScript() !== currentScript();
   const saveAsDisabled = () => user() === null;
   const loadDisabled = () => user() === null;
 
@@ -196,7 +202,6 @@ function TopLeftContents(props: {
         algo_script,
         viz_script,
         name,
-        publish: publish(),// TODO use previous value one way or another
       });
       setCurrentSavedScript({
         algo_script,
@@ -276,7 +281,7 @@ function TopLeftContents(props: {
         <button
           disabled={saveDisabled()}
           class={styles.input}
-          onClick={() => setShowSaveDialog(true)}
+          onClick={() => saveScript()}
         >
           Save
         </button>
@@ -600,10 +605,10 @@ arc(100,
     } else {
       try {
         const run_result = (await postJson('/api/run', toRun)) as ExecResult;
-        console.log('run_result', run_result);
+        // console.log('run_result', run_result);
         setExecResult(run_result);
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     }
   }
@@ -712,7 +717,7 @@ arc(100,
 }
 
 function Header(props: {
-  algoName: string,
+  algoName: Accessor<string>,
 }) {
   // We have to use an `Inner` function here in order for the component
   // to rerender correctly.  We need to have an `if` statement that checks
@@ -745,12 +750,17 @@ function Header(props: {
     }
   }
 
-  const nameToDisplay = props.algoName === '' ? 'Untitled' : props.algoName;
+  const [nameToDisplay, setNameToDisplay] = createSignal(props.algoName());
+
+  createEffect(() => {
+    const name = props.algoName();
+    setNameToDisplay(name === '' ? 'Untitled' : name);
+  });
 
   return (
     <>
       <div class={styles.header}>
-        <div class={styles.headerContent}>{nameToDisplay}</div>
+        <div class={styles.headerContent}>{nameToDisplay()}</div>
         {Inner()}
       </div>
     </>
@@ -788,7 +798,7 @@ export function Edit() {
 
   return (
     <div class={styles.app}>
-      <Header algoName={algoName()} />
+      <Header algoName={algoName} />
       <Content setAlgoName={setAlgoName} algoName={algoName}  />
       <Footer />
     </div>

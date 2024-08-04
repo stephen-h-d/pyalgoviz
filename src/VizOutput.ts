@@ -151,7 +151,7 @@ export function renderEvent(
       .attr('transform', 'scale(' + String(RENDERING_SCALE) + ')');
 
     try {
-      console.log(event.viz_output);
+      // console.log(event.viz_output);
       eval(event.viz_output);
     } catch (e) {
       console.error(e);

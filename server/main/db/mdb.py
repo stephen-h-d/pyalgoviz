@@ -8,12 +8,14 @@ from typing import Dict
 from typing import Type
 
 import attrs
+
 from main.db.models import Algorithm
 from main.db.models import Event
 from main.db.models import ScriptDemoInfo
 from main.db.models import User
 from main.db.models import UserId
 from main.db.protocol import DatabaseProtocol
+from main.db.protocol import SaveAlgorithmArgs
 
 # Function to convert dictionary back to attrs object
 # def dict_to_attrs(class_type, d):
@@ -101,9 +103,27 @@ class MemoryDatabase(DatabaseProtocol):
         algo_key = self._make_algo_key(author_id, name)
         return self.algos.get(algo_key)
 
-    def save_algo(self, algo: Algorithm) -> None:
-        algo_key = self._make_algo_key(algo.author.firebase_user_id, algo.name)
-        algo.last_updated = datetime.now()
+    def save_algo(self, args: SaveAlgorithmArgs) -> None:
+        algo_key = self._make_algo_key(args.author.firebase_user_id, args.name)
+        public = args.public
+        if public is None:
+            prev_algo = self.algos.get(algo_key)
+            if prev_algo is None:
+                # This shouldn't happen because we can't find the algorithm plus we don't have a value for public.
+                # The only time args.public should be None is when the user clicks "Save" not "Save As". But we set
+                # public to False in this case.
+                public = False
+            else:
+                public = prev_algo.public
+        algo = Algorithm(
+            author=args.author,
+            name=args.name,
+            algo_script=args.algo_script,
+            viz_script=args.viz_script,
+            public=public,
+            cached_events=args.cached_events,
+            last_updated=args.last_updated,
+        )
         self.algos[algo_key] = algo
 
     def get_algo_names_by(self, author_id: UserId) -> list[str]:

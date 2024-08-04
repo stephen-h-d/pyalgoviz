@@ -68,7 +68,7 @@ def save() -> Response:
     try:
         data = request.get_data().decode("utf-8")
         submission = json.loads(data)
-        publish = submission.get("publish", False)
+        publish = submission.get("publish")
         algo = Algorithm(
             author=author,
             algo_script=submission.get("algo_script"),
@@ -76,7 +76,7 @@ def save() -> Response:
             public=publish,
             name=submission.get("name"),
         )
-        if publish:
+        if publish is True:
             res = run_script(algo.algo_script, algo.viz_script)
             if res["py_error"] is None:
                 events = res["events"]

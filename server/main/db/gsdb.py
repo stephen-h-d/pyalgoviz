@@ -14,6 +14,8 @@ from main.db.models import User
 from main.db.models import UserId
 from main.db.protocol import DatabaseProtocol
 
+from server.main.db.protocol import SaveAlgorithmArgs
+
 
 class EntityType(Enum):
     USER = "User"
@@ -99,31 +101,44 @@ class GoogleStoreDatabase(DatabaseProtocol):
         key_str = str(author_id) + ":" + algo_name
         return self._client.key(EntityType.ALGORITHM.value, key_str)
 
-    def get_algo(self, author_id: UserId, name: str) -> Algorithm | None:
-        algo_key = self._make_algo_key(author_id, name)
+    def _get_algo(self, algo_key):
         entity = self._key_query(algo_key, Algorithm)
         if entity is None:
             return None
         return entity_to_algorithm(entity)
 
-    def save_algo(self, algo: Algorithm) -> None:
-        algo_key = self._make_algo_key(algo.author.firebase_user_id, algo.name)
-        algo.last_updated = datetime.now()
+    def get_algo(self, author_id: UserId, name: str) -> Algorithm | None:
+        algo_key = self._make_algo_key(author_id, name)
+        return self._get_algo(algo_key)
+
+    def save_algo(self, args: SaveAlgorithmArgs) -> None:
+        algo_key = self._make_algo_key(args.author.firebase_user_id, args.name)
+        args.last_updated = datetime.now()
+        public = args.public
+        if public is None:
+            prev_algo = self._get_algo(algo_key)
+            if prev_algo is None:
+                # This shouldn't happen because we can't find the algorithm plus we don't have a value for public.
+                # The only time args.public should be None is when the user clicks "Save" not "Save As". But we set
+                # public to False in this case.
+                public = False
+            else:
+                public = prev_algo.public
         entity = Entity(algo_key)
         entity.update(
             {
-                "author": algo.author,
-                "name": algo.name,
-                "algo_script": algo.algo_script,
-                "viz_script": algo.viz_script,
-                "public": algo.public,
+                "author": args.author,
+                "name": args.name,
+                "algo_script": args.algo_script,
+                "viz_script": args.viz_script,
+                "public": public,
                 # filter out events with no viz output, since cached events are just for display on the front page
                 "cached_events": [
                     self._event_to_entity(event)
-                    for event in algo.cached_events
+                    for event in args.cached_events
                     if event.viz_output != ""
                 ],
-                "last_updated": algo.last_updated,
+                "last_updated": args.last_updated,
             }
         )
         self._client.put(entity)
