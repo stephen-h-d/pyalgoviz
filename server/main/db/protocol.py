@@ -21,7 +21,6 @@ class SaveAlgorithmArgs:
     # not sure, but I think `events` in the old model was a way to cache a run of the
     # script for the public "all" page. Assuming that for now.
     cached_events: list[Event] = []
-    last_updated: datetime | None = None
 
 class DatabaseProtocol(Protocol):
     def get_user(self, user_id: UserId) -> User | None:

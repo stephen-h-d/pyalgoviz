@@ -14,7 +14,7 @@ from main.db.models import User
 from main.db.models import UserId
 from main.db.protocol import DatabaseProtocol
 
-from server.main.db.protocol import SaveAlgorithmArgs
+from main.db.protocol import SaveAlgorithmArgs
 
 
 class EntityType(Enum):
@@ -113,7 +113,7 @@ class GoogleStoreDatabase(DatabaseProtocol):
 
     def save_algo(self, args: SaveAlgorithmArgs) -> None:
         algo_key = self._make_algo_key(args.author.firebase_user_id, args.name)
-        args.last_updated = datetime.now()
+        last_updated = datetime.now()
         public = args.public
         if public is None:
             prev_algo = self._get_algo(algo_key)
@@ -138,7 +138,7 @@ class GoogleStoreDatabase(DatabaseProtocol):
                     for event in args.cached_events
                     if event.viz_output != ""
                 ],
-                "last_updated": args.last_updated,
+                "last_updated": last_updated,
             }
         )
         self._client.put(entity)

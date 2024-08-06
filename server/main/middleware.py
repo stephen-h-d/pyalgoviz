@@ -41,8 +41,7 @@ class JWTAuthenticator:
     db: DatabaseProtocol
 
     # This middleware function was adapted from a google app engine docs sample.
-    # I'm not sure why it's annotated as returning `int` but I'm leaving it for now.
-    def authenticated(self, func: Callable[..., int]) -> Callable[..., int]:
+    def authenticated(self, func: Callable[..., Response]) -> Callable[..., Response]:
         @wraps(func)
         def decorated_function(*args: Any, **kwargs: Any) -> Any:
             if current_user.is_authenticated:

@@ -122,7 +122,7 @@ class MemoryDatabase(DatabaseProtocol):
             viz_script=args.viz_script,
             public=public,
             cached_events=args.cached_events,
-            last_updated=args.last_updated,
+            last_updated=datetime.now(),
         )
         self.algos[algo_key] = algo
 

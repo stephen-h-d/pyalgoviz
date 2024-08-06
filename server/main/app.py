@@ -5,9 +5,10 @@ from http import HTTPStatus
 from pathlib import Path
 
 import attrs
-from flask import Flask
+from flask import Flask, jsonify
 from flask import request
 from flask import Response
+from flask import make_response
 from flask import send_file
 from flask import send_from_directory
 from flask_login import current_user  # type: ignore[import]
@@ -16,7 +17,7 @@ from google.cloud import datastore
 from main.db.models import Algorithm
 from main.db.models import User
 from main.db.models import UserId
-from main.db.protocol import DatabaseProtocol
+from main.db.protocol import DatabaseProtocol, SaveAlgorithmArgs
 from main.middleware import JWTAuthenticator
 from main.run_script import run_script  # type: ignore[attr-defined]
 
@@ -69,32 +70,47 @@ def save() -> Response:
         data = request.get_data().decode("utf-8")
         submission = json.loads(data)
         publish = submission.get("publish")
-        algo = Algorithm(
-            author=author,
-            algo_script=submission.get("algo_script"),
-            viz_script=submission.get("viz_script"),
-            public=publish,
-            name=submission.get("name"),
-        )
+        cached_events = []
+        algo_script = submission.get("algo_script")
+        viz_script = submission.get("viz_script")
+        name = submission.get("name")
+        if algo_script is None or viz_script is None or name is None:
+            logger.error(f"Missing one or more arguments. {algo_script}, {viz_script}, {name}")
+            response = jsonify({
+                "result": "Whoops!  Saving failed. Missing arguments.  Please report this bug."
+            })
+            return make_response(response,HTTPStatus.BAD_REQUEST)
+
         if publish is True:
-            res = run_script(algo.algo_script, algo.viz_script)
+            res = run_script(algo_script, viz_script)
             if res["py_error"] is None:
                 events = res["events"]
                 print(f"first 100 events {events[0:100]}")
-                algo.cached_events = events
-        db.save_algo(algo)
+                cached_events = events
+
+        args = SaveAlgorithmArgs(
+            author=author,
+            name=name,
+            algo_script=algo_script,
+            viz_script=viz_script,
+            public=publish,
+            cached_events=cached_events,
+        )
+        db.save_algo(args)
         # notify(author, 'save', algo.name, algo.script, algo.viz)
-        msg = 'Script was successfully saved by %s as "%s"' % (author.email, algo.name)
+        msg = 'Script was successfully saved by %s as "%s"' % (author.email, name)
         # info(msg)
         # info(algo.script)
     except Exception as e:
         msg = "Could not save script: %s" % e
         logger.error(msg)
         logger.exception(e)
-        return {
-            "result": "Whoops!  Saving failed.  Please report this bug."
-        }, HTTPStatus.INTERNAL_SERVER_ERROR
-    return {"result": msg}, HTTPStatus.OK
+        response = jsonify(
+            {"result": "Whoops!  Saving failed.  Please report this bug."}
+        )
+        return make_response(response,HTTPStatus.INTERNAL_SERVER_ERROR)
+    response = jsonify({"result": msg})
+    return make_response(response, HTTPStatus.OK)
 
 
 @app.route("/api/script_names", methods=["GET", "OPTIONS"])
@@ -103,7 +119,7 @@ def get_script_names() -> Response:
     author: User = current_user
     try:
         script_names = db.get_algo_names_by(author.firebase_user_id)
-        return {"result": script_names}
+        return jsonify({"result": script_names})
     except Exception as e:
         msg = "Could not load script names: %s" % e
         logger.error(msg)
@@ -120,7 +136,7 @@ def get_public_scripts() -> Response:
         script_demo_info_list = [
             attrs.asdict(demo_info) for demo_info in db.get_public_algos()
         ]
-        return {"result": script_demo_info_list}
+        return jsonify({"result": script_demo_info_list})
     except Exception as e:
         msg = "Could not load script names: %s" % e
         logger.error(msg)
@@ -136,8 +152,15 @@ def load() -> Response:
     author: User = current_user
     try:
         script_name = request.args.get("script_name")
+        if script_name is None:
+            logger.error(f"Missing script name when trying to load a script.")
+            response = jsonify({
+                "result": "Whoops!  Loading script failed. Missing script name.  Please report this bug."
+            })
+            return make_response(response, HTTPStatus.BAD_REQUEST)
+
         algo = db.get_algo(author.firebase_user_id, script_name)
-        return attrs.asdict(algo), HTTPStatus.OK
+        return jsonify(attrs.asdict(algo))
     except Exception as e:
         msg = "Could not load script names: %s" % e
         logger.error(msg)
@@ -160,10 +183,11 @@ def run() -> Response:
         msg = "Could not run script: %s" % e
         logger.error(msg)
         logger.exception(e)
-        return {
-            "result": "Whoops!  Running failed.  Please report this bug."
-        }, HTTPStatus.INTERNAL_SERVER_ERROR
-    return result, HTTPStatus.OK
+        response = jsonify(
+            {"result": "Whoops!  Running failed.  Please report this bug."}
+        )
+        return make_response(response, HTTPStatus.INTERNAL_SERVER_ERROR)
+    return jsonify(result)
 
 
 @app.route("/<path:filename>")
