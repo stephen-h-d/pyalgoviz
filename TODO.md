@@ -17,7 +17,7 @@
 7. Write basic manual tests.
 8. Fill in Header and Footer content
 9. Add the ability to load public/published Algos
-10. the TODOs near "// TODO if currentSavedScript doesn't match current script"
+10. fix pre-commit. almost there. need to get eslint working.
 
 ### Ready-to-implement TODOs post-launch
 1. Tell the user when Pyodide is loading, when it is done loading, when the code is running, and when it is done running.

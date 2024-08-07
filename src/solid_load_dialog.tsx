@@ -163,7 +163,8 @@ export function ErrorDialog(props: {
   );
 }
 
-function DuplicateNameDialog(props: {
+export function WarningDialog(props: {
+  text: string;
   open: Accessor<boolean>;
   setOpen: Setter<boolean>;
   onConfirm: () => void;
@@ -171,10 +172,27 @@ function DuplicateNameDialog(props: {
 }) {
   return (
     <dialog open={props.open()}>
-      <p>A script with this name already exists. Do you want to overwrite it?</p>
+      <p>{props.text}</p>
       <button onClick={props.onConfirm}>Yes</button>
       <button onClick={props.onCancel}>No</button>
     </dialog>
+  );
+}
+
+function DuplicateNameDialog(props: {
+  open: Accessor<boolean>;
+  setOpen: Setter<boolean>;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <WarningDialog
+      text="A script with that name already exists. Do you want to overwrite it?"
+      open={props.open}
+      setOpen={props.setOpen}
+      onConfirm={props.onConfirm}
+      onCancel={props.onCancel}
+    />
   );
 }
 
@@ -286,11 +304,11 @@ export function SaveScriptDialog(props: {
       </dialog>
       <SuccessDialog open={successOpen} setOpen={setSuccessOpen} />
       <ErrorDialog open={errorOpen} setOpen={setErrorOpen} />
-      <DuplicateNameDialog 
-        open={duplicateOpen} 
-        setOpen={setDuplicateOpen} 
-        onConfirm={handleConfirmOverwrite} 
-        onCancel={handleCancelOverwrite} 
+      <DuplicateNameDialog
+        open={duplicateOpen}
+        setOpen={setDuplicateOpen}
+        onConfirm={handleConfirmOverwrite}
+        onCancel={handleCancelOverwrite}
       />
     </>
   );
@@ -300,8 +318,7 @@ export function SaveScriptDialog(props: {
 export function LoadScriptDialog(props: {
   open: Accessor<boolean>;
   setOpen: Setter<boolean>;
-  setAlgo: Setter<string>;
-  setViz: Setter<string>;
+  finishLoading: (script: PyAlgoVizScript, algoName: string) => void;
 }) {
   const [scriptNames, { refetch }] = createResource(fetchScriptNames);
   const [selectedSig, setSelected] = createSignal<string | null>(null);
@@ -329,9 +346,10 @@ export function LoadScriptDialog(props: {
         .then(response => response.json())
         // eslint-disable-next-line solid/reactivity
         .then(data => {
-          const script = data as PyAlgoVizScript;
-          props.setAlgo(script.algo_script);
-          props.setViz(script.viz_script);
+          props.finishLoading({
+            algo_script: data.algo_script,
+            viz_script: data.viz_script,
+          },selectedScriptName);
         })
         .catch(error => console.error(error));
 

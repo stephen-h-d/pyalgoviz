@@ -11,7 +11,13 @@ import {
   Ref,
 } from 'solid-js';
 import isEqual from 'lodash/isEqual';
-import { ErrorDialog, LoadScriptDialog, SaveScriptDialog, SuccessDialog } from './solid_load_dialog';
+import {
+  ErrorDialog,
+  LoadScriptDialog,
+  SaveScriptDialog,
+  SuccessDialog,
+  WarningDialog,
+} from './solid_load_dialog';
 import * as styles from './edit3.css';
 import { Extension } from '@codemirror/state';
 import { Editor } from './editor';
@@ -109,6 +115,23 @@ declare module 'solid-js' {
   }
 }
 
+function UnsavedChangesDialog(props: {
+  open: Accessor<boolean>;
+  setOpen: Setter<boolean>;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <WarningDialog
+      text="There are unsaved changes. Are you sure you want to continue?"
+      open={props.open}
+      setOpen={props.setOpen}
+      onConfirm={props.onConfirm}
+      onCancel={props.onCancel}
+    />
+  );
+}
+
 function TopLeftContents(props: {
   run: (locally: boolean) => Promise<void>;
   algo: Accessor<string>;
@@ -137,19 +160,20 @@ function TopLeftContents(props: {
   // the success/error dialogs for saving (as opposed to "saving as")
   const [successOpen, setSuccessOpen] = createSignal(false);
   const [errorOpen, setErrorOpen] = createSignal(false);
+  const [unsavedDialogOpen, setUnsavedDialogOpen] = createSignal(false);
 
-  const setCurrentSavedScriptInfo = (script: PyAlgoVizScript, algoName: string) => {
+  const setCurrentSavedScriptInfo = (
+    script: PyAlgoVizScript,
+    algoName: string,
+  ) => {
+    // TODO maybe don't do this so eagerly. when this is called by the load
+    // dialog, it makes since, but when it's called by the save, it doesn't.
+    props.setAlgo(script.algo_script);
+    props.setViz(script.viz_script);
     setCurrentSavedScript(script);
     props.setAlgoName(algoName);
   };
 
-  // TODO if currentSavedScript doesn't match current script
-  // set warning dialog sig true
-  // else show load dialog
-  // also TODO 
-
-  // I will also need to make `doShowLoadDialog` that
-  // clicking on the warning dialog shows.
   const [showLoadDialog, setShowLoadDialog] = createSignal<boolean>(false);
 
   const [showSaveDialog, setShowSaveDialog] = createSignal<boolean>(false);
@@ -162,7 +186,6 @@ function TopLeftContents(props: {
   const runDisabled = () => props.running() || !props.pyodideReady();
   const prevDisabled = () => !props.currentEventIdx().canGoPrev();
   const nextDisabled = () => !props.currentEventIdx().canGoNext();
-  // if currentSavedScript does match current script, make "Save" button disabled
   const playPauseDisabled = () =>
     props.running() || props.currentEventIdx().total == 0;
 
@@ -171,13 +194,15 @@ function TopLeftContents(props: {
       algo_script: props.algo(),
       viz_script: props.viz(),
     };
-  }
-  const saveDisabled = () => {
+  };
+  const unsavedChanges = () => {
     const currentSaved = currentSavedScript();
     const current = currentScript();
-    const scriptsAreEqual = isEqual(currentSaved, current);
-    // console.log('currentSaved', currentSaved, 'current', current, 'user', user(), 'algoName', props.algoName(), 'scriptsAreEqual', scriptsAreEqual);
-    return user() === null || props.algoName() === '' || scriptsAreEqual;
+    // console.log('currentSaved', currentSaved, 'current', current);
+    return !isEqual(currentSaved, current);
+  }
+  const saveDisabled = () => {
+    return user() === null || props.algoName() === '' || !unsavedChanges();
   };
   const saveAsDisabled = () => user() === null;
   const loadDisabled = () => user() === null;
@@ -245,11 +270,19 @@ function TopLeftContents(props: {
       <LoadScriptDialog
         open={showLoadDialog}
         setOpen={setShowLoadDialog}
-        setAlgo={props.setAlgo}
-        setViz={props.setViz}
+        finishLoading={setCurrentSavedScriptInfo}
       />
       <SuccessDialog open={successOpen} setOpen={setSuccessOpen} />
       <ErrorDialog open={errorOpen} setOpen={setErrorOpen} />
+      <UnsavedChangesDialog
+        open={unsavedDialogOpen}
+        setOpen={setUnsavedDialogOpen}
+        onConfirm={() => {
+          setUnsavedDialogOpen(false);
+          setShowLoadDialog(true);
+        }}
+        onCancel={() => setUnsavedDialogOpen(false)}
+      />
       <div class={styles.inputs}>
         <button
           disabled={runDisabled()}
@@ -276,7 +309,7 @@ function TopLeftContents(props: {
           class={styles.input}
           onClick={() => props.eventNavSubjects.playPause$.next(null)}
         >
-          {props.playing() ? "Pause": "Play"}
+          {props.playing() ? 'Pause' : 'Play'}
         </button>
         <button
           disabled={nextDisabled()}
@@ -302,7 +335,13 @@ function TopLeftContents(props: {
         <button
           disabled={loadDisabled()}
           class={styles.input}
-          onClick={() => setShowLoadDialog(true)}
+          onClick={() => {
+            if (unsavedChanges()) {
+              setUnsavedDialogOpen(true);
+            } else {
+              setShowLoadDialog(true);
+            }
+          }}
         >
           Load
         </button>
@@ -723,9 +762,7 @@ arc(100,
   );
 }
 
-function Header(props: {
-  algoName: Accessor<string>,
-}) {
+function Header(props: { algoName: Accessor<string> }) {
   // We have to use an `Inner` function here in order for the component
   // to rerender correctly.  We need to have an `if` statement that checks
   // if the `userObj` is null for better type-checking, and the only way
@@ -776,7 +813,7 @@ function Header(props: {
 
 function Content(props: {
   algoName: Accessor<string>;
-  setAlgoName: Setter<String>
+  setAlgoName: Setter<String>;
 }) {
   // must disable prefer-const because `ideDiv` is used, but TSC/ESLint don't see that
   // eslint-disable-next-line prefer-const
@@ -791,7 +828,12 @@ function Content(props: {
 
   return (
     <div class={styles.content}>
-      <IDE ref={ideDiv} getSelf={getSelf} setAlgoName={props.setAlgoName} algoName={props.algoName} />
+      <IDE
+        ref={ideDiv}
+        getSelf={getSelf}
+        setAlgoName={props.setAlgoName}
+        algoName={props.algoName}
+      />
     </div>
   );
 }
@@ -801,12 +843,12 @@ function Footer() {
 }
 
 export function Edit() {
-  const [algoName, setAlgoName] = createSignal("");
+  const [algoName, setAlgoName] = createSignal('');
 
   return (
     <div class={styles.app}>
       <Header algoName={algoName} />
-      <Content setAlgoName={setAlgoName} algoName={algoName}  />
+      <Content setAlgoName={setAlgoName} algoName={algoName} />
       <Footer />
     </div>
   );

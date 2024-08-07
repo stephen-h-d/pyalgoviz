@@ -28,6 +28,11 @@ type-checking):
 pnpm run tsc --noEmit --watch
 ```
 
+To run tests:
+```
+pnpm run test
+```
+
 ### Backend
 
 #### Prerequisites
