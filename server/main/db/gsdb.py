@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import Enum
+from typing import cast
 from typing import TypeVar
 
 import attrs
@@ -13,7 +14,6 @@ from main.db.models import ScriptDemoInfo
 from main.db.models import User
 from main.db.models import UserId
 from main.db.protocol import DatabaseProtocol
-
 from main.db.protocol import SaveAlgorithmArgs
 
 
@@ -101,8 +101,9 @@ class GoogleStoreDatabase(DatabaseProtocol):
         key_str = str(author_id) + ":" + algo_name
         return self._client.key(EntityType.ALGORITHM.value, key_str)
 
-    def _get_algo(self, algo_key):
-        entity = self._key_query(algo_key, Algorithm)
+    def _get_algo(self, algo_key: Key) -> Algorithm | None:
+        # TODO figure out what to do here. Why can't this function just return an Entity?
+        entity = cast(Entity, self._key_query(algo_key, Algorithm))
         if entity is None:
             return None
         return entity_to_algorithm(entity)

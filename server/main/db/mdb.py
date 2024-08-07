@@ -2,13 +2,12 @@ from __future__ import annotations
 
 import json
 from datetime import datetime
-from typing import Any
-from typing import cast
 from typing import Dict
 from typing import Type
+from typing import TypeVar
 
 import attrs
-
+from attr import AttrsInstance
 from main.db.models import Algorithm
 from main.db.models import Event
 from main.db.models import ScriptDemoInfo
@@ -38,8 +37,10 @@ MODEL_ATTRS_CLASSES = {
     "User": User,
 }
 
+T = TypeVar("T", bound=AttrsInstance)
 
-def dict_to_attrs(class_type: Type[Any], d: Dict) -> Any:
+
+def dict_to_attrs(class_type: Type[T], d: Dict) -> T:
     print(f"instantiating {class_type}")
 
     field_types = {f.name: f.type for f in attrs.fields(class_type)}
@@ -152,5 +153,4 @@ class MemoryDatabase(DatabaseProtocol):
         with open("main/cached_demo_db.json", "r") as f:
             loaded_dict = json.load(f)
 
-        print(f"wth")
         return dict_to_attrs(MemoryDatabase, loaded_dict)

@@ -5,19 +5,20 @@ from http import HTTPStatus
 from pathlib import Path
 
 import attrs
-from flask import Flask, jsonify
+from flask import Flask
+from flask import jsonify
+from flask import make_response
 from flask import request
 from flask import Response
-from flask import make_response
 from flask import send_file
 from flask import send_from_directory
 from flask_login import current_user  # type: ignore[import]
 from flask_login import LoginManager
 from google.cloud import datastore
-from main.db.models import Algorithm
 from main.db.models import User
 from main.db.models import UserId
-from main.db.protocol import DatabaseProtocol, SaveAlgorithmArgs
+from main.db.protocol import DatabaseProtocol
+from main.db.protocol import SaveAlgorithmArgs
 from main.middleware import JWTAuthenticator
 from main.run_script import run_script  # type: ignore[attr-defined]
 
@@ -56,7 +57,7 @@ def load_user(user_id: UserId) -> User | None:
 
 @app.route("/")
 @app.route("/edit/")
-def serve_static():
+def serve_static() -> Response:
     path_to_file = Path(app.static_folder) / "dist" / "index.html"
     print(f"serve_static / {path_to_file}")
     return send_file(path_to_file)
@@ -75,11 +76,15 @@ def save() -> Response:
         viz_script = submission.get("viz_script")
         name = submission.get("name")
         if algo_script is None or viz_script is None or name is None:
-            logger.error(f"Missing one or more arguments. {algo_script}, {viz_script}, {name}")
-            response = jsonify({
-                "result": "Whoops!  Saving failed. Missing arguments.  Please report this bug."
-            })
-            return make_response(response,HTTPStatus.BAD_REQUEST)
+            logger.error(
+                f"Missing one or more arguments. {algo_script}, {viz_script}, {name}"
+            )
+            response = jsonify(
+                {
+                    "result": "Whoops!  Saving failed. Missing arguments.  Please report this bug."
+                }
+            )
+            return make_response(response, HTTPStatus.BAD_REQUEST)
 
         if publish is True:
             res = run_script(algo_script, viz_script)
@@ -105,10 +110,8 @@ def save() -> Response:
         msg = "Could not save script: %s" % e
         logger.error(msg)
         logger.exception(e)
-        response = jsonify(
-            {"result": "Whoops!  Saving failed.  Please report this bug."}
-        )
-        return make_response(response,HTTPStatus.INTERNAL_SERVER_ERROR)
+        response = jsonify({"result": "Whoops!  Saving failed.  Please report this bug."})
+        return make_response(response, HTTPStatus.INTERNAL_SERVER_ERROR)
     response = jsonify({"result": msg})
     return make_response(response, HTTPStatus.OK)
 
@@ -153,10 +156,12 @@ def load() -> Response:
     try:
         script_name = request.args.get("script_name")
         if script_name is None:
-            logger.error(f"Missing script name when trying to load a script.")
-            response = jsonify({
-                "result": "Whoops!  Loading script failed. Missing script name.  Please report this bug."
-            })
+            logger.error("Missing script name when trying to load a script.")
+            response = jsonify(
+                {
+                    "result": "Whoops!  Loading script failed. Missing script name.  Please report this bug."
+                }
+            )
             return make_response(response, HTTPStatus.BAD_REQUEST)
 
         algo = db.get_algo(author.firebase_user_id, script_name)
@@ -191,7 +196,7 @@ def run() -> Response:
 
 
 @app.route("/<path:filename>")
-def serve_static_assets(filename):
+def serve_static_assets(filename: str) -> Response:
     if filename.startswith("api/"):
         # If the path starts with "api/", let Flask continue to look for other matching routes
         return Response(status=404)
