@@ -1,6 +1,5 @@
 import { Accessor, Setter, Signal, createRenderEffect } from 'solid-js';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function checkbox_input(
   element: HTMLInputElement,
   value: Accessor<Signal<boolean>>,
@@ -19,7 +18,6 @@ function checkbox_input(
 }
 
 declare module 'solid-js' {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
     interface Directives {
       // use:checkbox_input

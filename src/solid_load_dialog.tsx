@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-namespace */
+ 
 /* @refresh reload */
 import {
   createResource,
@@ -45,7 +45,7 @@ function SelectDialogEl(props: {
   return (
     <div
       classList={getCl()}
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+       
       onClick={_e => optionClicked(props.option)}
     >
       {props.option}
@@ -63,13 +63,13 @@ function SelectDialog(props: {
     null,
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   function setSelectedAndClose(_e: MouseEvent) {
     props.setSelected(innerSelectedSig());
     props.setOpen(false);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   function showSelectDialog(option: string, _i: Accessor<number>) {
     return (
       <SelectDialogEl
@@ -95,7 +95,7 @@ function SelectDialog(props: {
         Load Selected Script
       </button>
       <button
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+         
         onClick={_e => props.setOpen(false)}
       >
         Cancel
@@ -113,7 +113,7 @@ const fetchScriptNames = async () => {
   return (await fetchResult.json()) as ScriptNames;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 function text_input(
   element: HTMLInputElement,
   value: Accessor<Signal<string>>,
@@ -127,7 +127,7 @@ function text_input(
 }
 
 declare module 'solid-js' {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
+   
   namespace JSX {
     interface Directives {
       // use:text_input
@@ -170,11 +170,18 @@ export function WarningDialog(props: {
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const onConfirm = () => {
+    props.onConfirm();
+  }
+  const onCancel = () => {
+    props.onCancel();
+  }
+
   return (
     <dialog open={props.open()}>
       <p>{props.text}</p>
-      <button onClick={props.onConfirm}>Yes</button>
-      <button onClick={props.onCancel}>No</button>
+      <button onClick={onConfirm}>Yes</button>
+      <button onClick={onCancel}>No</button>
     </dialog>
   );
 }

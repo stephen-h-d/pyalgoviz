@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-namespace */
+ 
 /* @refresh reload */
 import {
   Accessor,
@@ -39,7 +39,7 @@ import { CheckBox } from './CheckBox';
 import { EventNavSubjects } from './EventNavSubjects';
 
 declare module 'solid-js' {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
+   
   namespace JSX {
     interface Directives {
       // use:vizrenderer
@@ -55,7 +55,7 @@ interface EditorArgs {
   textReadOnly: boolean;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 function editor(element: HTMLInputElement, argsAccessor: Accessor<EditorArgs>) {
   const args = argsAccessor();
 
@@ -78,7 +78,7 @@ function editor(element: HTMLInputElement, argsAccessor: Accessor<EditorArgs>) {
 }
 
 declare module 'solid-js' {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
+   
   namespace JSX {
     interface Directives {
       // use:editor
@@ -87,7 +87,7 @@ declare module 'solid-js' {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 function range_input(
   element: HTMLInputElement,
   value: Accessor<Signal<number>>,
@@ -106,7 +106,7 @@ function range_input(
 }
 
 declare module 'solid-js' {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
+   
   namespace JSX {
     interface Directives {
       // use:range_input
@@ -154,7 +154,7 @@ function TopLeftContents(props: {
   // TODO finish checking whether the current saved script matches whether it is loaded,
   // and if so, warn user
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   const [currentSavedScript, setCurrentSavedScript] =
     createSignal<PyAlgoVizScript | null>(null);
   // the success/error dialogs for saving (as opposed to "saving as")
@@ -287,7 +287,7 @@ function TopLeftContents(props: {
         <button
           disabled={runDisabled()}
           class={styles.input}
-          // eslint-disable-next-line @typescript-eslint/no-misused-promises
+           
           onClick={() => props.run(runLocally())}
         >
           Run
@@ -370,6 +370,7 @@ function BottomLeftContents(props: {
   const editorArgs: EditorArgs = {
     // eslint-disable-next-line solid/reactivity
     contents: props.viz,
+    // eslint-disable-next-line solid/reactivity
     setContents: props.setViz,
     extensions: [basicSetup, fixedHeightEditor, python()],
     textReadOnly: false,
@@ -388,7 +389,7 @@ interface RendererArgs {
   currentEvent: Accessor<VizEvent | null>;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 function vizrenderer(
   div: HTMLDivElement,
   argsAccessor: Accessor<RendererArgs>,
@@ -437,7 +438,7 @@ function BottomRightContents(props: {
   createEffect(() => {
     if (hoveredTab()) {
       // TODO replace this with something better
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+       
       const newLocal = document.getElementById(`tooltip-${hoveredTab()}`);
       if (newLocal !== null) {
         newLocal.classList.add(styles.showTooltip);
@@ -528,7 +529,7 @@ class Resizer {
     };
 
     document.addEventListener('mousemove', mouse_moved); // TODO debounce this
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     document.addEventListener('mouseup', (_ev: MouseEvent) => {
       document.removeEventListener('mousemove', mouse_moved);
     });
@@ -552,7 +553,7 @@ class Resizer {
       };
 
       document.addEventListener('mousemove', mouse_moved); // TODO debounce this
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+       
       document.addEventListener('mouseup', (_ev: MouseEvent) => {
         document.removeEventListener('mousemove', mouse_moved);
       });
@@ -771,13 +772,13 @@ function Header(props: { algoName: Accessor<string> }) {
   function Inner() {
     const userObj = user();
     if (userObj !== null) {
-      // eslint-disable-next-line solid/components-return-once
+       
       return (
         <>
           <span>{userObj.email}</span>
           <button
             class={styles.logoutBtn}
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
+             
             onClick={logout}
           >
             Log Out
@@ -785,7 +786,7 @@ function Header(props: { algoName: Accessor<string> }) {
         </>
       );
     } else {
-      // eslint-disable-next-line solid/components-return-once
+       
       return (
         <button class={styles.loginBtn} onClick={loginWithGoogle}>
           Log In
@@ -794,12 +795,9 @@ function Header(props: { algoName: Accessor<string> }) {
     }
   }
 
-  const [nameToDisplay, setNameToDisplay] = createSignal(props.algoName());
-
-  createEffect(() => {
-    const name = props.algoName();
-    setNameToDisplay(name === '' ? 'Untitled' : name);
-  });
+  const nameToDisplay = () => {
+    props.algoName() === '' ? 'Untitled' : props.algoName()
+  };
 
   return (
     <>
@@ -816,7 +814,7 @@ function Content(props: {
   setAlgoName: Setter<String>;
 }) {
   // must disable prefer-const because `ideDiv` is used, but TSC/ESLint don't see that
-  // eslint-disable-next-line prefer-const
+   
   let ideDiv: HTMLDivElement | null = null;
 
   const getSelf = () => {

@@ -2,7 +2,7 @@ import { Selection, select, arc } from 'd3';
 import { VizEvent } from './exec_result';
 const RENDERING_SCALE = 1.0; // TODO make this more dynamic?
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 export function drawText(
   canvas: Selection<SVGGElement, unknown, null, undefined>,
   x: number,
@@ -22,7 +22,7 @@ export function drawText(
     .attr('fill', color);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 export function drawLine(
   canvas: Selection<SVGGElement, unknown, null, undefined>,
   x1: number,
@@ -42,7 +42,7 @@ export function drawLine(
     .attr('stroke-width', width);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 export function drawRect(
   canvas: Selection<SVGGElement, unknown, null, undefined>,
   x: number,
@@ -62,7 +62,7 @@ export function drawRect(
     .attr('stroke', border);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 export function drawCircle(
   canvas: Selection<SVGGElement, unknown, null, undefined>,
   x: number,
@@ -80,7 +80,7 @@ export function drawCircle(
     .attr('stroke', border);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 export function drawArc(
   canvas: Selection<SVGGElement, unknown, null, undefined>,
   x: number,

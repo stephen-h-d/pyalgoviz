@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+ 
+ 
 import { BehaviorSubject } from 'rxjs';
 
 const pyodideWorker = new Worker('/pyodide-0.21.3/webworker.js');
