@@ -48,7 +48,7 @@ export class Editor {
     update: this.updateLinesToHighlight.bind(this),
   });
 
-   
+
   private createLinesToHighlight(_state: EditorState): LinesToHighlight {
     return new LinesToHighlight(-1, -1);
   }

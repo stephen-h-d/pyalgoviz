@@ -3,7 +3,7 @@ import auth from './auth';
 import { setUser } from './authSignal';
 const googleProvider = new GoogleAuthProvider();
 
- 
+
 export function signInWithGoogle(_event: MouseEvent) {
   signInWithPopup(auth, googleProvider)
     .then(result => {

@@ -1,5 +1,5 @@
- 
- 
+
+
 import { BehaviorSubject } from 'rxjs';
 
 const pyodideWorker = new Worker('/pyodide-0.21.3/webworker.js');

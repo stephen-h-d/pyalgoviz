@@ -1,14 +1,11 @@
 from typing import Protocol
-from datetime import datetime
 
 import attrs
-
+from main.db.models import Algorithm
+from main.db.models import Event
 from main.db.models import ScriptDemoInfo
 from main.db.models import User
-from main.db.models import Algorithm
 from main.db.models import UserId
-
-from main.db.models import Event
 
 
 @attrs.define(kw_only=True)
@@ -21,6 +18,7 @@ class SaveAlgorithmArgs:
     # not sure, but I think `events` in the old model was a way to cache a run of the
     # script for the public "all" page. Assuming that for now.
     cached_events: list[Event] = []
+
 
 class DatabaseProtocol(Protocol):
     def get_user(self, user_id: UserId) -> User | None:

@@ -62,7 +62,7 @@ function isMouseInsideDiv(div: HTMLDivElement): Observable<boolean> {
   return isInside$;
 }
 
- 
+
 function vizrenderer(
   div: HTMLDivElement,
   argsAccessor: Accessor<RendererArgs>,
@@ -107,7 +107,7 @@ const ScriptDemo = (props: { events: VizEvent[] }) => {
       py_error: null,
       // This next line should be fine, as the events don't change, so we ignore the warning.
       // We also cast the events because we know they are only VizEvents
-       
+
       events: filteredEvents as VizEvent[],
     },
   );

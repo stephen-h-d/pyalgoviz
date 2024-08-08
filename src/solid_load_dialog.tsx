@@ -1,4 +1,4 @@
- 
+
 /* @refresh reload */
 import {
   createResource,
@@ -45,7 +45,7 @@ function SelectDialogEl(props: {
   return (
     <div
       classList={getCl()}
-       
+
       onClick={_e => optionClicked(props.option)}
     >
       {props.option}
@@ -63,13 +63,13 @@ function SelectDialog(props: {
     null,
   );
 
-   
+
   function setSelectedAndClose(_e: MouseEvent) {
     props.setSelected(innerSelectedSig());
     props.setOpen(false);
   }
 
-   
+
   function showSelectDialog(option: string, _i: Accessor<number>) {
     return (
       <SelectDialogEl
@@ -95,7 +95,7 @@ function SelectDialog(props: {
         Load Selected Script
       </button>
       <button
-         
+
         onClick={_e => props.setOpen(false)}
       >
         Cancel
@@ -113,7 +113,7 @@ const fetchScriptNames = async () => {
   return (await fetchResult.json()) as ScriptNames;
 };
 
- 
+
 function text_input(
   element: HTMLInputElement,
   value: Accessor<Signal<string>>,
@@ -127,7 +127,7 @@ function text_input(
 }
 
 declare module 'solid-js' {
-   
+
   namespace JSX {
     interface Directives {
       // use:text_input
