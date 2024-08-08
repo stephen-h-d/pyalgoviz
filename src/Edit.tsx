@@ -1,4 +1,3 @@
- 
 /* @refresh reload */
 import {
   Accessor,
@@ -39,7 +38,7 @@ import { CheckBox } from './CheckBox';
 import { EventNavSubjects } from './EventNavSubjects';
 
 declare module 'solid-js' {
-   
+
   namespace JSX {
     interface Directives {
       // use:vizrenderer
@@ -55,7 +54,7 @@ interface EditorArgs {
   textReadOnly: boolean;
 }
 
- 
+
 function editor(element: HTMLInputElement, argsAccessor: Accessor<EditorArgs>) {
   const args = argsAccessor();
 
@@ -78,7 +77,7 @@ function editor(element: HTMLInputElement, argsAccessor: Accessor<EditorArgs>) {
 }
 
 declare module 'solid-js' {
-   
+
   namespace JSX {
     interface Directives {
       // use:editor
@@ -87,7 +86,7 @@ declare module 'solid-js' {
   }
 }
 
- 
+
 function range_input(
   element: HTMLInputElement,
   value: Accessor<Signal<number>>,
@@ -106,7 +105,7 @@ function range_input(
 }
 
 declare module 'solid-js' {
-   
+
   namespace JSX {
     interface Directives {
       // use:range_input
@@ -154,7 +153,7 @@ function TopLeftContents(props: {
   // TODO finish checking whether the current saved script matches whether it is loaded,
   // and if so, warn user
 
-   
+
   const [currentSavedScript, setCurrentSavedScript] =
     createSignal<PyAlgoVizScript | null>(null);
   // the success/error dialogs for saving (as opposed to "saving as")
@@ -287,7 +286,7 @@ function TopLeftContents(props: {
         <button
           disabled={runDisabled()}
           class={styles.input}
-           
+
           onClick={() => props.run(runLocally())}
         >
           Run
@@ -389,7 +388,7 @@ interface RendererArgs {
   currentEvent: Accessor<VizEvent | null>;
 }
 
- 
+
 function vizrenderer(
   div: HTMLDivElement,
   argsAccessor: Accessor<RendererArgs>,
@@ -438,7 +437,7 @@ function BottomRightContents(props: {
   createEffect(() => {
     if (hoveredTab()) {
       // TODO replace this with something better
-       
+
       const newLocal = document.getElementById(`tooltip-${hoveredTab()}`);
       if (newLocal !== null) {
         newLocal.classList.add(styles.showTooltip);
@@ -529,7 +528,7 @@ class Resizer {
     };
 
     document.addEventListener('mousemove', mouse_moved); // TODO debounce this
-     
+
     document.addEventListener('mouseup', (_ev: MouseEvent) => {
       document.removeEventListener('mousemove', mouse_moved);
     });
@@ -553,7 +552,7 @@ class Resizer {
       };
 
       document.addEventListener('mousemove', mouse_moved); // TODO debounce this
-       
+
       document.addEventListener('mouseup', (_ev: MouseEvent) => {
         document.removeEventListener('mousemove', mouse_moved);
       });
@@ -772,13 +771,13 @@ function Header(props: { algoName: Accessor<string> }) {
   function Inner() {
     const userObj = user();
     if (userObj !== null) {
-       
+
       return (
         <>
           <span>{userObj.email}</span>
           <button
             class={styles.logoutBtn}
-             
+
             onClick={logout}
           >
             Log Out
@@ -786,7 +785,7 @@ function Header(props: { algoName: Accessor<string> }) {
         </>
       );
     } else {
-       
+
       return (
         <button class={styles.loginBtn} onClick={loginWithGoogle}>
           Log In
@@ -795,8 +794,8 @@ function Header(props: { algoName: Accessor<string> }) {
     }
   }
 
-  const nameToDisplay = () => {
-    props.algoName() === '' ? 'Untitled' : props.algoName()
+  const nameToDisplay = (): string => {
+    return props.algoName() === '' ? 'Untitled' : props.algoName();
   };
 
   return (
@@ -814,7 +813,7 @@ function Content(props: {
   setAlgoName: Setter<String>;
 }) {
   // must disable prefer-const because `ideDiv` is used, but TSC/ESLint don't see that
-   
+
   let ideDiv: HTMLDivElement | null = null;
 
   const getSelf = () => {
