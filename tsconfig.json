@@ -16,7 +16,7 @@
     "skipLibCheck": true,
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
-    "typeRoots": ["./node_modules/@types", "./types"],
+    "typeRoots": ["./node_modules/@types", "./types"]
   },
-  "include": ["src/**/*", "types/**/*"]
+  "include": ["src/**/*", "types/**/*", "vite.config.ts"]
 }
