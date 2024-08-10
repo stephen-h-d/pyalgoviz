@@ -36,6 +36,7 @@ import { LogManager } from './LogManager';
 import { postJson } from './postJson';
 import { CheckBox } from './CheckBox';
 import { EventNavSubjects } from './EventNavSubjects';
+import { create } from 'lodash';
 
 declare module 'solid-js' {
 
@@ -148,7 +149,6 @@ function TopLeftContents(props: {
   // TODO only allow running on server if logged in:
   // 1. on frontend
   // 2. on backend
-  // TODO add "autoplay" check box in inputs
   // TODO enable run button if "run locally" is not checked and user is logged in
   // TODO finish checking whether the current saved script matches whether it is loaded,
   // and if so, warn user
@@ -160,6 +160,7 @@ function TopLeftContents(props: {
   const [successOpen, setSuccessOpen] = createSignal(false);
   const [errorOpen, setErrorOpen] = createSignal(false);
   const [unsavedDialogOpen, setUnsavedDialogOpen] = createSignal(false);
+  const [autoPlay, setAutoPlay] = createSignal(false);
 
   const setCurrentSavedScriptInfo = (
     script: PyAlgoVizScript,
@@ -213,6 +214,17 @@ function TopLeftContents(props: {
     const rangePct = range();
     if (!props.playing()) {
       props.eventNavSubjects.sliderIndex$.next(rangePct);
+    }
+  });
+
+  // auto-play effect
+  createEffect(() => {
+    if (autoPlay()) {
+      const currentEventIdx = props.currentEventIdx();
+      if (currentEventIdx.current < 0 && !props.playing() && currentEventIdx.total > 0) {
+        console.log('currentEventIdx', currentEventIdx, 'auto-playing');
+        props.eventNavSubjects.playPause$.next(null);
+      }
     }
   });
 
@@ -296,6 +308,7 @@ function TopLeftContents(props: {
           selected={selectedSpeed}
           setSelected={setSelectedSpeed}
         />
+        <CheckBox id="autoplay" label="Auto-play" value={autoPlay} setValue={setAutoPlay} />
         <button
           disabled={prevDisabled()}
           class={styles.input}

@@ -4,10 +4,15 @@ import json
 from datetime import datetime
 from typing import Dict
 from typing import Type
+from typing import TYPE_CHECKING
 from typing import TypeVar
 
+if TYPE_CHECKING:
+    from attr import AttrsInstance
+
+    T = TypeVar("T", bound=AttrsInstance)
+
 import attrs
-from attr import AttrsInstance
 from main.db.models import Algorithm
 from main.db.models import Event
 from main.db.models import ScriptDemoInfo
@@ -36,8 +41,6 @@ MODEL_ATTRS_CLASSES = {
     "ScriptDemoInfo": ScriptDemoInfo,
     "User": User,
 }
-
-T = TypeVar("T", bound=AttrsInstance)
 
 
 def dict_to_attrs(class_type: Type[T], d: Dict) -> T:

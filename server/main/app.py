@@ -58,6 +58,9 @@ def load_user(user_id: UserId) -> User | None:
 @app.route("/")
 @app.route("/edit/")
 def serve_static() -> Response:
+    if app.static_folder is None:
+        raise ValueError("static_folder not set")
+
     path_to_file = Path(app.static_folder) / "dist" / "index.html"
     print(f"serve_static / {path_to_file}")
     return send_file(path_to_file)
@@ -200,6 +203,9 @@ def serve_static_assets(filename: str) -> Response:
     if filename.startswith("api/"):
         # If the path starts with "api/", let Flask continue to look for other matching routes
         return Response(status=404)
+
+    if app.static_folder is None:
+        raise ValueError("static_folder not set")
 
     path_to_dir = Path(app.static_folder) / "dist"
     sub_path = Path(filename)

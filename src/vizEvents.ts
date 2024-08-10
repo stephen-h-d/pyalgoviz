@@ -137,7 +137,7 @@ export class VizEventNavigator {
 
   private event_idx_subject = new VizEventIdxSig();
   private exec_result: ExecResult = { py_error: null, events: [] };
-  private event_timer$: Observable<number> | null = null;
+  private event_timer: ReturnType<typeof setInterval> | null = null;
 
   private readonly playing: Accessor<boolean>;
   private readonly setPlaying: Setter<boolean>;
@@ -192,33 +192,41 @@ export class VizEventNavigator {
   }
 
   private playPause(value: boolean | null) {
-    if (this.playing() && (value === null || value === false)) {
-      this.setPlaying(false);
-    } else if (!this.playing() && (value === null || value === true)) {
-      this.setPlaying(true);
-      const playing$ = from(observable(this.playing));
-      const notPlaying = playing$.pipe(filter(val => !val));
-      const speed = this.inputs_clicked.speed$.getValue();
-      const rate_per_s = Speed[speed.valueOf() as keyof typeof Speed];
-      const delay = (1 / rate_per_s) * 1000;
+    const playing = this.playing();
+    console.log('playPause', value, 'playing', playing);
 
-      if (this.event_idx_subject.eventsRemaining() === 0) {
-        // console.log('resetting event idx');
-        this.event_idx_subject.reset();
-      }
+    if (playing && (value === null || value === false)) {
+        // Stop playback
+        this.setPlaying(false);
+        if (this.event_timer) {
+            clearInterval(this.event_timer);
+            this.event_timer = null;
+        }
+    } else if (!playing && (value === null || value === true)) {
+        // Start playback
+        this.setPlaying(true);
 
-      this.event_timer$ = timer(0, delay).pipe(
-        takeUntil(notPlaying),
-        take(this.event_idx_subject.eventsRemaining()),
-      );
-      this.event_timer$.subscribe({
-        next: this.event_idx_subject.goNext.bind(this.event_idx_subject),
-        complete: () => {
-          this.setPlaying(false);
-        },
-      });
+        const speed = this.inputs_clicked.speed$.getValue();
+        const rate_per_s = Speed[speed.valueOf() as keyof typeof Speed];
+        const delay = (1 / rate_per_s) * 1000;
+
+        if (this.event_idx_subject.eventsRemaining() === 0) {
+            this.event_idx_subject.reset();
+        }
+
+        this.event_timer = setInterval(() => {
+            if (this.event_idx_subject.eventsRemaining() > 0) {
+                this.event_idx_subject.goNext();
+            } else {
+                this.setPlaying(false);
+                if (this.event_timer) {
+                    clearInterval(this.event_timer);
+                    this.event_timer = null;
+                }
+            }
+        }, delay);
     }
-  }
+}
 
   private nextEvents(exec_result: ExecResult) {
     this.exec_result = exec_result;
