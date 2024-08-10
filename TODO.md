@@ -5,16 +5,11 @@
 
 ### Ready-to-implement TODOs pre-launch
 
-1. Disable all the buttons when: (est. 0.5 hours)
-   * pyodide is not loaded
-   * a script is already running in pyodide
-2. Disable all buttons except "Run": (est. 0.5 hours)
-   * when nothing's been run or
-4. log out user when token expired (currently shows as logged in even though the token fails)
-6. use play/pause/next/prev icons, not text
-7. Write basic manual tests.
-8. Fill in Header and Footer content
-9. Add the ability to load public/published Algos
+1. log out user when token expired (currently shows as logged in even though the token fails)
+2. Write basic manual tests.
+3. Fill in Header and Footer content
+4. Add the ability to load public/published Algos
+5. fix line highlighting when running. This was working...
 
 ### Ready-to-implement TODOs post-launch
 1. Tell the user when Pyodide is loading, when it is done loading, when the code is running, and when it is done running.
