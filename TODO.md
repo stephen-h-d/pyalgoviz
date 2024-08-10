@@ -9,7 +9,6 @@
 2. Write basic manual tests.
 3. Fill in Header and Footer content
 4. Add the ability to load public/published Algos
-5. Fix the 500 error when a script does a normal failure.
 6. Do error highlighting. Sometimes this will be the wrong line -- when it's a syntax error, it says line 0 for some reason.
 
 ### Ready-to-implement TODOs post-launch

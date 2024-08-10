@@ -196,6 +196,22 @@ def arc(
 SCRIPT_FILENAMES = ["<inline>", "<string>"]
 
 
+def make_error_dict(
+    tb: TracebackType, e: Exception, vars_array: list[Any]
+) -> dict[str, Any]:
+    stack = traceback.extract_tb(tb)
+    lines = [0] + [
+        lineno for filename, lineno, fn, txt in stack if filename == "<string>"
+    ]
+    msg = "=" * 70
+    msg += "Error at line %d: %s" % (lines[-1], ERROR or e)
+    msg += "-" * 70
+    msg += "%s" % "".join(["%s = %r" % v for v in vars_array])
+    msg += "=" * 70
+    error = dict(error_msg=msg, lineno=lines[-1])
+    return error
+
+
 class Executor(object):
     def __init__(
         self, script: str | bytes, viz: str | bytes, exec_fn: Callable | None = None
@@ -234,17 +250,7 @@ class Executor(object):
             }
             self.events.append(event)
         except Exception as e:
-            tb = sys.exc_info()[2]
-            stack = traceback.extract_tb(tb)
-            lines = [0] + [
-                lineno for filename, lineno, fn, txt in stack if filename == "<string>"
-            ]
-            msg = "=" * 70
-            msg += "Error at line %d: %s" % (lines[-1], ERROR or e)
-            msg += "-" * 70
-            msg += "%s" % "".join(["%s = %r" % v for v in self.state])
-            msg += "=" * 70
-            self.error = dict(error_msg=msg, lineno=lines[-1])
+            self.error = make_error_dict(sys.exc_info()[2], e, self.state)
 
     def __enter__(self) -> None:
         self.start = time.time()
