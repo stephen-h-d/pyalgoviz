@@ -36,7 +36,6 @@ import { LogManager } from './LogManager';
 import { postJson } from './postJson';
 import { CheckBox } from './CheckBox';
 import { EventNavSubjects } from './EventNavSubjects';
-import { create } from 'lodash';
 
 declare module 'solid-js' {
 
@@ -51,6 +50,7 @@ declare module 'solid-js' {
 interface EditorArgs {
   contents: Accessor<string>;
   setContents?: Setter<string>;
+  normalHighlightLine: Accessor<number>;
   extensions: Array<Extension>;
   textReadOnly: boolean;
 }
@@ -71,7 +71,12 @@ function editor(element: HTMLInputElement, argsAccessor: Accessor<EditorArgs>) {
     }
   });
 
-  // TODO improve this, by combining the presence of `setContents` with whether it's readonly
+  createEffect(() => {
+    const newHighlightLine = args.normalHighlightLine();
+    editor.setHighlightLine(newHighlightLine);
+  });
+
+  // TODO improve this by combining the presence of `setContents` with whether it's readonly
   if (args.setContents !== undefined) {
     editor.subscribe(args.setContents);
   }
@@ -142,6 +147,7 @@ function TopLeftContents(props: {
   setViz: Setter<string>;
   eventNavSubjects: EventNavSubjects;
   currentEventIdx: Accessor<VizEventIdx>;
+  currentEvent: Accessor<VizEvent | null>;
   running: Accessor<boolean>;
   playing: Accessor<boolean>;
   pyodideReady: Accessor<boolean>;
@@ -229,7 +235,7 @@ function TopLeftContents(props: {
   createEffect(() => {
     const currentEventIdx = props.currentEventIdx();
     if (currentEventIdx.current < 0 && !props.playing() && currentEventIdx.total > 0 && !props.running() && autoPlay) {
-      console.log('currentEventIdx', currentEventIdx, 'auto-playing');
+      // console.log('currentEventIdx', currentEventIdx, 'auto-playing');
       props.eventNavSubjects.playPause$.next(null);
     }
   });
@@ -263,11 +269,20 @@ function TopLeftContents(props: {
     }
   };
 
+  const normalHighlightLine = () => {
+    const currentEvent = props.currentEvent();
+    if (currentEvent === null) {
+      return -1;
+    }
+    return currentEvent.lineno;
+  }
+
   const editorArgs: EditorArgs = {
     // eslint-disable-next-line solid/reactivity
     contents: props.algo,
     // eslint-disable-next-line solid/reactivity
     setContents: props.setAlgo,
+    normalHighlightLine,
     extensions: [basicSetup, fixedHeightEditor, python()],
     textReadOnly: false,
   };
@@ -390,6 +405,7 @@ function BottomLeftContents(props: {
     contents: props.viz,
     // eslint-disable-next-line solid/reactivity
     setContents: props.setViz,
+    normalHighlightLine: () => -1, // we don't highlight anything in this editor
     extensions: [basicSetup, fixedHeightEditor, python()],
     textReadOnly: false,
   };
@@ -406,7 +422,6 @@ function BottomLeftContents(props: {
 interface RendererArgs {
   currentEvent: Accessor<VizEvent | null>;
 }
-
 
 function vizrenderer(
   div: HTMLDivElement,
@@ -442,6 +457,7 @@ function BottomRightContents(props: {
   const algoLogArgs: EditorArgs = {
     // eslint-disable-next-line solid/reactivity
     contents: props.algoLog,
+    normalHighlightLine: () => -1, // TODO implement this
     extensions: [minimalSetup, fixedHeightEditor],
     textReadOnly: true,
   };
@@ -449,6 +465,7 @@ function BottomRightContents(props: {
   const vizLogArgs: EditorArgs = {
     // eslint-disable-next-line solid/reactivity
     contents: props.vizLog,
+    normalHighlightLine: () => -1, // TODO implement this
     extensions: [minimalSetup, fixedHeightEditor],
     textReadOnly: true,
   };
@@ -645,7 +662,7 @@ arc(100,
 `);
 
   const [algoLog, setAlgoLog] = createSignal('');
-  const [vizLog, setvizLog] = createSignal('');
+  const [vizLog, setVizLog] = createSignal('');
 
   async function run(locally: boolean) {
     const toRun = {
@@ -708,11 +725,12 @@ arc(100,
       const algoLogContents = logMgr.getAlgoLogUntilIndex(currEventIdx.current);
       setAlgoLog(algoLogContents);
       const vizLogContents = logMgr.getVizLogUntilIndex(currEventIdx.current);
-      setvizLog(vizLogContents);
+      setVizLog(vizLogContents);
     } else if (currExecResult.py_error !== null) {
-      let errorMsg = `Error executing script at line ${currExecResult.py_error.lineno}.\n`;
+      let errorMsg = `Encountered error executing script at line ${currExecResult.py_error.lineno}.\n`;
       errorMsg += currExecResult.py_error.error_msg;
       setAlgoLog(errorMsg);
+      setVizLog('');
     }
   });
 
@@ -730,6 +748,7 @@ arc(100,
         <div class={styles.top_left_cell}>
           <TopLeftContents
             eventNavSubjects={eventNavSubjects}
+            currentEvent={eventNavigator.getEventVal()}
             currentEventIdx={eventIdx}
             run={run}
             algo={algo}
@@ -772,7 +791,7 @@ arc(100,
             algoLog={algoLog}
             setAlgoLog={setAlgoLog}
             vizLog={vizLog}
-            setVizLog={setvizLog}
+            setVizLog={setVizLog}
           />
           <div
             class={styles.top_edge}

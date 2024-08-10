@@ -159,6 +159,7 @@ export class Editor {
   }
 
   public setHighlightLine(normalLine: number) {
+    // console.log('setHighlightLine', normalLine);
     this.linesToHighlight = new LinesToHighlight(
       normalLine,
       this.linesToHighlight.errorLine,

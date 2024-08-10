@@ -289,7 +289,7 @@ class Executor(object):
                     for filename, lineno, fn, txt in tb
                     if filename in SCRIPT_FILENAMES
                 ]
-                error_msg = f"Error executing script at line {lines[-1]}.{e}"
+                error_msg = f"Executor Error executing script at line {lines[-1]}.{e}"
                 viz_log.write(error_msg)
             finally:
                 current_log = algo_log
