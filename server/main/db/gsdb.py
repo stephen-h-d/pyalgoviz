@@ -13,6 +13,7 @@ from main.db.models import Event
 from main.db.models import ScriptDemoInfo
 from main.db.models import User
 from main.db.models import UserId
+from main.db.protocol import AlgorithmSummary
 from main.db.protocol import DatabaseProtocol
 from main.db.protocol import SaveAlgorithmArgs
 
@@ -144,12 +145,36 @@ class GoogleStoreDatabase(DatabaseProtocol):
         )
         self._client.put(entity)
 
-    def get_algo_names_by(self, author_id: UserId) -> list[str]:
-        query = self._client.query(kind=EntityType.ALGORITHM.value)
-        query.add_filter("author_id", "=", author_id)
-        results = list(query.fetch())
-        algo_names = [result["name"] for result in results]
-        return algo_names
+    def get_algo_summaries(self, author_id: UserId) -> list[AlgorithmSummary]:
+        # Query for algorithms where the author is the given user
+        author_query = self._client.query(kind=EntityType.ALGORITHM.value)
+        author_query.add_filter("author", "=", author_id)
+
+        # Query for public algorithms
+        public_query = self._client.query(kind=EntityType.ALGORITHM.value)
+        public_query.add_filter("public", "=", True)
+
+        # Fetch both queries
+        author_algos = list(author_query.fetch())
+        public_algos = list(public_query.fetch())
+
+        # Use a set to ensure there are no duplicates if the author's algorithms are also public
+        all_algos = {
+            entity.key.id_or_name: entity for entity in author_algos + public_algos
+        }.values()
+
+        # Create AlgorithmSummary objects
+        algo_summaries = [
+            AlgorithmSummary(
+                author_email=algo[
+                    "author"
+                ].email,  # assuming `User` has an `email` attribute
+                name=algo["name"],
+            )
+            for algo in all_algos
+        ]
+
+        return algo_summaries
 
     def get_public_algos(self) -> list[ScriptDemoInfo]:
         query = self._client.query(kind=EntityType.ALGORITHM.value)

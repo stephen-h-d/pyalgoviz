@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     T = TypeVar("T", bound=AttrsInstance)
 
 import attrs
-from main.db.models import Algorithm
+from main.db.models import Algorithm, AlgorithmSummary
 from main.db.models import Event
 from main.db.models import ScriptDemoInfo
 from main.db.models import User
@@ -130,11 +130,11 @@ class MemoryDatabase(DatabaseProtocol):
         )
         self.algos[algo_key] = algo
 
-    def get_algo_names_by(self, author_id: UserId) -> list[str]:
+    def get_algo_summaries(self, author_id: UserId) -> list[AlgorithmSummary]:
         return [
-            algo.name
+            AlgorithmSummary(name=algo.name, author_email=algo.author.email)
             for algo in self.algos.values()
-            if algo.author.firebase_user_id == author_id
+            if algo.author.firebase_user_id == author_id or algo.public is True
         ]
 
     def get_public_algos(self) -> list[ScriptDemoInfo]:

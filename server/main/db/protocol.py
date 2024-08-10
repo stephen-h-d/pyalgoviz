@@ -2,6 +2,7 @@ from typing import Protocol
 
 import attrs
 from main.db.models import Algorithm
+from main.db.models import AlgorithmSummary
 from main.db.models import Event
 from main.db.models import ScriptDemoInfo
 from main.db.models import User
@@ -33,7 +34,7 @@ class DatabaseProtocol(Protocol):
     def save_algo(self, algo: SaveAlgorithmArgs) -> None:
         ...
 
-    def get_algo_names_by(self, author_id: UserId) -> list[str]:
+    def get_algo_summaries(self, author_id: UserId) -> list[AlgorithmSummary]:
         ...
 
     def get_public_algos(self) -> list[ScriptDemoInfo]:

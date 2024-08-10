@@ -38,6 +38,12 @@ class Event:
     algo_log: str
 
 
+@attrs.define
+class AlgorithmSummary:
+    author_email: str
+    name: str
+
+
 @attrs.define(kw_only=True)
 class Algorithm:
     author: User
