@@ -17,17 +17,20 @@ function checkbox_input(
   });
 }
 
+export type SimpleBooleanSetter = (value: boolean) => void;
+
 declare module 'solid-js' {
   namespace JSX {
     interface Directives {
       // use:checkbox_input
-      checkbox_input: [Accessor<boolean>, Setter<boolean>];
+      checkbox_input: [Accessor<boolean>, SimpleBooleanSetter];
     }
   }
 }
+
 export function CheckBox(props: {
   value: Accessor<boolean>;
-  setValue: Setter<boolean>;
+  setValue: SimpleBooleanSetter;
   id: string;
   label: string;
 }) {

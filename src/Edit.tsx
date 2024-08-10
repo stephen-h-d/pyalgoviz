@@ -160,7 +160,15 @@ function TopLeftContents(props: {
   const [successOpen, setSuccessOpen] = createSignal(false);
   const [errorOpen, setErrorOpen] = createSignal(false);
   const [unsavedDialogOpen, setUnsavedDialogOpen] = createSignal(false);
-  const [autoPlay, setAutoPlay] = createSignal(false);
+
+  // we do not want autoplay to be a reactive signal because changing auto-play
+  // should not cause the script visualization to start playing.
+  let autoPlay = false;
+  const setAutoPlay = (val: boolean) => {
+    autoPlay = val;
+  }
+
+  const autoPlayAcc = () => autoPlay;
 
   const setCurrentSavedScriptInfo = (
     script: PyAlgoVizScript,
@@ -208,7 +216,7 @@ function TopLeftContents(props: {
   const loadDisabled = () => user() === null;
 
   const [range, setRange] = createSignal(0.0);
-  const [runLocally, setrunLocally] = createSignal(true);
+  const [runLocally, setRunLocally] = createSignal(true);
 
   createEffect(() => {
     const rangePct = range();
@@ -219,12 +227,10 @@ function TopLeftContents(props: {
 
   // auto-play effect
   createEffect(() => {
-    if (autoPlay()) {
-      const currentEventIdx = props.currentEventIdx();
-      if (currentEventIdx.current < 0 && !props.playing() && currentEventIdx.total > 0) {
-        console.log('currentEventIdx', currentEventIdx, 'auto-playing');
-        props.eventNavSubjects.playPause$.next(null);
-      }
+    const currentEventIdx = props.currentEventIdx();
+    if (currentEventIdx.current < 0 && !props.playing() && currentEventIdx.total > 0 && !props.running() && autoPlay) {
+      console.log('currentEventIdx', currentEventIdx, 'auto-playing');
+      props.eventNavSubjects.playPause$.next(null);
     }
   });
 
@@ -308,7 +314,7 @@ function TopLeftContents(props: {
           selected={selectedSpeed}
           setSelected={setSelectedSpeed}
         />
-        <CheckBox id="autoplay" label="Auto-play" value={autoPlay} setValue={setAutoPlay} />
+        <CheckBox id="autoplay" label="Auto-play" value={autoPlayAcc} setValue={setAutoPlay} />
         <button
           disabled={prevDisabled()}
           class={styles.input}
@@ -368,7 +374,7 @@ function TopLeftContents(props: {
           id="run_local"
           label="Run Locally"
           value={runLocally}
-          setValue={setrunLocally}
+          setValue={setRunLocally}
         />
       </div>
     </div>
@@ -610,7 +616,7 @@ function IDE(props: {
     events: [],
   });
   const eventNavigator = new VizEventNavigator(eventNavSubjects, execResult);
-  const [pyodideRunning, setPyodideRunning] = createSignal(false);
+  const [runningScript, setRunningScript] = createSignal(false);
   const pyodideReadyAcc = from(pyodide_ready);
   const pyodideReady = () => {
     return pyodideReadyAcc() === true;
@@ -647,11 +653,11 @@ arc(100,
       viz_script: viz(),
     };
     if (locally) {
-      setPyodideRunning(true);
+      setRunningScript(true);
       try {
         const result_json = await asyncRun(executorScript, toRun);
         if (result_json !== undefined) {
-          setPyodideRunning(false);
+          setRunningScript(false);
           const run_result = JSON.parse(result_json) as ExecResult;
           setExecResult(run_result);
         } else {
@@ -659,15 +665,18 @@ arc(100,
         }
       } catch (error) {
         console.error(error);
-        setPyodideRunning(false);
+        setRunningScript(false);
       }
     } else {
       try {
+        setRunningScript(true);
         const run_result = (await postJson('/api/run', toRun)) as ExecResult;
+        setRunningScript(false);
         // console.log('run_result', run_result);
         setExecResult(run_result);
       } catch (error) {
         console.error(error);
+        setRunningScript(false);
       }
     }
   }
@@ -729,7 +738,7 @@ arc(100,
             algoName={props.algoName}
             setAlgoName={props.setAlgoName}
             setViz={setViz}
-            running={pyodideRunning}
+            running={runningScript}
             pyodideReady={pyodideReady}
             playing={eventNavigator.playingAcc()}
           />
