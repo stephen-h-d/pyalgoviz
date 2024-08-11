@@ -56,9 +56,9 @@ for how to set this up on your local development environment.
 To install the Python backend API environment:
 
 ```
+cd server/
 pyenv virtualenv 3.10.8 pyalgoviz_api
 pip install pip-tools
-cd server/
 pip-sync
 ```
 
