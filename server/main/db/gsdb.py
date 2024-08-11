@@ -9,11 +9,11 @@ from google.cloud.datastore import Client
 from google.cloud.datastore import Entity
 from google.cloud.datastore import Key
 from main.db.models import Algorithm
+from main.db.models import AlgorithmSummary
 from main.db.models import Event
 from main.db.models import ScriptDemoInfo
 from main.db.models import User
 from main.db.models import UserId
-from main.db.protocol import AlgorithmSummary
 from main.db.protocol import DatabaseProtocol
 from main.db.protocol import SaveAlgorithmArgs
 
