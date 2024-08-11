@@ -15,7 +15,6 @@ from flask import send_from_directory
 from flask_login import current_user  # type: ignore[import]
 from flask_login import LoginManager
 from google.cloud import datastore
-from main.api_types import AlgorithmSummary
 from main.db.models import User
 from main.db.models import UserId
 from main.db.protocol import DatabaseProtocol
@@ -125,12 +124,9 @@ def save() -> Response:
 def get_script_names() -> Response:
     author: User = current_user
     try:
-        script_names = db.get_algo_summaries(author.firebase_user_id)
-        script_summaries = [
-            AlgorithmSummary(name=name, author_email=author.email)
-            for name in script_names
-        ]
-        return jsonify({"result": script_names})
+        script_summaries = db.get_algo_summaries(author.firebase_user_id)
+        # TODO handle the new summary type on the FE
+        return jsonify({"result": script_summaries})
     except Exception as e:
         msg = "Could not load script names: %s" % e
         logger.error(msg)

@@ -1,10 +1,7 @@
 Flask
 pre-commit
 google-cloud-core
-google-auth
 google-cloud-datastore
-google-cloud-firestore
-types-google-cloud-ndb
 firebase-admin
 Flask-Login
 attrs
