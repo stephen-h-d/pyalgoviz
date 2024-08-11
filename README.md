@@ -38,6 +38,16 @@ pnpm run test
 #### Prerequisites
 
 1. pyenv
+
+After installing `pyenv`, put this in your .bashrc or similar file:
+```
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init --path)"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+```
+
 2. Google Cloud CLI
 
 See [here](https://cloud.google.com/sdk/docs/install) for installation options.
