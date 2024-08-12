@@ -1,5 +1,6 @@
 import sys
 
+from main.db.fsdb import FirestoreDatabase
 from main.db.mdb import MemoryDatabase
 from main.db.models import User
 from main.db.protocol import DatabaseProtocol
@@ -82,8 +83,11 @@ def test_database_protocol(db: DatabaseProtocol) -> None:
 # main function
 def main() -> None:
     db_type = sys.argv[1]
+    db: DatabaseProtocol
     if db_type == "memory":
         db = MemoryDatabase()
+    elif db_type == "firestore":
+        db = FirestoreDatabase()
     else:
         raise ValueError(f"Unknown database type: {db_type}")
 

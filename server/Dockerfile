@@ -8,7 +8,7 @@ FROM python:3.10-slim
 # Allow statements and log messages to immediately appear in the logs
 ENV PYTHONUNBUFFERED True
 ENV PYTHONPATH=/app/main
-ENV GOOGLE_CLOUD_PROJECT=pyalgoviz-361922
+ENV GOOGLE_CLOUD_PROJECT=pyalgoviz-test
 
 # Copy local code to the container image.
 ENV APP_HOME /app

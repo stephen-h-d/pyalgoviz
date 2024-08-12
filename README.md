@@ -75,7 +75,7 @@ pip-sync
 In addition, to work with Google Cloud:
 ```
 sudo snap install google-cloud-sdk --classic
-gcloud config set project pyalgoviz-361922
+gcloud config set project pyalgoviz-test
 gcloud auth application-default login
 ```
 
