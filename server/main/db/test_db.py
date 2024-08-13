@@ -44,13 +44,6 @@ def test_database_protocol(db: DatabaseProtocol) -> None:
         retrieved_algo.viz_script == test_algo.viz_script
     ), "Visualization script should match"
 
-    # Test public algorithms retrieval
-    public_algos = db.get_public_algos()
-    assert len(public_algos) > 0, "There should be at least one public algorithm"
-    assert any(
-        algo.name == "Test Algorithm" for algo in public_algos
-    ), "Public algorithm should be retrievable"
-
     # Create and save another algorithm that is not public
     test_algo_private = SaveAlgorithmArgs(
         author=test_user,
@@ -61,21 +54,48 @@ def test_database_protocol(db: DatabaseProtocol) -> None:
     )
     db.save_algo(test_algo_private)
 
+    # create another test user
+    test_user2 = User(firebase_user_id="test_user_2", email="test2@example.com")
+    db.save_user(test_user2)
+
+    # create a public algorithm by test_user2
+    test_algo2 = SaveAlgorithmArgs(
+        author=test_user2,
+        name="Test Algorithm 2",
+        algo_script="print('Hello World 2')",
+        viz_script="print('Visualize Hello World 2')",
+        public=True,
+    )
+    db.save_algo(test_algo2)
+
+    # create a private algorithm by test_user2
+    test_algo2_private = SaveAlgorithmArgs(
+        author=test_user2,
+        name="Private Algorithm",
+        algo_script="print('Private Hello World 2')",
+        viz_script="print('Private Visualize Hello World 2')",
+        public=False,
+    )
+    db.save_algo(test_algo2_private)
+
     # Ensure private algorithm does not appear in public listings
     public_algos = db.get_public_algos()
+    assert len(public_algos) == 2, "There should be 2 public algorithms"
+    assert any(
+        algo.name == "Test Algorithm" for algo in public_algos
+    ), "Public algorithm should be retrievable"
     assert not any(
         algo.name == "Private Algorithm" for algo in public_algos
     ), "Private algorithm should not be in public list"
 
     # Retrieve algorithm summaries
     algo_summaries = db.get_algo_summaries(test_user.firebase_user_id)
-    assert len(algo_summaries) == 2, "User should have two algorithms"
+    print(f"algo summaries {algo_summaries}")
+    assert len(algo_summaries) == 3, "Summaries should include 3 algorithms"
     assert any(
         summary.name == "Test Algorithm" for summary in algo_summaries
     ), "Test Algorithm should be in summaries"
-    assert any(
-        summary.name == "Private Algorithm" for summary in algo_summaries
-    ), "Private Algorithm should be in summaries"
+    assert any(summary.name == "Test Algorithm 2" for summary in algo_summaries)
 
     print("All tests passed!")
 
