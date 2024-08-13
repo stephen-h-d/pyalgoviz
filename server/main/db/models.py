@@ -4,12 +4,12 @@ from datetime import datetime
 
 import attrs
 
-UserId = str
+FirebaseUserId = str
 
 
 @attrs.define
 class User:
-    firebase_user_id: UserId
+    firebase_user_id: FirebaseUserId
     email: str
 
     # The following three properties and method are necessary for use in conjunction with
@@ -26,7 +26,7 @@ class User:
     def is_anonymous(self) -> bool:
         return True
 
-    def get_id(self) -> UserId:
+    def get_id(self) -> FirebaseUserId:
         return self.firebase_user_id
 
 
@@ -46,7 +46,7 @@ class AlgorithmSummary:
 
 @attrs.define(kw_only=True)
 class Algorithm:
-    author: User
+    author_email: str
     name: str
     algo_script: str
     viz_script: str
@@ -69,7 +69,7 @@ class ScriptDemoInfo:
             raise ValueError("Only public algorithms can be used as script demos")
 
         return cls(
-            author_email=algo.author.email,
+            author_email=algo.author_email,
             name=algo.name,
             cached_events=algo.cached_events,
         )
@@ -77,14 +77,14 @@ class ScriptDemoInfo:
 
 @attrs.define
 class Log:
-    author: UserId
+    author: FirebaseUserId
     msg: str
     timestamp: datetime
 
 
 @attrs.define
 class Comment:
-    author: UserId
+    author: FirebaseUserId
     name: str
     content: str
     timestamp: datetime

@@ -11,9 +11,9 @@ from google.cloud.datastore import Key
 from main.db.models import Algorithm
 from main.db.models import AlgorithmSummary
 from main.db.models import Event
+from main.db.models import FirebaseUserId
 from main.db.models import ScriptDemoInfo
 from main.db.models import User
-from main.db.models import UserId
 from main.db.protocol import DatabaseProtocol
 from main.db.protocol import SaveAlgorithmArgs
 
@@ -81,7 +81,7 @@ class GoogleStoreDatabase(DatabaseProtocol):
         else:
             return None
 
-    def get_user(self, user_id: UserId) -> User | None:
+    def get_user(self, user_id: FirebaseUserId) -> User | None:
         user_key = self._client.key(EntityType.USER.value, user_id)
         entity = self._key_query(user_key, User)
         if entity is None:
@@ -95,7 +95,7 @@ class GoogleStoreDatabase(DatabaseProtocol):
         entity.update(attrs.asdict(user))
         self._client.put(entity)
 
-    def _make_algo_key(self, author_id: UserId, algo_name: str) -> Key:
+    def _make_algo_key(self, author_id: FirebaseUserId, algo_name: str) -> Key:
         # keys can be strings, and there can only be one key, so this is how we guarantee
         # uniqueness of the algorithm by name and author -- by combining the author ID and
         # the algorithm name.
@@ -109,7 +109,7 @@ class GoogleStoreDatabase(DatabaseProtocol):
             return None
         return entity_to_algorithm(entity)
 
-    def get_algo(self, author_id: UserId, name: str) -> Algorithm | None:
+    def get_algo(self, author_id: FirebaseUserId, name: str) -> Algorithm | None:
         algo_key = self._make_algo_key(author_id, name)
         return self._get_algo(algo_key)
 
@@ -145,7 +145,7 @@ class GoogleStoreDatabase(DatabaseProtocol):
         )
         self._client.put(entity)
 
-    def get_algo_summaries(self, author_id: UserId) -> list[AlgorithmSummary]:
+    def get_algo_summaries(self, author_id: FirebaseUserId) -> list[AlgorithmSummary]:
         # Query for algorithms where the author is the given user
         author_query = self._client.query(kind=EntityType.ALGORITHM.value)
         author_query.add_filter("author", "=", author_id)

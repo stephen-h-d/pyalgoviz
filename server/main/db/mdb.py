@@ -17,7 +17,7 @@ from main.db.models import Algorithm, AlgorithmSummary
 from main.db.models import Event
 from main.db.models import ScriptDemoInfo
 from main.db.models import User
-from main.db.models import UserId
+from main.db.models import FirebaseUserId
 from main.db.protocol import DatabaseProtocol
 from main.db.protocol import SaveAlgorithmArgs
 
@@ -78,7 +78,9 @@ def dict_to_attrs(class_type: Type[T], d: Dict) -> T:
             new_list = []
             for item in d[field]:
                 new_item = (
-                    dict_to_attrs(element_type, item) if attrs.has(element_type) else item
+                    dict_to_attrs(element_type, item)
+                    if attrs.has(element_type)
+                    else item
                 )
                 new_list.append(new_item)
             d[field] = new_list
@@ -90,25 +92,26 @@ def dict_to_attrs(class_type: Type[T], d: Dict) -> T:
 class MemoryDatabase(DatabaseProtocol):
     """An in-memory database used solely for development."""
 
-    users: dict[UserId, User] = attrs.field(factory=dict)
+    users: dict[FirebaseUserId, User] = attrs.field(factory=dict)
     algos: dict[str, Algorithm] = attrs.field(factory=dict)
+    write_on_deletion: bool = False
 
-    def get_user(self, user_id: UserId) -> User | None:
+    def get_user(self, user_id: FirebaseUserId) -> User | None:
         return self.users.get(user_id)
 
     def save_user(self, user: User) -> None:
         self.users[user.firebase_user_id] = user
 
     @staticmethod
-    def _make_algo_key(author_id: UserId, algo_name: str) -> str:
-        return str(author_id) + ":" + algo_name
+    def _make_algo_key(author_email: str, algo_name: str) -> str:
+        return author_email + ":" + algo_name
 
-    def get_algo(self, author_id: UserId, name: str) -> Algorithm | None:
-        algo_key = self._make_algo_key(author_id, name)
+    def get_algo(self, author_email: str, name: str) -> Algorithm | None:
+        algo_key = self._make_algo_key(author_email, name)
         return self.algos.get(algo_key)
 
     def save_algo(self, args: SaveAlgorithmArgs) -> None:
-        algo_key = self._make_algo_key(args.author.firebase_user_id, args.name)
+        algo_key = self._make_algo_key(args.author_email, args.name)
         public = args.public
         if public is None:
             prev_algo = self.algos.get(algo_key)
@@ -120,7 +123,7 @@ class MemoryDatabase(DatabaseProtocol):
             else:
                 public = prev_algo.public
         algo = Algorithm(
-            author=args.author,
+            author_email=args.author_email,
             name=args.name,
             algo_script=args.algo_script,
             viz_script=args.viz_script,
@@ -130,11 +133,11 @@ class MemoryDatabase(DatabaseProtocol):
         )
         self.algos[algo_key] = algo
 
-    def get_algo_summaries(self, author_id: UserId) -> list[AlgorithmSummary]:
+    def get_algo_summaries(self, author_email: str) -> list[AlgorithmSummary]:
         return [
-            AlgorithmSummary(name=algo.name, author_email=algo.author.email)
+            AlgorithmSummary(name=algo.name, author_email=algo.author_email)
             for algo in self.algos.values()
-            if algo.author.firebase_user_id == author_id or algo.public is True
+            if author_email == algo.author_email or algo.public is True
         ]
 
     def get_public_algos(self) -> list[ScriptDemoInfo]:
@@ -150,6 +153,13 @@ class MemoryDatabase(DatabaseProtocol):
             for algo in self.algos.values()
             if algo.public is True
         ]
+
+    def __del__(self) -> None:
+        if self.write_on_deletion:
+            # Save the database to a file when the object is deleted so we can
+            # load it next time.
+            with open("main/cached_demo_db.json", "w") as f:
+                json.dump(attrs.asdict(self), f)
 
     @classmethod
     def load_cached_demo_db(cls) -> MemoryDatabase:

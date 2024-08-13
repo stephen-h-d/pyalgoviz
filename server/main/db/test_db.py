@@ -22,7 +22,7 @@ def test_database_protocol(db: DatabaseProtocol) -> None:
 
     # Create a test algorithm
     test_algo = SaveAlgorithmArgs(
-        author=test_user,
+        author_email=test_user.email,
         name="Test Algorithm",
         algo_script="print('Hello World')",
         viz_script="print('Visualize Hello World')",
@@ -31,11 +31,11 @@ def test_database_protocol(db: DatabaseProtocol) -> None:
     db.save_algo(test_algo)
 
     # Retrieve the test algorithm
-    retrieved_algo = db.get_algo(test_user.firebase_user_id, "Test Algorithm")
+    retrieved_algo = db.get_algo(test_user.email, "Test Algorithm")
     assert retrieved_algo is not None, "Algorithm should be retrieved successfully"
     assert (
-        retrieved_algo.author.firebase_user_id == test_algo.author.firebase_user_id
-    ), "Author ID should match"
+        retrieved_algo.author_email == test_algo.author_email
+    ), "Author email should match"
     assert retrieved_algo.name == test_algo.name, "Algorithm name should match"
     assert (
         retrieved_algo.algo_script == test_algo.algo_script
@@ -46,7 +46,7 @@ def test_database_protocol(db: DatabaseProtocol) -> None:
 
     # Create and save another algorithm that is not public
     test_algo_private = SaveAlgorithmArgs(
-        author=test_user,
+        author_email=test_user.email,
         name="Private Algorithm",
         algo_script="print('Private Hello World')",
         viz_script="print('Private Visualize Hello World')",
@@ -60,7 +60,7 @@ def test_database_protocol(db: DatabaseProtocol) -> None:
 
     # create a public algorithm by test_user2
     test_algo2 = SaveAlgorithmArgs(
-        author=test_user2,
+        author_email=test_user2.email,
         name="Test Algorithm 2",
         algo_script="print('Hello World 2')",
         viz_script="print('Visualize Hello World 2')",
@@ -70,7 +70,7 @@ def test_database_protocol(db: DatabaseProtocol) -> None:
 
     # create a private algorithm by test_user2
     test_algo2_private = SaveAlgorithmArgs(
-        author=test_user2,
+        author_email=test_user2.email,
         name="Private Algorithm",
         algo_script="print('Private Hello World 2')",
         viz_script="print('Private Visualize Hello World 2')",
@@ -89,7 +89,7 @@ def test_database_protocol(db: DatabaseProtocol) -> None:
     ), "Private algorithm should not be in public list"
 
     # Retrieve algorithm summaries
-    algo_summaries = db.get_algo_summaries(test_user.firebase_user_id)
+    algo_summaries = db.get_algo_summaries(test_user.email)
     print(f"algo summaries {algo_summaries}")
     assert len(algo_summaries) == 3, "Summaries should include 3 algorithms"
     assert any(

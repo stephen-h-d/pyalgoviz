@@ -15,8 +15,8 @@ from flask import send_from_directory
 from flask_login import current_user  # type: ignore[import]
 from flask_login import LoginManager
 from google.cloud import datastore
+from main.db.models import FirebaseUserId
 from main.db.models import User
-from main.db.models import UserId
 from main.db.protocol import DatabaseProtocol
 from main.db.protocol import SaveAlgorithmArgs
 from main.middleware import JWTAuthenticator
@@ -51,7 +51,7 @@ login_manager.init_app(app)
 
 
 @login_manager.user_loader
-def load_user(user_id: UserId) -> User | None:
+def load_user(user_id: FirebaseUserId) -> User | None:
     return db.get_user(user_id)
 
 
