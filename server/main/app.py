@@ -14,7 +14,6 @@ from flask import send_file
 from flask import send_from_directory
 from flask_login import current_user  # type: ignore[import]
 from flask_login import LoginManager
-from google.cloud import datastore
 from main.db.models import FirebaseUserId
 from main.db.models import User
 from main.db.protocol import DatabaseProtocol
@@ -34,10 +33,9 @@ USE_GOOGLE_DB = os.environ.get("USE_GOOGLE_DB", "False")
 db: DatabaseProtocol
 
 if USE_GOOGLE_DB.lower() == "true":
-    from main.db.gsdb import GoogleStoreDatabase
+    from main.db.fsdb import FirestoreDatabase
 
-    client = datastore.Client(project=PROJECT)
-    db = GoogleStoreDatabase(client)
+    fb = FirestoreDatabase()
 else:
     from main.db.mdb import MemoryDatabase
 
@@ -97,7 +95,7 @@ def save() -> Response:
                 cached_events = events
 
         args = SaveAlgorithmArgs(
-            author=author,
+            author_email=author.email,
             name=name,
             algo_script=algo_script,
             viz_script=viz_script,
@@ -124,7 +122,7 @@ def save() -> Response:
 def get_script_names() -> Response:
     author: User = current_user
     try:
-        script_summaries = db.get_algo_summaries(author.firebase_user_id)
+        script_summaries = db.get_algo_summaries(author.email)
         # TODO handle the new summary type on the FE
         return jsonify({"result": script_summaries})
     except Exception as e:
@@ -168,7 +166,7 @@ def load() -> Response:
             )
             return make_response(response, HTTPStatus.BAD_REQUEST)
 
-        algo = db.get_algo(author.firebase_user_id, script_name)
+        algo = db.get_algo(author.email, script_name)
         return jsonify(attrs.asdict(algo))
     except Exception as e:
         msg = "Could not load script names: %s" % e
