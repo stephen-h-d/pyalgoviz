@@ -123,7 +123,6 @@ def get_script_names() -> Response:
     author: User = current_user
     try:
         script_summaries = db.get_algo_summaries(author.email)
-        # TODO handle the new summary type on the FE
         return jsonify({"result": script_summaries})
     except Exception as e:
         msg = "Could not load script names: %s" % e

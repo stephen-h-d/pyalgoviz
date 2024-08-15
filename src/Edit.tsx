@@ -818,7 +818,6 @@ function Header(props: { algoName: Accessor<string> }) {
           <span>{userObj.email}</span>
           <button
             class={styles.logoutBtn}
-
             onClick={logout}
           >
             Log Out

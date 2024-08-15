@@ -14,12 +14,14 @@ import * as styles from './solid_load_dialog.css';
 import { postJson } from './postJson';
 import { PyAlgoVizScript } from './exec_result';
 import { CheckBox } from './CheckBox';
+import { user } from './authSignal';
 
 function SelectDialogEl(props: {
-  option: string;
-  selected: Accessor<string | null>;
-  setSelected: Setter<string | null>;
+  option: AlgorithmSummary;
+  selected: Accessor<AlgorithmSummary | null>;
+  setSelected: Setter<AlgorithmSummary | null>;
 }) {
+  const userObj = user();
   const getCl = () => {
     const classList: { [c: string]: boolean | undefined } = {};
     classList[styles.no_select] = true;
@@ -34,7 +36,7 @@ function SelectDialogEl(props: {
 
     return classList;
   };
-  function optionClicked(val: string) {
+  function optionClicked(val: AlgorithmSummary) {
     if (props.selected() == val) {
       props.setSelected(null);
     } else {
@@ -45,32 +47,30 @@ function SelectDialogEl(props: {
   return (
     <div
       classList={getCl()}
-
       onClick={_e => optionClicked(props.option)}
     >
-      {props.option}
+      {props.option.name}
+      {(userObj === null || userObj.email !== props.option.author_email) ? " (Public)" : ""}
     </div>
   );
 }
 
 function SelectDialog(props: {
-  options: string[];
+  options: AlgorithmSummary[];
   open: Accessor<boolean>;
   setOpen: Setter<boolean>;
-  setSelected: Setter<string | null>;
+  setSelected: Setter<AlgorithmSummary | null>;
 }) {
-  const [innerSelectedSig, setinnerSelectedSig] = createSignal<string | null>(
-    null,
+  const [innerSelectedSig, setinnerSelectedSig] = createSignal<AlgorithmSummary | null>(
+    null
   );
-
 
   function setSelectedAndClose(_e: MouseEvent) {
     props.setSelected(innerSelectedSig());
     props.setOpen(false);
   }
 
-
-  function showSelectDialog(option: string, _i: Accessor<number>) {
+  function showSelectDialog(option: AlgorithmSummary, _i: Accessor<number>) {
     return (
       <SelectDialogEl
         option={option}
@@ -104,13 +104,18 @@ function SelectDialog(props: {
   );
 }
 
-interface ScriptNames {
-  result: string[];
+interface AlgorithmSummary {
+  name: string;
+  author_email: string;
+}
+
+interface AlgorithmSummaries {
+  result: AlgorithmSummary[];
 }
 
 const fetchScriptNames = async () => {
   const fetchResult = await fetch('/api/script_names');
-  return (await fetchResult.json()) as ScriptNames;
+  return (await fetchResult.json()) as AlgorithmSummaries;
 };
 
 
@@ -210,7 +215,7 @@ export function SaveScriptDialog(props: {
   viz: Accessor<string>;
   savedCb: (script: PyAlgoVizScript, algoName: string) => void;
 }) {
-  const [scriptNames, { refetch }] = createResource(fetchScriptNames);
+  const [algoSummAries, { refetch }] = createResource(fetchScriptNames);
   const [algoName, setAlgoName] = createSignal('');
   const [publish, setPublish] = createSignal(false);
   const [saving, setSaving] = createSignal(false);
@@ -224,18 +229,26 @@ export function SaveScriptDialog(props: {
     }
   });
 
-  const scriptNamesList = () => {
+  const getAlgoSummaries = () => {
+    const userObj = user();
     const names = [];
-    if (scriptNames.loading || scriptNames.error) {
-      if (scriptNames.error !== undefined) {
-        console.error('Error loading script names', scriptNames.error);
+    if (algoSummAries.loading || algoSummAries.error || userObj === null) {
+      if (userObj === null) {
+        console.error('User not logged in');
+      }
+      if (algoSummAries.error !== undefined) {
+        console.error('Error loading script names', algoSummAries.error);
       }
       return [];
     }
 
-    const fetched = scriptNames() as ScriptNames;
+    const fetched = algoSummAries() as AlgorithmSummaries;
     for (const name of fetched.result) {
-      names.push(name);
+      // discard the public ones; this function is just for checking whether
+      // they are saving a duplicate.
+      if (name.author_email === userObj.email) {
+        names.push(name.name);
+      }
     }
     return names;
   };
@@ -245,7 +258,7 @@ export function SaveScriptDialog(props: {
     const name = algoName();
 
     await refetch();
-    const scriptNamesResult = scriptNamesList();
+    const scriptNamesResult = getAlgoSummaries();
 
     if (scriptNamesResult.includes(name)) {
       setDuplicateOpen(true);
@@ -364,7 +377,7 @@ export function LoadScriptDialog(props: {
     }
   });
 
-  const scriptNamesList = () => {
+  const getAlgoSummaries = () => {
     const names = [];
     if (scriptNames.loading || scriptNames.error) {
       if (scriptNames.error !== undefined) {
@@ -373,7 +386,7 @@ export function LoadScriptDialog(props: {
       return [];
     }
 
-    const fetched = scriptNames() as ScriptNames;
+    const fetched = scriptNames() as AlgorithmSummaries;
     for (const name of fetched.result) {
       names.push(name);
     }
@@ -385,7 +398,7 @@ export function LoadScriptDialog(props: {
       open={props.open}
       setSelected={setSelected}
       setOpen={props.setOpen}
-      options={scriptNamesList()}
+      options={getAlgoSummaries()}
     />
   );
 }
