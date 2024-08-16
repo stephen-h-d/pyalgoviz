@@ -21,19 +21,6 @@ from main.db.models import FirebaseUserId
 from main.db.protocol import DatabaseProtocol
 from main.db.protocol import SaveAlgorithmArgs
 
-# Function to convert dictionary back to attrs object
-# def dict_to_attrs(class_type, d):
-#     field_types = {f.name: f.type for f in attrs.fields(class_type)}
-#     for field, field_type in field_types.items():
-#
-#         print(f"field {field} field_type {field_type}")
-#         # TODO the abovel ine results in this: ugh.
-#         # field users field_type dict[UserId, User]
-#         # field algos field_type dict[str, Algorithm]
-#         if attrs.has(field_type):
-#             d[field] = dict_to_attrs(field_type, d[field])
-#     return class_type(**d)
-
 
 MODEL_ATTRS_CLASSES = {
     "Algorithm": Algorithm,
@@ -78,9 +65,7 @@ def dict_to_attrs(class_type: Type[T], d: Dict) -> T:
             new_list = []
             for item in d[field]:
                 new_item = (
-                    dict_to_attrs(element_type, item)
-                    if attrs.has(element_type)
-                    else item
+                    dict_to_attrs(element_type, item) if attrs.has(element_type) else item
                 )
                 new_list.append(new_item)
             d[field] = new_list
@@ -94,7 +79,6 @@ class MemoryDatabase(DatabaseProtocol):
 
     users: dict[FirebaseUserId, User] = attrs.field(factory=dict)
     algos: dict[str, Algorithm] = attrs.field(factory=dict)
-    write_on_deletion: bool = False
 
     def get_user(self, user_id: FirebaseUserId) -> User | None:
         return self.users.get(user_id)
@@ -154,16 +138,52 @@ class MemoryDatabase(DatabaseProtocol):
             if algo.public is True
         ]
 
-    def __del__(self) -> None:
-        if self.write_on_deletion:
-            # Save the database to a file when the object is deleted so we can
-            # load it next time.
-            with open("main/cached_demo_db.json", "w") as f:
-                json.dump(attrs.asdict(self), f)
+    def to_dict(self) -> dict:
+        return {
+            "users": {k: attrs.asdict(v) for k, v in self.users.items()},
+            "algos": {k: v.to_dict() for k, v in self.algos.items()},
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> MemoryDatabase:
+        users = {k: dict_to_attrs(User, v) for k, v in d.get("users", {}).items()}
+        algos = {k: Algorithm.from_dict(v) for k, v in d.get("algos", {}).items()}
+        return cls(users=users, algos=algos)
+
+    def save_cached_demo_db(self):
+        # Save the database to a file when the object is deleted so we can
+        # load it next time.
+        with open("main/cached_demo_db.json", "w") as f:
+            json.dump(self.to_dict(), f)
 
     @classmethod
     def load_cached_demo_db(cls) -> MemoryDatabase:
         with open("main/cached_demo_db.json", "r") as f:
             loaded_dict = json.load(f)
 
-        return dict_to_attrs(MemoryDatabase, loaded_dict)
+        return MemoryDatabase.from_dict(loaded_dict)
+
+
+# quick and dirty test of to_dict and from_dict
+def main():
+    db = MemoryDatabase()
+    user = User(firebase_user_id="test_user", email="test@exampl.com")
+    db.save_user(user)
+    algo = SaveAlgorithmArgs(
+        author_email=user.email,
+        name="Test Algorithm",
+        algo_script="print('Hello World')",
+        viz_script="print('Visualize Hello World')",
+        public=True,
+    )
+    db.save_algo(algo)
+
+    dict_version = db.to_dict()
+    loaded_db = MemoryDatabase.from_dict(dict_version)
+    assert loaded_db.users == db.users
+
+    print("All tests passed!")
+
+
+if __name__ == "__main__":
+    main()

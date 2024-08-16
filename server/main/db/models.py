@@ -56,6 +56,31 @@ class Algorithm:
     cached_events: list[Event] = []
     last_updated: datetime | None = None
 
+    def to_dict(self) -> dict:
+        return {
+            "author_email": self.author_email,
+            "name": self.name,
+            "algo_script": self.algo_script,
+            "viz_script": self.viz_script,
+            "public": self.public,
+            "cached_events": [attrs.asdict(event) for event in self.cached_events],
+            "last_updated": self.last_updated.strftime("%Y-%m-%d %H:%M:%S"),
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> Algorithm:
+        events = [Event(**event) for event in d["cached_events"]]
+        last_updated = datetime.strptime(d["last_updated"], "%Y-%m-%d %H:%M:%S")
+        return cls(
+            author_email=d["author_email"],
+            name=d["name"],
+            algo_script=d["algo_script"],
+            viz_script=d["viz_script"],
+            public=d["public"],
+            cached_events=events,
+            last_updated=last_updated,
+        )
+
 
 @attrs.define(kw_only=True)
 class ScriptDemoInfo:

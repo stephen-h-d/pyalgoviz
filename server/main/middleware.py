@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
 import os
 from functools import wraps
 from typing import Any
@@ -58,7 +59,8 @@ class JWTAuthenticator:
                         self.db.save_user(user)
 
                     login_user(user)
-                except InvalidIdTokenError:
+                except InvalidIdTokenError as exc:
+                    logging.log(logging.ERROR, f"Invalid token: {exc}")
                     # TODO figure out how to indicate to the client that the token is
                     # invalid.  It might not be that big a deal, though, if all the
                     # Python code is just an API.

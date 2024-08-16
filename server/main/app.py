@@ -1,3 +1,4 @@
+import atexit
 import json
 import logging
 import os
@@ -46,6 +47,20 @@ jwta = JWTAuthenticator(db)
 app = Flask(__name__, static_folder="public")
 app.secret_key = SECRET_KEY
 login_manager.init_app(app)
+
+
+cleanup_done = False  # I don't know why this is necessary, but it is.
+
+
+def cleanup():
+    global cleanup_done
+    if not cleanup_done:
+        if isinstance(db, MemoryDatabase):
+            db.save_cached_demo_db()
+
+
+# Register the cleanup function to run at exit
+atexit.register(cleanup)
 
 
 @login_manager.user_loader
@@ -123,6 +138,7 @@ def get_script_names() -> Response:
     author: User = current_user
     try:
         script_summaries = db.get_algo_summaries(author.email)
+        script_summaries = [attrs.asdict(summary) for summary in script_summaries]
         return jsonify({"result": script_summaries})
     except Exception as e:
         msg = "Could not load script names: %s" % e

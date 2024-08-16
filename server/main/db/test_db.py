@@ -1,4 +1,5 @@
 import sys
+from datetime import datetime
 
 from main.db.fsdb import FirestoreDatabase
 from main.db.mdb import MemoryDatabase
@@ -43,6 +44,7 @@ def test_database_protocol(db: DatabaseProtocol) -> None:
     assert (
         retrieved_algo.viz_script == test_algo.viz_script
     ), "Visualization script should match"
+    assert isinstance(retrieved_algo.last_updated, datetime)
 
     # Create and save another algorithm that is not public
     test_algo_private = SaveAlgorithmArgs(
