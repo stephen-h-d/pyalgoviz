@@ -14,7 +14,7 @@ import * as styles from './solid_load_dialog.css';
 import { postJson } from './postJson';
 import { PyAlgoVizScript } from './exec_result';
 import { CheckBox } from './CheckBox';
-import { user } from './authSignal';
+import { setUserAndAuthError, user } from './authSignal';
 
 function SelectDialogEl(props: {
   option: AlgorithmSummary;
@@ -272,16 +272,16 @@ export function SaveScriptDialog(props: {
   const saveScript = async () => {
     setSaving(true);
 
-    try {
-      const algo_script = props.algo();
-      const viz_script = props.viz();
-      const name = algoName();
-      await postJson('/api/save', {
-        algo_script,
-        viz_script,
-        name,
-        publish: publish(),
-      });
+    const algo_script = props.algo();
+    const viz_script = props.viz();
+    const name = algoName();
+    const saveResult = await postJson('/api/save', {
+      algo_script,
+      viz_script,
+      name,
+      publish: publish(),
+    });
+    if (saveResult.type === "Ok") {
       props.savedCb({
         algo_script,
         viz_script,
@@ -289,8 +289,11 @@ export function SaveScriptDialog(props: {
       setSaving(false);
       props.setOpen(false);
       setSuccessOpen(true);
-    } catch (error) {
-      console.error(`API call error: ${String(error)}`);
+    }
+    else if (saveResult.type === "Unauthorized") {
+      console.error("Encountered unauthorized error while saving script");
+      setUserAndAuthError(null, 'Authorization error encountered while saving script. You have been logged out.');
+    } else {
       setSaving(false);
       setErrorOpen(true);
     }

@@ -32,7 +32,7 @@ import { ExecResult, PyAlgoVizScript, VizEvent } from './exec_result';
 import { renderEvent } from './VizOutput';
 import EnumSelect from './EnumSelect';
 import { signInWithGoogle as loginWithGoogle, logout } from './login';
-import { authError, user } from './authSignal';
+import { authError, setUserAndAuthError, user } from './authSignal';
 import { LogManager } from './LogManager';
 import { postJson } from './postJson';
 import { CheckBox } from './CheckBox';
@@ -253,22 +253,25 @@ function TopLeftContents(props: {
   });
 
   const saveScript = async () => {
-    try {
-      const algo_script = props.algo();
-      const viz_script = props.viz();
-      const name = props.algoName();
-      await postJson('/api/save', {
-        algo_script,
-        viz_script,
-        name,
-      });
+    const algo_script = props.algo();
+    const viz_script = props.viz();
+    const name = props.algoName();
+    const saveResult = await postJson('/api/save', {
+      algo_script,
+      viz_script,
+      name,
+    });
+
+    if (saveResult.type === "Ok") {
       setCurrentSavedScript({
         algo_script,
         viz_script,
       });
       setSuccessOpen(true);
-    } catch (error) {
-      console.error(`API call error: ${String(error)}`);
+    } else if (saveResult.type === "Unauthorized") {
+      setUserAndAuthError(null, 'Authorization error saving script. You have been logged out.');
+    } else {
+      console.error('Error saving script:', saveResult);
       setErrorOpen(true);
     }
   };
@@ -689,14 +692,15 @@ arc(100,
         setRunningScript(false);
       }
     } else {
-      try {
-        setRunningScript(true);
-        const run_result = (await postJson('/api/run', toRun)) as ExecResult;
+      setRunningScript(true);
+      const run_result = (await postJson('/api/run', toRun));
+      if (run_result.type === "Ok") {
         setRunningScript(false);
-        // console.log('run_result', run_result);
-        setExecResult(run_result);
-      } catch (error) {
-        console.error(error);
+        setExecResult(run_result.data as ExecResult);
+      } else if (run_result.type === "Unauthorized") {
+        setRunningScript(false);
+        setUserAndAuthError(null, 'Authorization error running script. You have been logged out.');
+      } else {
         setRunningScript(false);
       }
     }

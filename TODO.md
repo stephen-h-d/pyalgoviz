@@ -6,14 +6,12 @@
 
 ### Ready-to-implement TODOs pre-launch
 
-1. log out user when token expired (currently shows as logged in even though the token fails). Also detect it if they reload the page and they were logged in..?
-2. Write basic manual tests.
-3. Fill in Header and Footer content
-4. Add the ability to load public/published Algos
-6. Do error highlighting. Sometimes this will be the wrong line -- when it's a syntax error, it says line 0 for some reason.
-7. Require manual approval of script before they are actually published
-8. Fix ScriptDemo bug -- not showing Gaussian demo
-9. Fix viz log; everything ends up on one line
+1. Write basic manual tests.
+   1. Add the ability to load public/published Algos
+2. Fill in Header and Footer content
+3. Do error highlighting. Sometimes this will be the wrong line -- when it's a syntax error, it says line 0 for some reason.
+4. Fix ScriptDemo bug -- not showing Gaussian demo
+5. Fix viz log; everything ends up on one line
 
 ### Ready-to-implement TODOs post-launch
 1. Tell the user when Pyodide is loading, when it is done loading, when the code is running, and when it is done running.

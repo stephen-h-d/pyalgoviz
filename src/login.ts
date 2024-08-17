@@ -37,7 +37,7 @@ export function signInWithGoogle(_event: MouseEvent) {
         })
         .catch(error => {
           console.error('Error verifying login:', error);
-          setUserAndAuthError(null, 'Error verifying login');
+          setUserAndAuthError(null, 'Error verifying login. You have been logged out.');
         });
 
       } else {
@@ -53,7 +53,7 @@ export function signInWithGoogle(_event: MouseEvent) {
       // The AuthCredential type that was used.
       // const credential = GoogleAuthProvider.credentialFromError(error);
       console.error(error);
-      setUserAndAuthError(null, 'Error signing in')
+      setUserAndAuthError(null, 'Error signing in. You have been logged out.')
     });
 }
 
@@ -63,6 +63,6 @@ export async function logout() {
     setUserAndAuthError(null, null);
   } catch (error) {
     console.error('Error signing out:', error);
-    setUserAndAuthError(null, 'Error signing out');
+    setUserAndAuthError(null, 'Error signing out. Please refresh the page.');
   }
 }
