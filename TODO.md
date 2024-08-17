@@ -1,7 +1,8 @@
 ### Planning TODOs
 1. Decide which other login ID providers to support and make TODO items for those.
-4. some of the TODOs in the code (need to clarify which ones)
-5. figure out how to deploy
+2. some of the TODOs in the code (need to clarify which ones)
+3. figure out how to deploy
+4. decide whether to make the run_script safe/secure enough or just take this out altogether.
 
 ### Ready-to-implement TODOs pre-launch
 

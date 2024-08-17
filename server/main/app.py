@@ -21,7 +21,8 @@ from main.db.models import User
 from main.db.protocol import DatabaseProtocol
 from main.db.protocol import SaveAlgorithmArgs
 from main.middleware import JWTAuthenticator
-from main.run_script import run_script  # type: ignore[attr-defined]
+
+# from main.run_script import run_script  # type: ignore[attr-defined]
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +84,7 @@ def save() -> Response:
         data = request.get_data().decode("utf-8")
         submission = json.loads(data)
         publish = submission.get("publish")
-        cached_events = []
+        cached_events: list[Event] = []
         algo_script = submission.get("algo_script")
         viz_script = submission.get("viz_script")
         name = submission.get("name")
@@ -98,15 +99,15 @@ def save() -> Response:
             )
             return make_response(response, HTTPStatus.BAD_REQUEST)
 
-        if publish is True:
-            res = run_script(algo_script, viz_script)
-            if res["py_error"] is None:
-                events = res["events"]
-                cached_events = [Event(**event) for event in events]
-            else:
-                logger.error(
-                    f"Could not run script to cache events for public view: {res['py_error']}"
-                )
+        # if publish is True:
+        #     res = run_script(algo_script, viz_script)
+        #     if res["py_error"] is None:
+        #         events = res["events"]
+        #         cached_events = [Event(**event) for event in events]
+        #     else:
+        #         logger.error(
+        #             f"Could not run script to cache events for public view: {res['py_error']}"
+        #         )
 
         args = SaveAlgorithmArgs(
             author_email=author.email,
@@ -203,24 +204,25 @@ def load() -> Response:
         )
 
 
-@app.route("/api/run", methods=["POST", "OPTIONS"])
-@jwta.authenticated
-def run() -> Response:
-    try:
-        data = request.get_data().decode("utf-8")
-        submission = json.loads(data)
-        algo_script = submission.get("algo_script")
-        viz_script = submission.get("viz_script")
-        result = run_script(algo_script, viz_script)
-    except Exception as e:
-        msg = "Could not run script: %s" % e
-        logger.error(msg)
-        logger.exception(e)
-        response = jsonify(
-            {"result": "Whoops!  Running failed.  Please report this bug."}
-        )
-        return make_response(response, HTTPStatus.INTERNAL_SERVER_ERROR)
-    return jsonify(result)
+# TODO decide whether to make the run_script safe/secure enough or just take this out altogether.
+# @app.route("/api/run", methods=["POST", "OPTIONS"])
+# @jwta.authenticated
+# def run() -> Response:
+#     try:
+#         data = request.get_data().decode("utf-8")
+#         submission = json.loads(data)
+#         algo_script = submission.get("algo_script")
+#         viz_script = submission.get("viz_script")
+#         result = run_script(algo_script, viz_script)
+#     except Exception as e:
+#         msg = "Could not run script: %s" % e
+#         logger.error(msg)
+#         logger.exception(e)
+#         response = jsonify(
+#             {"result": "Whoops!  Running failed.  Please report this bug."}
+#         )
+#         return make_response(response, HTTPStatus.INTERNAL_SERVER_ERROR)
+#     return jsonify(result)
 
 
 @app.route("/<path:filename>")

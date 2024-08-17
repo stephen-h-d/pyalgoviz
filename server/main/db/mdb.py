@@ -18,8 +18,7 @@ from main.db.models import Event
 from main.db.models import ScriptDemoInfo
 from main.db.models import User
 from main.db.models import FirebaseUserId
-from main.db.protocol import SaveAlgorithmArgs
-
+from main.db.protocol import SaveAlgorithmArgs, DatabaseProtocol
 
 MODEL_ATTRS_CLASSES = {
     "Algorithm": Algorithm,
@@ -66,7 +65,7 @@ def dict_to_attrs(class_type: Type[T], d: Dict) -> T:
 
 
 @attrs.define
-class MemoryDatabase:
+class MemoryDatabase(DatabaseProtocol):
     """An in-memory database used solely for development."""
 
     users: dict[FirebaseUserId, User] = attrs.field(factory=dict)

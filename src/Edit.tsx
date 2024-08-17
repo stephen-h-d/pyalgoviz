@@ -222,7 +222,7 @@ function TopLeftContents(props: {
   const loadDisabled = () => user() === null;
 
   const [range, setRange] = createSignal(0.0);
-  const [runLocally, setRunLocally] = createSignal(true);
+  // const [runLocally, setRunLocally] = createSignal(true);
 
   createEffect(() => {
     const rangePct = range();
@@ -320,7 +320,7 @@ function TopLeftContents(props: {
           disabled={runDisabled()}
           class={styles.input}
 
-          onClick={() => props.run(runLocally())}
+          onClick={() => props.run(true)}
         >
           Run
         </button>
@@ -385,12 +385,12 @@ function TopLeftContents(props: {
           max={1}
           step="0.01"
         />
-        <CheckBox
+        {/* <CheckBox
           id="run_local"
           label="Run Locally"
           value={runLocally}
           setValue={setRunLocally}
-        />
+        /> */}
       </div>
     </div>
   );
