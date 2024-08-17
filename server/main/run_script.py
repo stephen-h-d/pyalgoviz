@@ -17,7 +17,35 @@ def allowed_import(name, globals=None, locals=None, fromlist=(), level=0):
     if name in safe_modules:
         return __import__(name, globals, locals, fromlist, level)
     else:
-        raise Exception("Don't you even think about it {0}".format(name))
+        raise Exception("Module not allowed: {0}".format(name))
+
+
+def guarded_getitem(obj, index):
+    try:
+        return obj[index]
+    except (IndexError, KeyError, TypeError):
+        raise Exception("Invalid access attempt")
+
+
+def guarded_write(obj):
+    # Simply return the object, but raise an exception if it's a file-like object
+    if hasattr(obj, "write"):
+        raise Exception("Write access not allowed")
+    return obj
+
+
+def guarded_iter_unpack_sequence(obj, count, context=None):
+    # Convert to a list if it's an iterator without __len__
+    if hasattr(obj, "__len__"):
+        actual_len = len(obj)
+    else:
+        obj = list(obj)  # Convert iterator to list
+        actual_len = len(obj)
+
+    if actual_len != count:
+        raise ValueError(f"Cannot unpack, expected {count} elements but got {actual_len}")
+
+    return obj
 
 
 custom_builtins = dict(safe_builtins)
@@ -26,6 +54,9 @@ custom_builtins["__import__"] = allowed_import
 safe_globals = dict(__builtins__=custom_builtins)  # noqa
 safe_globals["range"] = range
 safe_globals["_getiter_"] = default_guarded_getiter
+safe_globals["_getitem_"] = guarded_getitem
+safe_globals["_write_"] = guarded_write
+safe_globals["_iter_unpack_sequence_"] = guarded_iter_unpack_sequence
 
 
 def run_script(algo_script: str, viz_script: str) -> dict:

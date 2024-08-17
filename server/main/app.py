@@ -15,6 +15,7 @@ from flask import send_file
 from flask import send_from_directory
 from flask_login import current_user  # type: ignore[import]
 from flask_login import LoginManager
+from main.db.models import Event
 from main.db.models import FirebaseUserId
 from main.db.models import User
 from main.db.protocol import DatabaseProtocol
@@ -101,8 +102,11 @@ def save() -> Response:
             res = run_script(algo_script, viz_script)
             if res["py_error"] is None:
                 events = res["events"]
-                print(f"first 100 events {events[0:100]}")
-                cached_events = events
+                cached_events = [Event(**event) for event in events]
+            else:
+                logger.error(
+                    f"Could not run script to cache events for public view: {res['py_error']}"
+                )
 
         args = SaveAlgorithmArgs(
             author_email=author.email,

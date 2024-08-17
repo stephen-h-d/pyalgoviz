@@ -150,11 +150,15 @@ class MemoryDatabase:
 
     @classmethod
     def load_cached_demo_db(cls) -> MemoryDatabase:
-        with open("main/cached_demo_db.json", "r") as f:
-            loaded_dict = json.load(f)
-            # print(f"loaded_dict {loaded_dict}")
+        try:
+            with open("main/cached_demo_db.json", "r") as f:
+                loaded_dict = json.load(f)
+                # print(f"loaded_dict {loaded_dict}")
 
-        return MemoryDatabase.from_dict(loaded_dict)
+            return MemoryDatabase.from_dict(loaded_dict)
+        except Exception as e:
+            print(f"Error loading cached demo db: {e}. Starting with empty database.")
+            return MemoryDatabase()
 
 
 # quick and dirty test of to_dict and from_dict
@@ -168,6 +172,7 @@ def main() -> None:
         algo_script="print('Hello World')",
         viz_script="print('Visualize Hello World')",
         public=True,
+        cached_events=[Event(lineno=1, viz_output="viz", viz_log="log", algo_log="log")],
     )
     db.save_algo(algo)
 

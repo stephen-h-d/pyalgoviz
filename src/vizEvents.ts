@@ -193,7 +193,7 @@ export class VizEventNavigator {
 
   private playPause(value: boolean | null) {
     const playing = this.playing();
-    console.log('playPause', value, 'playing', playing);
+    // console.log('playPause', value, 'playing', playing);
 
     if (playing && (value === null || value === false)) {
         // Stop playback
