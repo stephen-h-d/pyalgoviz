@@ -150,7 +150,7 @@ class MemoryDatabase(DatabaseProtocol):
         algos = {k: Algorithm.from_dict(v) for k, v in d.get("algos", {}).items()}
         return cls(users=users, algos=algos)
 
-    def save_cached_demo_db(self):
+    def save_cached_demo_db(self) -> None:
         # Save the database to a file when the object is deleted so we can
         # load it next time.
         with open("main/cached_demo_db.json", "w") as f:
@@ -160,12 +160,13 @@ class MemoryDatabase(DatabaseProtocol):
     def load_cached_demo_db(cls) -> MemoryDatabase:
         with open("main/cached_demo_db.json", "r") as f:
             loaded_dict = json.load(f)
+            # print(f"loaded_dict {loaded_dict}")
 
         return MemoryDatabase.from_dict(loaded_dict)
 
 
 # quick and dirty test of to_dict and from_dict
-def main():
+def main() -> None:
     db = MemoryDatabase()
     user = User(firebase_user_id="test_user", email="test@exampl.com")
     db.save_user(user)

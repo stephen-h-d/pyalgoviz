@@ -11,6 +11,7 @@
 4. Add the ability to load public/published Algos
 6. Do error highlighting. Sometimes this will be the wrong line -- when it's a syntax error, it says line 0 for some reason.
 7. Require manual approval of script before they are actually published
+8. Fix ScriptDemo bug -- not showing Gaussian demo
 
 ### Ready-to-implement TODOs post-launch
 1. Tell the user when Pyodide is loading, when it is done loading, when the code is running, and when it is done running.

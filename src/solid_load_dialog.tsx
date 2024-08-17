@@ -341,7 +341,7 @@ export function LoadScriptDialog(props: {
   finishLoading: (script: PyAlgoVizScript, algoName: string) => void;
 }) {
   const [scriptNames, { refetch }] = createResource(fetchScriptNames);
-  const [selectedSig, setSelected] = createSignal<string | null>(null);
+  const [selected, setSelected] = createSignal<AlgorithmSummary | null>(null);
 
   // TODO at some point in the process, prompt the user if they are about
   // to overwrite something that isn't saved
@@ -360,16 +360,16 @@ export function LoadScriptDialog(props: {
   });
 
   createEffect(() => {
-    const selectedScriptName = selectedSig();
-    if (selectedScriptName !== null) {
-      fetch(`/api/load?script_name=${selectedScriptName}`)
+    const selectedScript = selected();
+    if (selectedScript !== null) {
+      fetch(`/api/load?script_name=${selectedScript.name}&author_email=${selectedScript.author_email}`)
         .then(response => response.json())
         // eslint-disable-next-line solid/reactivity
         .then(data => {
           props.finishLoading({
             algo_script: data.algo_script,
             viz_script: data.viz_script,
-          },selectedScriptName);
+          },selectedScript.name);
         })
         .catch(error => console.error(error));
 

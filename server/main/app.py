@@ -52,7 +52,7 @@ login_manager.init_app(app)
 cleanup_done = False  # I don't know why this is necessary, but it is.
 
 
-def cleanup():
+def cleanup() -> None:
     global cleanup_done
     if not cleanup_done:
         if isinstance(db, MemoryDatabase):
@@ -138,8 +138,8 @@ def get_script_names() -> Response:
     author: User = current_user
     try:
         script_summaries = db.get_algo_summaries(author.email)
-        script_summaries = [attrs.asdict(summary) for summary in script_summaries]
-        return jsonify({"result": script_summaries})
+        dict_script_summaries = [attrs.asdict(summary) for summary in script_summaries]
+        return jsonify({"result": dict_script_summaries})
     except Exception as e:
         msg = "Could not load script names: %s" % e
         logger.error(msg)
@@ -172,16 +172,28 @@ def load() -> Response:
     author: User = current_user
     try:
         script_name = request.args.get("script_name")
-        if script_name is None:
-            logger.error("Missing script name when trying to load a script.")
+        author_email = request.args.get("author_email")
+        if script_name is None or author_email is None:
+            logger.error(f"Missing one or more arguments. {script_name}, {author_email}")
             response = jsonify(
                 {
-                    "result": "Whoops!  Loading script failed. Missing script name.  Please report this bug."
+                    "result": "Whoops!  Loading script failed. Missing arguments.  Please report this bug."
                 }
             )
             return make_response(response, HTTPStatus.BAD_REQUEST)
 
         algo = db.get_algo(author.email, script_name)
+        if algo is None:
+            logger.error(
+                f"Could not find script with name {script_name} and author email {author.email}"
+            )
+            response = jsonify(
+                {
+                    "result": "Whoops!  Loading script failed. Could not find script.  Please report this bug."
+                }
+            )
+            return make_response(response, HTTPStatus.BAD_REQUEST)
+
         return jsonify(attrs.asdict(algo))
     except Exception as e:
         msg = "Could not load script names: %s" % e

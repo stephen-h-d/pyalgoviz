@@ -64,7 +64,9 @@ class Algorithm:
             "viz_script": self.viz_script,
             "public": self.public,
             "cached_events": [attrs.asdict(event) for event in self.cached_events],
-            "last_updated": self.last_updated.strftime("%Y-%m-%d %H:%M:%S"),
+            "last_updated": self.last_updated.strftime("%Y-%m-%d %H:%M:%S")
+            if self.last_updated is not None
+            else None,
         }
 
     @classmethod
