@@ -49,14 +49,9 @@ app.secret_key = SECRET_KEY
 login_manager.init_app(app)
 
 
-cleanup_done = False  # I don't know why this is necessary, but it is.
-
-
 def cleanup() -> None:
-    global cleanup_done
-    if not cleanup_done:
-        if isinstance(db, MemoryDatabase):
-            db.save_cached_demo_db()
+    if isinstance(db, MemoryDatabase):
+        db.save_cached_demo_db()
 
 
 # Register the cleanup function to run at exit

@@ -18,7 +18,6 @@ from main.db.models import Event
 from main.db.models import ScriptDemoInfo
 from main.db.models import User
 from main.db.models import FirebaseUserId
-from main.db.protocol import DatabaseProtocol
 from main.db.protocol import SaveAlgorithmArgs
 
 
@@ -31,13 +30,8 @@ MODEL_ATTRS_CLASSES = {
 
 
 def dict_to_attrs(class_type: Type[T], d: Dict) -> T:
-    print(f"instantiating {class_type}")
-
     field_types = {f.name: f.type for f in attrs.fields(class_type)}
     for field, field_type in field_types.items():
-        print(f"field {field} field_type {field_type}")
-        print(f"does `attrs` have {field_type}? {attrs.has(field_type)}")
-
         attrs_class = MODEL_ATTRS_CLASSES.get(field_type)
         if attrs_class is not None:
             d[field] = dict_to_attrs(attrs_class, d[field])
@@ -47,13 +41,11 @@ def dict_to_attrs(class_type: Type[T], d: Dict) -> T:
             key_type_str, value_type_str = str(field_type)[5:-1].split(", ")
             key_type = globals().get(key_type_str, key_type_str)
             value_type = globals().get(value_type_str, value_type_str)
-            print(f"Converting dictionary {key_type} {value_type}")
 
             new_dict = {}
             for k, v in d[field].items():
                 new_key = dict_to_attrs(key_type, k) if attrs.has(key_type) else k
                 new_value = dict_to_attrs(value_type, v) if attrs.has(value_type) else v
-                print(f"new_key {new_key}")
                 new_dict[new_key] = new_value
             d[field] = new_dict
         elif "list[" in str(field_type):
@@ -74,7 +66,7 @@ def dict_to_attrs(class_type: Type[T], d: Dict) -> T:
 
 
 @attrs.define
-class MemoryDatabase(DatabaseProtocol):
+class MemoryDatabase:
     """An in-memory database used solely for development."""
 
     users: dict[FirebaseUserId, User] = attrs.field(factory=dict)
@@ -146,7 +138,7 @@ class MemoryDatabase(DatabaseProtocol):
 
     @classmethod
     def from_dict(cls, d: dict) -> MemoryDatabase:
-        users = {k: dict_to_attrs(User, v) for k, v in d.get("users", {}).items()}
+        users = {k: dict_to_attrs(User, v) for k, v in d.get("users", {}).items()}  # type: ignore
         algos = {k: Algorithm.from_dict(v) for k, v in d.get("algos", {}).items()}
         return cls(users=users, algos=algos)
 
