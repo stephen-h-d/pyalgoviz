@@ -12,7 +12,6 @@ auth.onAuthStateChanged(
   function (user) {
     if (user) {
       // User is signed in
-      // TODO update the login state indicators
       user
         .getIdToken()
         .then(function (token) {
@@ -26,7 +25,6 @@ auth.onAuthStateChanged(
         .catch(error => console.log(error));
     } else {
       // User is signed out.
-      // TODO Update the login state indicators.
       // Clear the token cookie.
       document.cookie = 'token=' + '; SameSite=None ; Secure';
     }

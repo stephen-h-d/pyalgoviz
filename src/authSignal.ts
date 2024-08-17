@@ -8,8 +8,14 @@ export interface User {
 }
 
 const [user, setUser] = createSignal<User | null>(null);
+const [authError, setAuthError] = createSignal<string | null>(null);
 
-export { user, setUser };
+const setUserAndAuthError = (newUser: User | null, newAuthError: string | null) => {
+  setUser(newUser);
+  setAuthError(newAuthError);
+}
+
+export { user, setUserAndAuthError, authError };
 
 onAuthStateChanged(auth, firebaseUser => {
   if (firebaseUser) {

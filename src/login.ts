@@ -1,6 +1,6 @@
 import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import auth from './auth';
-import { setUser } from './authSignal';
+import { setUserAndAuthError } from './authSignal';
 const googleProvider = new GoogleAuthProvider();
 
 
@@ -11,18 +11,37 @@ export function signInWithGoogle(_event: MouseEvent) {
       const credential = GoogleAuthProvider.credentialFromResult(result);
       if (credential === null) {
         console.error('credential was null');
-        setUser(null);
+        setUserAndAuthError(null, 'Error signing in with Google. No credential');
         return;
       }
       // The signed-in user info.
       const user = result.user;
+      console.log("cookie",document.cookie);
       if (user) {
-        setUser({
-          firebase_user_id: user.uid,
-          // TODO decide if I really need email or username or whatever
-          email: user.email || '',
-          // Add any other properties you need
+        // call verify_login to make sure the token is valid
+        fetch('/api/verify_login', {})
+        .then(response => {
+          if (!response.ok) {
+            // If the response status is not in the range 200-299
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          return response.json(); // Assuming the response is JSON, adjust as needed
+        })
+        .then(_data => {
+          console.log('verified login');
+          const newUser = {
+            firebase_user_id: user.uid,
+            email: user.email || '',
+          };
+          setUserAndAuthError(newUser, null);
+        })
+        .catch(error => {
+          console.error('Error verifying login:', error);
+          setUserAndAuthError(null, 'Error verifying login');
         });
+
+      } else {
+      setUserAndAuthError(null, 'Error signing in with Google');
       }
     })
     .catch(error => {
@@ -34,17 +53,16 @@ export function signInWithGoogle(_event: MouseEvent) {
       // The AuthCredential type that was used.
       // const credential = GoogleAuthProvider.credentialFromError(error);
       console.error(error);
-      setUser(null);
+      setUserAndAuthError(null, 'Error signing in')
     });
 }
 
 export async function logout() {
-  // set the user to null no matter what.  (I think that's the best approach anyway.)
-  // TODO review this
-  setUser(null);
   try {
     await signOut(auth);
+    setUserAndAuthError(null, null);
   } catch (error) {
     console.error('Error signing out:', error);
+    setUserAndAuthError(null, 'Error signing out');
   }
 }

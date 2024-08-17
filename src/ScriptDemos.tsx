@@ -1,4 +1,3 @@
-import { render } from 'solid-js/web';
 import { Accessor, For, createEffect, createResource } from 'solid-js';
 import * as styles from './index.css';
 import { EventNavSubjects } from './EventNavSubjects';

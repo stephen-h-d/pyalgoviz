@@ -14,6 +14,7 @@ import {
   ErrorDialog,
   LoadScriptDialog,
   SaveScriptDialog,
+  savingErrorText,
   SuccessDialog,
   WarningDialog,
 } from './solid_load_dialog';
@@ -31,11 +32,12 @@ import { ExecResult, PyAlgoVizScript, VizEvent } from './exec_result';
 import { renderEvent } from './VizOutput';
 import EnumSelect from './EnumSelect';
 import { signInWithGoogle as loginWithGoogle, logout } from './login';
-import { user } from './authSignal';
+import { authError, user } from './authSignal';
 import { LogManager } from './LogManager';
 import { postJson } from './postJson';
 import { CheckBox } from './CheckBox';
 import { EventNavSubjects } from './EventNavSubjects';
+import auth from './auth';
 
 declare module 'solid-js' {
 
@@ -165,6 +167,8 @@ function TopLeftContents(props: {
   // the success/error dialogs for saving (as opposed to "saving as")
   const [successOpen, setSuccessOpen] = createSignal(false);
   const [errorOpen, setErrorOpen] = createSignal(false);
+  // TODO give a link to report the bug
+
   const [unsavedDialogOpen, setUnsavedDialogOpen] = createSignal(false);
 
   // we do not want autoplay to be a reactive signal because changing auto-play
@@ -305,7 +309,7 @@ function TopLeftContents(props: {
         finishLoading={setCurrentSavedScriptInfo}
       />
       <SuccessDialog open={successOpen} setOpen={setSuccessOpen} />
-      <ErrorDialog open={errorOpen} setOpen={setErrorOpen} />
+      <ErrorDialog open={errorOpen} setOpen={setErrorOpen} text={savingErrorText} />
       <UnsavedChangesDialog
         open={unsavedDialogOpen}
         setOpen={setUnsavedDialogOpen}
@@ -881,9 +885,25 @@ function Footer() {
 
 export function Edit() {
   const [algoName, setAlgoName] = createSignal('');
+  const [errorOpen, setErrorOpen] = createSignal(false);
+  const authErrorText = () => {
+    const val = authError();
+    return val === null ? '' : val;
+  }
+  createEffect(() => {
+    if (authError() !== null) {
+      setErrorOpen(true);
+    }
+  });
 
   return (
     <div class={styles.app}>
+      <ErrorDialog
+        className={styles.errorDialog}
+        text={authErrorText}
+        open={errorOpen}
+        setOpen={setErrorOpen}
+      />
       <Header algoName={algoName} />
       <Content setAlgoName={setAlgoName} algoName={algoName} />
       <Footer />

@@ -156,13 +156,12 @@ export function SuccessDialog(props: {
 export function ErrorDialog(props: {
   open: Accessor<boolean>;
   setOpen: Setter<boolean>;
+  text: Accessor<string>;
+  className?: string;
 }) {
   return (
-    <dialog open={props.open()}>
-      <p>
-        Error saving scripts. Please try again. If that does not work, please
-        report this bug.
-      </p>
+    <dialog open={props.open()} class={props.className}>
+      <p>{props.text()}</p>
       <button onClick={() => props.setOpen(false)}>OK</button>
     </dialog>
   );
@@ -207,6 +206,8 @@ function DuplicateNameDialog(props: {
     />
   );
 }
+
+export const savingErrorText = () => 'Error saving script. Please try again. If that does not work, please report this bug.';
 
 export function SaveScriptDialog(props: {
   open: Accessor<boolean>;
@@ -323,7 +324,7 @@ export function SaveScriptDialog(props: {
         <p>{saving() && 'Saving...'}</p>
       </dialog>
       <SuccessDialog open={successOpen} setOpen={setSuccessOpen} />
-      <ErrorDialog open={errorOpen} setOpen={setErrorOpen} />
+      <ErrorDialog open={errorOpen} setOpen={setErrorOpen} text={savingErrorText}/>
       <DuplicateNameDialog
         open={duplicateOpen}
         setOpen={setDuplicateOpen}

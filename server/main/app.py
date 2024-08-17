@@ -132,6 +132,14 @@ def save() -> Response:
     return make_response(response, HTTPStatus.OK)
 
 
+@app.route("/api/verify_login", methods=["GET", "OPTIONS"])
+@jwta.authenticated
+def verify_login() -> Response:
+    user: User = current_user
+    logging.info(f"User {user.email} is logged in.")
+    return jsonify({"result": "success"})
+
+
 @app.route("/api/script_names", methods=["GET", "OPTIONS"])
 @jwta.authenticated
 def get_script_names() -> Response:

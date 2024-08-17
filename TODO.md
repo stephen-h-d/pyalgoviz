@@ -2,11 +2,11 @@
 1. Decide which other login ID providers to support and make TODO items for those.
 2. some of the TODOs in the code (need to clarify which ones)
 3. figure out how to deploy
-4. decide whether to make the run_script safe/secure enough or just take this out altogether.
+4. decide whether to make the run_script safe/secure enough or just take this out altogether. For now I have just removed it altogether.
 
 ### Ready-to-implement TODOs pre-launch
 
-1. log out user when token expired (currently shows as logged in even though the token fails)
+1. log out user when token expired (currently shows as logged in even though the token fails). Also detect it if they reload the page and they were logged in..?
 2. Write basic manual tests.
 3. Fill in Header and Footer content
 4. Add the ability to load public/published Algos

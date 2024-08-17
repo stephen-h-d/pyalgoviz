@@ -185,6 +185,11 @@ export const selectedTab = style({
   backgroundColor: '#d9d9d9',
 });
 
+export const errorDialog = style({
+  position: 'absolute',
+  zIndex: 2,
+});
+
 const global_args = { height: '100%', margin: '0' };
 export const global = style(global_args);
 globalStyle('html, body', global_args);
