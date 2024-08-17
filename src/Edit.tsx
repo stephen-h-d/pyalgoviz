@@ -725,7 +725,14 @@ arc(100,
     const currExecResult = execResult();
     logMgr.resetEvents(currExecResult.events);
 
-    if (
+    if (currExecResult.py_error !== null) {
+      let errorMsg = `Encountered error executing script at line ${currExecResult.py_error.lineno}.\n`;
+      errorMsg += currExecResult.py_error.error_msg;
+      console.log('error msg', errorMsg);
+      setAlgoLog(errorMsg);
+      setVizLog('');
+    }
+    else if (
       currEventIdx.current != -1 &&
       currEventIdx.current < currExecResult.events.length
     ) {
@@ -734,11 +741,6 @@ arc(100,
       setAlgoLog(algoLogContents);
       const vizLogContents = logMgr.getVizLogUntilIndex(currEventIdx.current);
       setVizLog(vizLogContents);
-    } else if (currExecResult.py_error !== null) {
-      let errorMsg = `Encountered error executing script at line ${currExecResult.py_error.lineno}.\n`;
-      errorMsg += currExecResult.py_error.error_msg;
-      setAlgoLog(errorMsg);
-      setVizLog('');
     }
   });
 

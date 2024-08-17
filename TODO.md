@@ -3,15 +3,21 @@
 2. some of the TODOs in the code (need to clarify which ones)
 3. figure out how to deploy
 4. decide whether to make the run_script safe/secure enough or just take this out altogether. For now I have just removed it altogether.
+5. decide whether and how to make keyboard shortcuts
 
 ### Ready-to-implement TODOs pre-launch
 
-1. Write basic manual tests.
-   1. Add the ability to load public/published Algos
+1. Write basic manual tests. Test:
+   1. the ability to load public/published Algos
+   2. the ability to load the user's own Algos
+   3. the ability to run a script without auto-play
+   4. the ability to run it with auto-play
+   5. prev, next, scroll bar
+   6. the Save button
+   7. the "Save As" button
+   8. more stuff...
 2. Fill in Header and Footer content
 3. Do error highlighting. Sometimes this will be the wrong line -- when it's a syntax error, it says line 0 for some reason.
-4. Fix ScriptDemo bug -- not showing Gaussian demo
-5. Fix viz log; everything ends up on one line
 
 ### Ready-to-implement TODOs post-launch
 1. Tell the user when Pyodide is loading, when it is done loading, when the code is running, and when it is done running.

@@ -246,7 +246,7 @@ class Executor(object):
                 "lineno": self.last_line,
                 "viz_output": self.events[-1]["viz_output"],
                 "viz_log": "",
-                "algo_log": "Program finished.Hit F9 or Ctrl-Enter to run the script again.",
+                "algo_log": "Program finished.",
             }
             self.events.append(event)
         except Exception as e:
@@ -295,7 +295,7 @@ class Executor(object):
                     for filename, lineno, fn, txt in tb
                     if filename in SCRIPT_FILENAMES
                 ]
-                error_msg = f"Executor Error executing script at line {lines[-1]}.{e}"
+                error_msg = f"Executor Error executing script at line {lines[-1]}.{e}\n"
                 viz_log.write(error_msg)
             finally:
                 current_log = algo_log
