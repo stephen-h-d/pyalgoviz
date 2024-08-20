@@ -23,12 +23,12 @@ export class LogManager {
     for (let i = 0; i < this.events.length; i++) {
       this.algoLogContent += this.events[i].algo_log;
       algoLogIndex = this.algoLogContent.length;
-      console.log("algoLogIndex",algoLogIndex,"algoLogContent",this.algoLogContent);
+      // console.log("algoLogIndex",algoLogIndex,"algoLogContent",this.algoLogContent);
       this.algoLogIndexCache.set(i, algoLogIndex);
 
       this.vizLogContent += this.events[i].viz_log;
       vizLogIndex = this.vizLogContent.length;
-      console.log("vizLogIndex",vizLogIndex,"vizLogContent",this.vizLogContent);
+      // console.log("vizLogIndex",vizLogIndex,"vizLogContent",this.vizLogContent);
       this.vizLogIndexCache.set(i, vizLogIndex);
     }
   }

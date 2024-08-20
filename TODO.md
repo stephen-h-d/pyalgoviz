@@ -17,7 +17,10 @@
    7. the "Save As" button
    8. more stuff...
 2. Fill in Header and Footer content
-3. Do error highlighting. Sometimes this will be the wrong line -- when it's a syntax error, it says line 0 for some reason.
+3. Do error highlighting. Scenarios:
+   1. syntax error in either the algo or the viz script. These should be shown immediately.
+   2. viz error. These now have a viz_error_line which can be set to the line number or None.
+   3. Algo error. There's only one of these. It should only be shown at the end.
 
 ### Ready-to-implement TODOs post-launch
 1. Tell the user when Pyodide is loading, when it is done loading, when the code is running, and when it is done running.

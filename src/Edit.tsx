@@ -680,8 +680,8 @@ arc(100,
       setRunningScript(true);
       try {
         const result_json = await asyncRun(executorScript, toRun);
+        setRunningScript(false);
         if (result_json !== undefined) {
-          setRunningScript(false);
           const run_result = JSON.parse(result_json) as ExecResult;
           setExecResult(run_result);
         } else {
@@ -728,7 +728,6 @@ arc(100,
     if (currExecResult.py_error !== null) {
       let errorMsg = `Encountered error executing script at line ${currExecResult.py_error.lineno}.\n`;
       errorMsg += currExecResult.py_error.error_msg;
-      console.log('error msg', errorMsg);
       setAlgoLog(errorMsg);
       setVizLog('');
     }

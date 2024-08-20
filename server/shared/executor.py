@@ -212,6 +212,16 @@ def make_error_dict(
     return error
 
 
+def make_syntax_error_dict(tb: TracebackType, e: SyntaxError) -> dict[str, Any]:
+    traceback.extract_tb(tb)
+    msg = "=" * 70
+    msg += "Syntax Error at line %d: %s" % (e.lineno, e.msg)
+    msg += "-" * 70
+    msg += "=" * 70
+    error = dict(error_msg=msg, lineno=e.lineno)
+    return error
+
+
 class Executor(object):
     def __init__(
         self, script: str | bytes, viz: str | bytes, exec_fn: Callable | None = None
@@ -221,7 +231,6 @@ class Executor(object):
         self.events = []
         self.state = []
         self.last_line = -1
-        self.viz = viz
         self.vars = {"log": log}
         self.vizPrims = {
             "text": text,
@@ -235,16 +244,29 @@ class Executor(object):
             "viz_output": viz_output,
         }
         try:
+            compiled_code = compile(script, "<string>", "exec")
+        except SyntaxError as e:
+            self.error = make_syntax_error_dict(e.__traceback__, e)
+            return
+
+        try:
+            self._compiled_viz = compile(viz, "<string>", "exec")
+        except SyntaxError as e:
+            self.error = make_syntax_error_dict(e.__traceback__, e)
+            return
+
+        try:
             with self:
                 if self.exec_fn is None:
                     self.exec_fn = exec
-                self.exec_fn(script, self.vars)
+                self.exec_fn(compiled_code, self.vars)
 
             # Add an extra "event" indicating the end of the program, with the output
             # being the output from the last line
             event = {
                 "lineno": self.last_line,
                 "viz_output": self.events[-1]["viz_output"],
+                "viz_error_line": None,
                 "viz_log": "",
                 "algo_log": "Program finished.",
             }
@@ -266,8 +288,6 @@ class Executor(object):
         now = time.time()
         if now - self.start > 10:
             self.events = self.events[-100:]
-            # TODO figure out if I can switch from  to  now that this is in a bona fide Python file.
-            # Since it is still being pasted into TS and run by Pyodide, that might not be the case.
             raise TimeoutError(
                 "Script ran for more than 10 seconds and has been canceled."
                 + "Showing just the last 100 events."
@@ -287,7 +307,7 @@ class Executor(object):
 
             try:
                 current_log = viz_log
-                self.exec_fn(self.viz, self.vizPrims)
+                self.exec_fn(self._compiled_viz, self.vizPrims)
             except Exception as e:
                 tb = traceback.extract_tb(sys.exc_info()[2])
                 lines = [0] + [
@@ -295,7 +315,10 @@ class Executor(object):
                     for filename, lineno, fn, txt in tb
                     if filename in SCRIPT_FILENAMES
                 ]
-                error_msg = f"Executor Error executing script at line {lines[-1]}.{e}\n"
+                lines[-1]
+                error_msg = (
+                    f"Error running visualization script at line {lines[-1]}.{e}\n"
+                )
                 viz_log.write(error_msg)
             finally:
                 current_log = algo_log
@@ -304,10 +327,11 @@ class Executor(object):
             self.last_line = frame.f_lineno
             return self.trace
 
-    def createEvent(self, lineno: int) -> None:
+    def createEvent(self, lineno: int, viz_error_line: Optional[int]) -> None:
         event = {
-            "lineno": lineno,
+            "lineno": lineno,  # the line number of the algo script.
             "viz_output": viz_output,
+            "viz_error_line": viz_error_line,
             "viz_log": viz_log.getvalue(),
             "algo_log": algo_log.getvalue(),
         }
