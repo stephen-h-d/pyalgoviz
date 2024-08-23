@@ -6,6 +6,7 @@ export interface PythonScriptError {
 export interface VizEvent {
   lineno: number;
   viz_output: string; // a JavaScript script
+  viz_error_line: number | null;
   viz_log: string;
   algo_log: string;
 }

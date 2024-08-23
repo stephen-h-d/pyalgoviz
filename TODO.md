@@ -21,6 +21,7 @@
    1. syntax error in either the algo or the viz script. These should be shown immediately.
    2. viz error. These now have a viz_error_line which can be set to the line number or None.
    3. Algo error. There's only one of these. It should only be shown at the end.
+4. Do some sort of notifications to the user about pyodide loading.
 
 ### Ready-to-implement TODOs post-launch
 1. Tell the user when Pyodide is loading, when it is done loading, when the code is running, and when it is done running.

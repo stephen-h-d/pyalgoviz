@@ -53,6 +53,7 @@ interface EditorArgs {
   contents: Accessor<string>;
   setContents?: Setter<string>;
   normalHighlightLine: Accessor<number>;
+  errorHighlightLine?: Accessor<number | null>;
   extensions: Array<Extension>;
   textReadOnly: boolean;
 }
@@ -76,6 +77,14 @@ function editor(element: HTMLInputElement, argsAccessor: Accessor<EditorArgs>) {
   createEffect(() => {
     const newHighlightLine = args.normalHighlightLine();
     editor.setHighlightLine(newHighlightLine);
+  });
+
+  createEffect(() => {
+    if (args.errorHighlightLine !== undefined) {
+      const errorLine = args.errorHighlightLine();
+      const newErrorHighlightLine = errorLine === null ? -1 : errorLine;
+      editor.setErrorLine(newErrorHighlightLine);
+    }
   });
 
   // TODO improve this by combining the presence of `setContents` with whether it's readonly
@@ -143,6 +152,7 @@ function TopLeftContents(props: {
   run: (locally: boolean) => Promise<void>;
   algo: Accessor<string>;
   setAlgo: Setter<string>;
+  algoErrorLine: () => number | null; // NOTE: I am not sure yet if this'll work or if SolidJS rendering will not work with this
   algoName: Accessor<string>;
   setAlgoName: Setter<String>;
   viz: Accessor<string>;
@@ -719,6 +729,22 @@ arc(100,
     return result;
   };
 
+  const algoErrorLine = () => {
+    const execResultVal = execResult();
+    if (execResultVal.py_error === null) {
+      return null;
+    }
+    return execResultVal.py_error.lineno;
+  }
+
+  const vizErrorLine = () => {
+    const currentEvent = eventNavigator.getEventVal()();
+    if (currentEvent === null) {
+      return null;
+    }
+    return currentEvent.viz_error_line;
+  }
+
   const logMgr = new LogManager();
   createEffect(() => {
     const currEventIdx = eventIdx();
@@ -756,7 +782,9 @@ arc(100,
         />
         <div class={styles.top_left_cell}>
           <TopLeftContents
+            // TODO consolidate all of these arguments a bit.
             eventNavSubjects={eventNavSubjects}
+            algoErrorLine={algoErrorLine}
             currentEvent={eventNavigator.getEventVal()}
             currentEventIdx={eventIdx}
             run={run}
