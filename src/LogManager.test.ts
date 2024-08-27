@@ -9,6 +9,7 @@ describe('LogManager', () => {
         fc.array(
           fc.record({
             lineno: fc.nat(),
+            viz_error_line: fc.option(fc.nat()),
             viz_output: fc.string(),
             viz_log: fc.string(),
             algo_log: fc.string(),
@@ -40,6 +41,7 @@ describe('LogManager', () => {
         fc.array(
           fc.record({
             lineno: fc.nat(),
+            viz_error_line: fc.option(fc.nat()),
             viz_output: fc.string(),
             viz_log: fc.string(),
             algo_log: fc.string(),

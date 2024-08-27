@@ -82,6 +82,7 @@ function editor(element: HTMLInputElement, argsAccessor: Accessor<EditorArgs>) {
   createEffect(() => {
     if (args.errorHighlightLine !== undefined) {
       const errorLine = args.errorHighlightLine();
+      // console.log('errorHighlightLine:', errorLine);
       const newErrorHighlightLine = errorLine === null ? -1 : errorLine;
       editor.setErrorLine(newErrorHighlightLine);
     }
@@ -152,7 +153,7 @@ function TopLeftContents(props: {
   run: (locally: boolean) => Promise<void>;
   algo: Accessor<string>;
   setAlgo: Setter<string>;
-  algoErrorLine: () => number | null; // NOTE: I am not sure yet if this'll work or if SolidJS rendering will not work with this
+  algoErrorLine: () => number | null;
   algoName: Accessor<string>;
   setAlgoName: Setter<String>;
   viz: Accessor<string>;
@@ -300,6 +301,8 @@ function TopLeftContents(props: {
     // eslint-disable-next-line solid/reactivity
     setContents: props.setAlgo,
     normalHighlightLine,
+    // eslint-disable-next-line solid/reactivity
+    errorHighlightLine: props.algoErrorLine,
     extensions: [basicSetup, fixedHeightEditor, python()],
     textReadOnly: false,
   };
@@ -416,6 +419,7 @@ function TopLeftContents(props: {
 function BottomLeftContents(props: {
   viz: Accessor<string>;
   setViz: Setter<string>;
+  vizErrorLine: () => number | null;
 }) {
   const editorArgs: EditorArgs = {
     // eslint-disable-next-line solid/reactivity
@@ -423,6 +427,8 @@ function BottomLeftContents(props: {
     // eslint-disable-next-line solid/reactivity
     setContents: props.setViz,
     normalHighlightLine: () => -1, // we don't highlight anything in this editor
+    // eslint-disable-next-line solid/reactivity
+    errorHighlightLine: props.vizErrorLine,
     extensions: [basicSetup, fixedHeightEditor, python()],
     textReadOnly: false,
   };
@@ -731,17 +737,26 @@ arc(100,
 
   const algoErrorLine = () => {
     const execResultVal = execResult();
-    if (execResultVal.py_error === null) {
+    if (execResultVal.py_error === null || execResultVal.py_error.script !== 'algo') {
       return null;
     }
     return execResultVal.py_error.lineno;
   }
 
   const vizErrorLine = () => {
+    const execResultVal = execResult();
     const currentEvent = eventNavigator.getEventVal()();
-    if (currentEvent === null) {
+
+    // first check if it's a syntax viz error
+    if (execResultVal.py_error !== null && execResultVal.py_error.script === 'viz') {
+      // console.log('viz syntax  error line:', execResultVal.py_error.lineno);
+      return execResultVal.py_error.lineno;
+    }
+
+    if (currentEvent === null || currentEvent.viz_error_line === null) {
       return null;
     }
+    // console.log('viz error line for event:', currentEvent.viz_error_line);
     return currentEvent.viz_error_line;
   }
 
@@ -804,7 +819,8 @@ arc(100,
           />
         </div>
         <div class={styles.bottom_left_cell}>
-          <BottomLeftContents viz={viz} setViz={setViz} />
+          <BottomLeftContents viz={viz} setViz={setViz}
+            vizErrorLine={vizErrorLine} />
           <div
             class={styles.top_edge}
             onMouseDown={resizer.resize_cell_11_listener()}

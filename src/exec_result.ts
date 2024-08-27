@@ -1,6 +1,7 @@
 export interface PythonScriptError {
   lineno: number;
   error_msg: string;
+  script: "algo" | "viz";
 }
 
 export interface VizEvent {

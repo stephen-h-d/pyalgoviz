@@ -208,17 +208,19 @@ def make_error_dict(
     msg += "-" * 70
     msg += "%s" % "".join(["%s = %r" % v for v in vars_array])
     msg += "=" * 70
-    error = dict(error_msg=msg, lineno=lines[-1])
+    error = dict(error_msg=msg, lineno=lines[-1], script="algo")
     return error
 
 
-def make_syntax_error_dict(tb: TracebackType, e: SyntaxError) -> dict[str, Any]:
+def make_syntax_error_dict(
+    tb: TracebackType, e: SyntaxError, script: str
+) -> dict[str, Any]:
     traceback.extract_tb(tb)
     msg = "=" * 70
     msg += "Syntax Error at line %d: %s" % (e.lineno, e.msg)
     msg += "-" * 70
     msg += "=" * 70
-    error = dict(error_msg=msg, lineno=e.lineno)
+    error = dict(error_msg=msg, lineno=e.lineno, script=script)
     return error
 
 
@@ -246,13 +248,13 @@ class Executor(object):
         try:
             compiled_code = compile(script, "<string>", "exec")
         except SyntaxError as e:
-            self.error = make_syntax_error_dict(e.__traceback__, e)
+            self.error = make_syntax_error_dict(e.__traceback__, e, "algo")
             return
 
         try:
             self._compiled_viz = compile(viz, "<string>", "exec")
         except SyntaxError as e:
-            self.error = make_syntax_error_dict(e.__traceback__, e)
+            self.error = make_syntax_error_dict(e.__traceback__, e, "viz")
             return
 
         try:
@@ -305,6 +307,8 @@ class Executor(object):
                 self.vizPrims[k] = v
             self.vizPrims["__lineno__"] = frame.f_lineno
 
+            viz_error_line = None
+
             try:
                 current_log = viz_log
                 self.exec_fn(self._compiled_viz, self.vizPrims)
@@ -315,15 +319,15 @@ class Executor(object):
                     for filename, lineno, fn, txt in tb
                     if filename in SCRIPT_FILENAMES
                 ]
-                lines[-1]
+                viz_error_line = lines[-1]
                 error_msg = (
-                    f"Error running visualization script at line {lines[-1]}.{e}\n"
+                    f"Error running visualization script at line {viz_error_line}.{e}\n"
                 )
                 viz_log.write(error_msg)
             finally:
                 current_log = algo_log
 
-            self.createEvent(frame.f_lineno)
+            self.createEvent(frame.f_lineno, viz_error_line)
             self.last_line = frame.f_lineno
             return self.trace
 
