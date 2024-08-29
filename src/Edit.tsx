@@ -37,7 +37,7 @@ import { LogManager } from './LogManager';
 import { postJson } from './postJson';
 import { CheckBox } from './CheckBox';
 import { EventNavSubjects } from './EventNavSubjects';
-import auth from './auth';
+import toast, { Toaster } from 'solid-toast';
 
 declare module 'solid-js' {
 
@@ -661,6 +661,21 @@ function IDE(props: {
   const pyodideReady = () => {
     return pyodideReadyAcc() === true;
   };
+  let loadingToastId: string | undefined;
+
+  createEffect(() => {
+    if (pyodideReady()) {
+      if (loadingToastId !== undefined) {
+        toast.remove(loadingToastId);
+      }
+      toast.success('Pyodide has loaded!');
+    } else {
+      // delay the loading message for half a second to give other things a chance to render
+      setTimeout(() => {
+        loadingToastId = toast.loading('Loading Pyodide...');
+      }, 500);
+    }
+  });
 
   const [algo, setAlgo] = createSignal(`
 for x in range(50, 500, 50):
@@ -956,6 +971,15 @@ export function Edit() {
       <Header algoName={algoName} />
       <Content setAlgoName={setAlgoName} algoName={algoName} />
       <Footer />
+      <Toaster
+        position="top-center"
+        gutter={8}
+        toastOptions={{
+          // Define default options that each toast will inherit. Will be overwritten by individual toast options
+          className: '',
+          duration: 3000,
+        }}
+      />
     </div>
   );
 }

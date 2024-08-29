@@ -17,7 +17,6 @@
    7. the "Save As" button
    8. more stuff...
 2. Fill in Header and Footer content
-4. Do some sort of notifications to the user about pyodide loading.
 
 ### Ready-to-implement TODOs post-launch
 1. Tell the user when Pyodide is loading, when it is done loading, when the code is running, and when it is done running.
