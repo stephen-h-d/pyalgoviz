@@ -5,6 +5,7 @@ from typing import Optional
 import attrs
 import firebase_admin  # type: ignore[import]
 from firebase_admin import firestore
+from google.oauth2 import service_account
 
 from server.main.db.models import Algorithm
 from server.main.db.models import AlgorithmSummary
@@ -17,12 +18,11 @@ from server.main.db.protocol import SaveAlgorithmArgs
 
 
 class FirestoreDatabase(DatabaseProtocol):
-    def __init__(self, app: firebase_admin.App) -> None:
-        self._app = app
-        self._db = firestore.client()
+    def __init__(self, client: firestore.Client) -> None:
+        self._client = client
 
     def get_user(self, user_id: FirebaseUserId) -> Optional[User]:
-        user_ref = self._db.collection("users").document(user_id)
+        user_ref = self._client.collection("users").document(user_id)
         user_doc = user_ref.get()
         if user_doc.exists:
             data = user_doc.to_dict()
@@ -30,11 +30,13 @@ class FirestoreDatabase(DatabaseProtocol):
         return None
 
     def save_user(self, user: User) -> None:
-        user_ref = self._db.collection("users").document(user.firebase_user_id)
+        user_ref = self._client.collection("users").document(user.firebase_user_id)
         user_ref.set({"email": user.email})
 
     def get_algo(self, author_email: str, name: str) -> Optional[Algorithm]:
-        algo_ref = self._db.collection("algorithms").document(f"{author_email}-{name}")
+        algo_ref = self._client.collection("algorithms").document(
+            f"{author_email}-{name}"
+        )
         algo_doc = algo_ref.get()
         if algo_doc.exists:
             data = algo_doc.to_dict()
@@ -51,7 +53,7 @@ class FirestoreDatabase(DatabaseProtocol):
         return None
 
     def save_algo(self, algo: SaveAlgorithmArgs) -> None:
-        algo_ref = self._db.collection("algorithms").document(
+        algo_ref = self._client.collection("algorithms").document(
             f"{algo.author_email}-{algo.name}"
         )
         algo_ref.set(
@@ -68,7 +70,7 @@ class FirestoreDatabase(DatabaseProtocol):
 
     def get_algo_summaries(self, author_email: str) -> List[AlgorithmSummary]:
         # Fetch algorithms authored by the user
-        algos_ref = self._db.collection("algorithms").where(
+        algos_ref = self._client.collection("algorithms").where(
             "author_email", "==", author_email
         )
         algos = algos_ref.stream()
@@ -79,9 +81,12 @@ class FirestoreDatabase(DatabaseProtocol):
 
         # Fetch public algorithms excluding the ones authored by the user
         public_algos_ref = (
-            self._db.collection("algorithms")
-            .where("public", "==", True)
-            .where("author_email", "!=", author_email)
+            self._client.collection("algorithms")
+            # note: these where clauses trigger a warning.
+            # https://stackoverflow.com/questions/76110267/firestore-warning-on-filtering-with-positional-arguments-how-to-use-filter-kw
+            # has a way to fix it, perhaps, but that means importing a FieldFilter from google.cloud.firestore_v1, and
+            # that doesn't seem worth it / I don't know if that'd work.
+            .where("public", "==", True).where("author_email", "!=", author_email)
         )
         public_algos = public_algos_ref.stream()
         summaries += [
@@ -91,7 +96,9 @@ class FirestoreDatabase(DatabaseProtocol):
         return summaries
 
     def get_public_algos(self) -> List[ScriptDemoInfo]:
-        public_algos_ref = self._db.collection("algorithms").where("public", "==", True)
+        public_algos_ref = self._client.collection("algorithms").where(
+            "public", "==", True
+        )
         public_algos = public_algos_ref.stream()
         return [
             ScriptDemoInfo(
@@ -101,3 +108,11 @@ class FirestoreDatabase(DatabaseProtocol):
             )
             for algo in public_algos
         ]
+
+
+def connect_to_fs(
+    project: str, credentials_file: str, database_id: str
+) -> firestore.Client:
+    firebase_admin.initialize_app()
+    credentials = service_account.Credentials.from_service_account_file(credentials_file)
+    return firestore.Client(project, credentials, database_id)

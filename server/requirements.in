@@ -2,7 +2,7 @@ Flask
 pre-commit
 google-cloud-core
 google-cloud-datastore
-firebase-admin
+firebase-admin>=6.2.0
 Flask-Login
 attrs
 pre-commit

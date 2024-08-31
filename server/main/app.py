@@ -32,15 +32,16 @@ login_manager = LoginManager()
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
 PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT")
+CREDENTIALS = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
 USE_GOOGLE_DB = os.environ.get("USE_GOOGLE_DB", "False")
 
 db: DatabaseProtocol
 
 if USE_GOOGLE_DB.lower() == "true":
-    import firebase_admin  # type: ignore[import]
-    from server.main.db.fsdb import FirestoreDatabase
+    from server.main.db.fsdb import FirestoreDatabase, connect_to_fs
 
-    fb = FirestoreDatabase(firebase_admin.initialize_app())
+    client = connect_to_fs(PROJECT, CREDENTIALS, "pyalgoviz-test")
+    db = FirestoreDatabase(client)
 else:
     from server.main.db.mdb import MemoryDatabase
 

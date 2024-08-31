@@ -1,29 +1,31 @@
+import os
 import sys
 from datetime import datetime
 
-import firebase_admin  # type: ignore[import]
-from firebase_admin import firestore
+from firebase_admin import firestore  # type: ignore[import]
 
+from server.main.db.fsdb import connect_to_fs
+from server.main.db.fsdb import FirestoreDatabase
 from server.main.db.mdb import MemoryDatabase
 from server.main.db.models import User
 from server.main.db.protocol import DatabaseProtocol
 from server.main.db.protocol import SaveAlgorithmArgs
 
 
-def delete_all_collections(_db) -> None:  # type: ignore[no-untyped-def]
-    collections = _db.collections()
-    for collection in collections:
-        _delete_collection(collection)
-
-
-def _delete_collection(collection_ref, batch_size=500) -> None:  # type: ignore[no-untyped-def]
+def _empty_collection(collection_ref, batch_size=500) -> None:  # type: ignore[no-untyped-def]
     docs = collection_ref.limit(batch_size).stream()
-    deleted = 0
+    deleted: int = 0
     for doc in docs:
         doc.reference.delete()
         deleted += 1
     if deleted >= batch_size:
-        _delete_collection(collection_ref, batch_size)
+        _empty_collection(collection_ref, batch_size)
+
+
+def empty_all_collections(client: firestore.Client) -> None:
+    collections = client.collections()
+    for collection in collections:
+        _empty_collection(collection)
 
 
 def test_database_protocol(db: DatabaseProtocol) -> None:
@@ -127,13 +129,12 @@ def main() -> None:
     if db_type == "memory":
         db = MemoryDatabase()
     elif db_type == "firestore":
-        firebase_admin.initialize_app()
-        db = firestore.client()
-        # Clear all collections in the Firestore test database before testing.
-        delete_all_collections(db)
-
-        # db = FirestoreDatabase(app)
-        raise ValueError("undo this")
+        project = os.environ.get("GOOGLE_CLOUD_PROJECT")
+        cred_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+        client = connect_to_fs(project, cred_path, "unit-test")
+        # clear the collections before testing. This is why we use a separate "unit-test" database
+        empty_all_collections(client)
+        db = FirestoreDatabase(client)
     else:
         raise ValueError(f"Unknown database type: {db_type}")
 

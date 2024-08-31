@@ -88,6 +88,7 @@ python -m server.main.db.test_db memory
 
  # tests the Google Cloud-based version, which tests that the DatabaseProtocol implementation is correct
 export GOOGLE_CLOUD_PROJECT=pyalgoviz-test
+export GOOGLE_APPLICATION_CREDENTIALS=$HOME/keys/pyalgoviz-test-e14f2f427b51.json
 python -m server.main.db.test_db firestore
 ```
 
