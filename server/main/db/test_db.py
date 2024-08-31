@@ -1,11 +1,29 @@
 import sys
 from datetime import datetime
 
-from server.main.db.fsdb import FirestoreDatabase
+import firebase_admin  # type: ignore[import]
+from firebase_admin import firestore
+
 from server.main.db.mdb import MemoryDatabase
 from server.main.db.models import User
 from server.main.db.protocol import DatabaseProtocol
 from server.main.db.protocol import SaveAlgorithmArgs
+
+
+def delete_all_collections(_db) -> None:  # type: ignore[no-untyped-def]
+    collections = _db.collections()
+    for collection in collections:
+        _delete_collection(collection)
+
+
+def _delete_collection(collection_ref, batch_size=500) -> None:  # type: ignore[no-untyped-def]
+    docs = collection_ref.limit(batch_size).stream()
+    deleted = 0
+    for doc in docs:
+        doc.reference.delete()
+        deleted += 1
+    if deleted >= batch_size:
+        _delete_collection(collection_ref, batch_size)
 
 
 def test_database_protocol(db: DatabaseProtocol) -> None:
@@ -109,7 +127,13 @@ def main() -> None:
     if db_type == "memory":
         db = MemoryDatabase()
     elif db_type == "firestore":
-        db = FirestoreDatabase()
+        firebase_admin.initialize_app()
+        db = firestore.client()
+        # Clear all collections in the Firestore test database before testing.
+        delete_all_collections(db)
+
+        # db = FirestoreDatabase(app)
+        raise ValueError("undo this")
     else:
         raise ValueError(f"Unknown database type: {db_type}")
 

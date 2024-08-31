@@ -17,8 +17,8 @@ from server.main.db.protocol import SaveAlgorithmArgs
 
 
 class FirestoreDatabase(DatabaseProtocol):
-    def __init__(self) -> None:
-        self._app = firebase_admin.initialize_app()
+    def __init__(self, app: firebase_admin.App) -> None:
+        self._app = app
         self._db = firestore.client()
 
     def get_user(self, user_id: FirebaseUserId) -> Optional[User]:

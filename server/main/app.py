@@ -37,9 +37,10 @@ USE_GOOGLE_DB = os.environ.get("USE_GOOGLE_DB", "False")
 db: DatabaseProtocol
 
 if USE_GOOGLE_DB.lower() == "true":
+    import firebase_admin  # type: ignore[import]
     from server.main.db.fsdb import FirestoreDatabase
 
-    fb = FirestoreDatabase()
+    fb = FirestoreDatabase(firebase_admin.initialize_app())
 else:
     from server.main.db.mdb import MemoryDatabase
 
