@@ -13,12 +13,12 @@ if TYPE_CHECKING:
     T = TypeVar("T", bound=AttrsInstance)
 
 import attrs
-from main.db.models import Algorithm, AlgorithmSummary
-from main.db.models import Event
-from main.db.models import ScriptDemoInfo
-from main.db.models import User
-from main.db.models import FirebaseUserId
-from main.db.protocol import SaveAlgorithmArgs, DatabaseProtocol
+from server.main.db.models import Algorithm, AlgorithmSummary
+from server.main.db.models import Event
+from server.main.db.models import ScriptDemoInfo
+from server.main.db.models import User
+from server.main.db.models import FirebaseUserId
+from server.main.db.protocol import SaveAlgorithmArgs, DatabaseProtocol
 
 MODEL_ATTRS_CLASSES = {
     "Algorithm": Algorithm,
@@ -137,7 +137,7 @@ class MemoryDatabase(DatabaseProtocol):
 
     @classmethod
     def from_dict(cls, d: dict) -> MemoryDatabase:
-        users = {k: dict_to_attrs(User, v) for k, v in d.get("users", {}).items()}  # type: ignore
+        users = {k: dict_to_attrs(User, v) for k, v in d.get("users", {}).items()}
         algos = {k: Algorithm.from_dict(v) for k, v in d.get("algos", {}).items()}
         return cls(users=users, algos=algos)
 

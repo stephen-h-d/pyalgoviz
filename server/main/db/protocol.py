@@ -1,12 +1,13 @@
 from typing import Protocol
 
 import attrs
-from main.db.models import Algorithm
-from main.db.models import AlgorithmSummary
-from main.db.models import Event
-from main.db.models import FirebaseUserId
-from main.db.models import ScriptDemoInfo
-from main.db.models import User
+
+from server.main.db.models import Algorithm
+from server.main.db.models import AlgorithmSummary
+from server.main.db.models import Event
+from server.main.db.models import FirebaseUserId
+from server.main.db.models import ScriptDemoInfo
+from server.main.db.models import User
 
 
 @attrs.define(kw_only=True)

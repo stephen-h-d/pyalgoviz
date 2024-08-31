@@ -5,14 +5,15 @@ from typing import Optional
 import attrs
 import firebase_admin  # type: ignore[import]
 from firebase_admin import firestore
-from main.db.models import Algorithm
-from main.db.models import AlgorithmSummary
-from main.db.models import Event
-from main.db.models import FirebaseUserId
-from main.db.models import ScriptDemoInfo
-from main.db.models import User
-from main.db.protocol import DatabaseProtocol
-from main.db.protocol import SaveAlgorithmArgs
+
+from server.main.db.models import Algorithm
+from server.main.db.models import AlgorithmSummary
+from server.main.db.models import Event
+from server.main.db.models import FirebaseUserId
+from server.main.db.models import ScriptDemoInfo
+from server.main.db.models import User
+from server.main.db.protocol import DatabaseProtocol
+from server.main.db.protocol import SaveAlgorithmArgs
 
 
 class FirestoreDatabase(DatabaseProtocol):

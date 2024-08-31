@@ -1,11 +1,11 @@
 import sys
 from datetime import datetime
 
-from main.db.fsdb import FirestoreDatabase
-from main.db.mdb import MemoryDatabase
-from main.db.models import User
-from main.db.protocol import DatabaseProtocol
-from main.db.protocol import SaveAlgorithmArgs
+from server.main.db.fsdb import FirestoreDatabase
+from server.main.db.mdb import MemoryDatabase
+from server.main.db.models import User
+from server.main.db.protocol import DatabaseProtocol
+from server.main.db.protocol import SaveAlgorithmArgs
 
 
 def test_database_protocol(db: DatabaseProtocol) -> None:

@@ -15,14 +15,15 @@ from flask import send_file
 from flask import send_from_directory
 from flask_login import current_user  # type: ignore[import]
 from flask_login import LoginManager
-from main.db.models import Event
-from main.db.models import FirebaseUserId
-from main.db.models import User
-from main.db.protocol import DatabaseProtocol
-from main.db.protocol import SaveAlgorithmArgs
-from main.middleware import JWTAuthenticator
 
-# from main.run_script import run_script  # type: ignore[attr-defined]
+from server.main.db.models import Event
+from server.main.db.models import FirebaseUserId
+from server.main.db.models import User
+from server.main.db.protocol import DatabaseProtocol
+from server.main.db.protocol import SaveAlgorithmArgs
+from server.main.middleware import JWTAuthenticator
+
+# from server.main.run_script import run_script  # type: ignore[attr-defined]
 
 logger = logging.getLogger(__name__)
 
@@ -36,11 +37,11 @@ USE_GOOGLE_DB = os.environ.get("USE_GOOGLE_DB", "False")
 db: DatabaseProtocol
 
 if USE_GOOGLE_DB.lower() == "true":
-    from main.db.fsdb import FirestoreDatabase
+    from server.main.db.fsdb import FirestoreDatabase
 
     fb = FirestoreDatabase()
 else:
-    from main.db.mdb import MemoryDatabase
+    from server.main.db.mdb import MemoryDatabase
 
     db = MemoryDatabase.load_cached_demo_db()
 
