@@ -79,6 +79,18 @@ gcloud config set project pyalgoviz-test
 gcloud auth application-default login
 ```
 
+#### Testing
+
+To test the database functionality:
+```
+# tests the in-memory version, which is useful for local development and testing
+python -m server.main.db.test_db memory
+
+ # tests the Google Cloud-based version, which tests that the DatabaseProtocol implementation is correct
+export GOOGLE_CLOUD_PROJECT=pyalgoviz-test
+python -m server.main.db.test_db firestore
+```
+
 #### Running
 
 To run the backend server locally:
