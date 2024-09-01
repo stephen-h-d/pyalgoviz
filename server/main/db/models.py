@@ -50,9 +50,9 @@ class Algorithm:
     name: str
     algo_script: str
     viz_script: str
-    public: bool = False
-    # not sure, but I think `events` in the old model was a way to cache a run of the
-    # script for the public "all" page. Assuming that for now.
+    requested_public: bool = False
+    # if and only if it has cached events and requested_public is true, it is public.
+    # cached events will be set manually for now.
     cached_events: list[Event] = []
     last_updated: datetime | None = None
 
@@ -62,7 +62,7 @@ class Algorithm:
             "name": self.name,
             "algo_script": self.algo_script,
             "viz_script": self.viz_script,
-            "public": self.public,
+            "requested_public": self.requested_public,
             "cached_events": [attrs.asdict(event) for event in self.cached_events],
             "last_updated": self.last_updated.strftime("%Y-%m-%d %H:%M:%S")
             if self.last_updated is not None
@@ -78,7 +78,7 @@ class Algorithm:
             name=d["name"],
             algo_script=d["algo_script"],
             viz_script=d["viz_script"],
-            public=d["public"],
+            requested_public=d["requested_public"],
             cached_events=events,
             last_updated=last_updated,
         )
@@ -92,7 +92,7 @@ class ScriptDemoInfo:
 
     @classmethod
     def from_algorithm(cls, algo: Algorithm) -> ScriptDemoInfo:
-        if algo.public is False:
+        if algo.requested_public is False:
             raise ValueError("Only public algorithms can be used as script demos")
 
         return cls(

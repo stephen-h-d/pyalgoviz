@@ -87,7 +87,7 @@ class MemoryDatabase(DatabaseProtocol):
 
     def save_algo(self, args: SaveAlgorithmArgs) -> None:
         algo_key = self._make_algo_key(args.author_email, args.name)
-        public = args.public
+        public = args.requested_public
         if public is None:
             prev_algo = self.algos.get(algo_key)
             if prev_algo is None:
@@ -96,13 +96,13 @@ class MemoryDatabase(DatabaseProtocol):
                 # public to False in this case.
                 public = False
             else:
-                public = prev_algo.public
+                public = prev_algo.requested_public
         algo = Algorithm(
             author_email=args.author_email,
             name=args.name,
             algo_script=args.algo_script,
             viz_script=args.viz_script,
-            public=public,
+            requested_public=public,
             cached_events=args.cached_events,
             last_updated=datetime.now(),
         )
@@ -112,21 +112,17 @@ class MemoryDatabase(DatabaseProtocol):
         return [
             AlgorithmSummary(name=algo.name, author_email=algo.author_email)
             for algo in self.algos.values()
-            if author_email == algo.author_email or algo.public is True
+            if author_email == algo.author_email
+            or (algo.requested_public is True and len(algo.cached_events) > 0)
         ]
 
     def get_public_algos(self) -> list[ScriptDemoInfo]:
-        # sd = attrs.asdict(self)
-        # with open("cached_demo_db.json","w") as f:
-        #     json.dump(sd, f)
-        #
-        # back_converted = dict_to_attrs(MemoryDatabase, sd)
-        # print("succcess...")
-
+        values = self.algos.values()
+        print(f"values {values}")
         return [
             ScriptDemoInfo.from_algorithm(algo)
-            for algo in self.algos.values()
-            if algo.public is True
+            for algo in values
+            if algo.requested_public is True and len(algo.cached_events) > 0
         ]
 
     def to_dict(self) -> dict:
@@ -170,7 +166,7 @@ def main() -> None:
         name="Test Algorithm",
         algo_script="print('Hello World')",
         viz_script="print('Visualize Hello World')",
-        public=True,
+        requested_public=True,
         cached_events=[Event(lineno=1, viz_output="viz", viz_log="log", algo_log="log")],
     )
     db.save_algo(algo)

@@ -1,10 +1,13 @@
 from datetime import datetime
+from typing import cast
 from typing import List
 from typing import Optional
+from typing import TypeVar
 
 import attrs
 import firebase_admin  # type: ignore[import]
 from firebase_admin import firestore
+from google.cloud.firestore_v1 import DocumentSnapshot
 from google.oauth2 import service_account
 
 from server.main.db.models import Algorithm
@@ -15,6 +18,16 @@ from server.main.db.models import ScriptDemoInfo
 from server.main.db.models import User
 from server.main.db.protocol import DatabaseProtocol
 from server.main.db.protocol import SaveAlgorithmArgs
+
+
+T = TypeVar("T")
+
+
+def get_with_default(doc: DocumentSnapshot, key: str, default: T) -> T:
+    result = doc.get(key)
+    if result is None:
+        return default
+    return cast(T, result)
 
 
 class FirestoreDatabase(DatabaseProtocol):
@@ -46,7 +59,7 @@ class FirestoreDatabase(DatabaseProtocol):
                 name=data["name"],
                 algo_script=data["algo_script"],
                 viz_script=data["viz_script"],
-                public=data["public"],
+                requested_public=data["requested_public"],
                 cached_events=events,
                 last_updated=data.get("last_updated"),
             )
@@ -62,14 +75,14 @@ class FirestoreDatabase(DatabaseProtocol):
                 "name": algo.name,
                 "algo_script": algo.algo_script,
                 "viz_script": algo.viz_script,
-                "public": algo.public,
+                "requested_public": algo.requested_public,
                 "cached_events": [attrs.asdict(event) for event in algo.cached_events],
                 "last_updated": datetime.now(),
             }
         )
 
     def get_algo_summaries(self, author_email: str) -> List[AlgorithmSummary]:
-        # Fetch algorithms authored by the user
+        # Fetch all algorithms authored by the user
         algos_ref = self._client.collection("algorithms").where(
             "author_email", "==", author_email
         )
@@ -82,22 +95,20 @@ class FirestoreDatabase(DatabaseProtocol):
         # Fetch public algorithms excluding the ones authored by the user
         public_algos_ref = (
             self._client.collection("algorithms")
-            # note: these where clauses trigger a warning.
-            # https://stackoverflow.com/questions/76110267/firestore-warning-on-filtering-with-positional-arguments-how-to-use-filter-kw
-            # has a way to fix it, perhaps, but that means importing a FieldFilter from google.cloud.firestore_v1, and
-            # that doesn't seem worth it / I don't know if that'd work.
-            .where("public", "==", True).where("author_email", "!=", author_email)
+            .where("requested_public", "==", True)
+            .where("author_email", "!=", author_email)
         )
         public_algos = public_algos_ref.stream()
         summaries += [
             AlgorithmSummary(author_email=algo.get("author_email"), name=algo.get("name"))
             for algo in public_algos
+            if get_with_default(algo, "cached_events", default=[]) != []
         ]
         return summaries
 
     def get_public_algos(self) -> List[ScriptDemoInfo]:
         public_algos_ref = self._client.collection("algorithms").where(
-            "public", "==", True
+            "requested_public", "==", True
         )
         public_algos = public_algos_ref.stream()
         return [
@@ -107,6 +118,7 @@ class FirestoreDatabase(DatabaseProtocol):
                 cached_events=[Event(**event) for event in algo.get("cached_events")],
             )
             for algo in public_algos
+            if get_with_default(algo, "cached_events", default=[]) != []
         ]
 
 

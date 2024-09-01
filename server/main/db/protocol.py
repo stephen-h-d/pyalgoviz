@@ -16,9 +16,9 @@ class SaveAlgorithmArgs:
     name: str
     algo_script: str
     viz_script: str
-    public: bool | None = False
-    # not sure, but I think `events` in the old model was a way to cache a run of the
-    # script for the public "all" page. Assuming that for now.
+    requested_public: bool | None = False
+    # if and only if it has cached events and requested_public is true, it is public.
+    # cached events will be set manually for now.
     cached_events: list[Event] = []
 
 

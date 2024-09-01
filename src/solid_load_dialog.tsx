@@ -218,7 +218,7 @@ export function SaveScriptDialog(props: {
 }) {
   const [algoSummAries, { refetch }] = createResource(fetchScriptNames);
   const [algoName, setAlgoName] = createSignal('');
-  const [publish, setPublish] = createSignal(false);
+  const [requestPublic, setRequestPublic] = createSignal(false);
   const [saving, setSaving] = createSignal(false);
   const [successOpen, setSuccessOpen] = createSignal(false);
   const [errorOpen, setErrorOpen] = createSignal(false);
@@ -279,7 +279,7 @@ export function SaveScriptDialog(props: {
       algo_script,
       viz_script,
       name,
-      publish: publish(),
+      requested_public: requestPublic(),
     });
     if (saveResult.type === "Ok") {
       props.savedCb({
@@ -314,9 +314,9 @@ export function SaveScriptDialog(props: {
         <input type="text" use:text_input={[algoName, setAlgoName]} />
         <CheckBox
           id="publish"
-          label="Publish"
-          value={publish}
-          setValue={setPublish}
+          label="Make Public (will be visible to all users after it is checked for malicious content)"
+          value={requestPublic}
+          setValue={setRequestPublic}
         />
         <button onClick={() => props.setOpen(false)}>
           Cancel

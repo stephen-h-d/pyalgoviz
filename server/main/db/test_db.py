@@ -7,6 +7,7 @@ from firebase_admin import firestore  # type: ignore[import]
 from server.main.db.fsdb import connect_to_fs
 from server.main.db.fsdb import FirestoreDatabase
 from server.main.db.mdb import MemoryDatabase
+from server.main.db.models import Event
 from server.main.db.models import User
 from server.main.db.protocol import DatabaseProtocol
 from server.main.db.protocol import SaveAlgorithmArgs
@@ -28,96 +29,99 @@ def empty_all_collections(client: firestore.Client) -> None:
         _empty_collection(collection)
 
 
-def test_database_protocol(db: DatabaseProtocol) -> None:
-    # Create test user
-    test_user = User(firebase_user_id="test_user_1", email="test1@example.com")
-    db.save_user(test_user)
-
-    # Retrieve the test user and check if it matches
-    retrieved_user = db.get_user("test_user_1")
+def create_test_user(db: DatabaseProtocol, id: str, email: str) -> User:
+    user = User(firebase_user_id=id, email=email)
+    db.save_user(user)
+    retrieved_user = db.get_user(id)
     assert retrieved_user is not None, "User should be retrieved successfully"
     assert (
-        retrieved_user.firebase_user_id == test_user.firebase_user_id
-    ), "User ID should match"
-    assert retrieved_user.email == test_user.email, "User email should match"
+        retrieved_user.firebase_user_id == user.firebase_user_id
+    ), f"User ID should match: {retrieved_user.firebase_user_id} != {user.firebase_user_id}"
+    assert (
+        retrieved_user.email == user.email
+    ), f"User email should match: {retrieved_user.email} != {user.email}"
+    return user
 
-    # Create a test algorithm
-    test_algo = SaveAlgorithmArgs(
-        author_email=test_user.email,
-        name="Test Algorithm",
+
+algorithm_count = 0
+
+
+def save_algo(
+    db: DatabaseProtocol, user: User, requested_public: bool, has_cached_event: bool
+) -> None:
+    global algorithm_count
+    algorithm_count += 1
+    name = f"test_algo_{algorithm_count}"
+    save_args = SaveAlgorithmArgs(
+        author_email=user.email,
+        name=name,
         algo_script="print('Hello World')",
         viz_script="print('Visualize Hello World')",
-        public=True,
+        requested_public=requested_public,
+        cached_events=[
+            Event(
+                lineno=1,
+                viz_output="dummy_viz",
+                viz_log="dummy_viz_log",
+                algo_log="dummy_algo_log",
+            )
+        ]
+        if has_cached_event
+        else [],
     )
-    db.save_algo(test_algo)
+    db.save_algo(save_args)
+    algo = db.get_algo(user.email, name)
+    assert algo is not None, "Algorithm should be retrieved successfully"
+    assert algo.author_email == save_args.author_email, "Author email should match"
+    assert algo.name == name, "Algorithm name should match"
+    assert algo.algo_script == save_args.algo_script, "Algorithm script should match"
+    assert algo.viz_script == save_args.viz_script, "Visualization script should match"
+    assert isinstance(algo.last_updated, datetime)
+    if has_cached_event:
+        assert len(algo.cached_events) == 1, "Cached events should not be empty"
+        event = algo.cached_events[0]
+        assert event.lineno == 1, "Event lineno should match"
+        assert event.viz_output == "dummy_viz", "Event viz_output should match"
+        assert event.viz_log == "dummy_viz_log", "Event viz_log should match"
+        assert event.algo_log == "dummy_algo_log", "Event algo_log should match"
+    else:
+        assert len(algo.cached_events) == 0, "Cached events should be empty"
 
-    # Retrieve the test algorithm
-    retrieved_algo = db.get_algo(test_user.email, "Test Algorithm")
-    assert retrieved_algo is not None, "Algorithm should be retrieved successfully"
-    assert (
-        retrieved_algo.author_email == test_algo.author_email
-    ), "Author email should match"
-    assert retrieved_algo.name == test_algo.name, "Algorithm name should match"
-    assert (
-        retrieved_algo.algo_script == test_algo.algo_script
-    ), "Algorithm script should match"
-    assert (
-        retrieved_algo.viz_script == test_algo.viz_script
-    ), "Visualization script should match"
-    assert isinstance(retrieved_algo.last_updated, datetime)
 
-    # Create and save another algorithm that is not public
-    test_algo_private = SaveAlgorithmArgs(
-        author_email=test_user.email,
-        name="Private Algorithm",
-        algo_script="print('Private Hello World')",
-        viz_script="print('Private Visualize Hello World')",
-        public=False,
-    )
-    db.save_algo(test_algo_private)
+def test_database_protocol(db: DatabaseProtocol) -> None:
+    # Create test user
+    test_user = create_test_user(db, "test_user_1", "test1@example.com")
 
-    # create another test user
-    test_user2 = User(firebase_user_id="test_user_2", email="test2@example.com")
-    db.save_user(test_user2)
+    # Create a requested_public test algorithm with non-empty cached events and one with empty cached events
+    save_algo(db, test_user, requested_public=True, has_cached_event=True)
+    save_algo(db, test_user, requested_public=True, has_cached_event=False)
+    # Create a not requested_public test algorithm with non-empty cached events and one with empty cached events
+    save_algo(db, test_user, requested_public=False, has_cached_event=True)
+    save_algo(db, test_user, requested_public=False, has_cached_event=False)
 
-    # create a public algorithm by test_user2
-    test_algo2 = SaveAlgorithmArgs(
-        author_email=test_user2.email,
-        name="Test Algorithm 2",
-        algo_script="print('Hello World 2')",
-        viz_script="print('Visualize Hello World 2')",
-        public=True,
-    )
-    db.save_algo(test_algo2)
+    # Create another test user
+    test_user2 = create_test_user(db, "test_user_2", "test2@example.com")
 
-    # create a private algorithm by test_user2
-    test_algo2_private = SaveAlgorithmArgs(
-        author_email=test_user2.email,
-        name="Private Algorithm",
-        algo_script="print('Private Hello World 2')",
-        viz_script="print('Private Visualize Hello World 2')",
-        public=False,
-    )
-    db.save_algo(test_algo2_private)
+    # Create a requested_public algorithm by test_user2 with non-empty cached events and with empty cached events
+    save_algo(db, test_user2, requested_public=True, has_cached_event=True)
+    save_algo(db, test_user2, requested_public=True, has_cached_event=False)
 
-    # Ensure private algorithm does not appear in public listings
+    # Ensure only algorithms with non-empty cached events appear in public listings
     public_algos = db.get_public_algos()
-    assert len(public_algos) == 2, "There should be 2 public algorithms"
-    assert any(
-        algo.name == "Test Algorithm" for algo in public_algos
-    ), "Public algorithm should be retrievable"
-    assert not any(
-        algo.name == "Private Algorithm" for algo in public_algos
-    ), "Private algorithm should not be in public list"
+    assert (
+        len(public_algos) == 2
+    ), f"Public algorithms should be 2, but got {public_algos}"
 
-    # Retrieve algorithm summaries
+    # Retrieve algorithm summaries for test_user
     algo_summaries = db.get_algo_summaries(test_user.email)
-    print(f"algo summaries {algo_summaries}")
-    assert len(algo_summaries) == 3, "Summaries should include 3 algorithms"
-    assert any(
-        summary.name == "Test Algorithm" for summary in algo_summaries
-    ), "Test Algorithm should be in summaries"
-    assert any(summary.name == "Test Algorithm 2" for summary in algo_summaries)
+    assert (
+        len(algo_summaries) == 5
+    ), f"User should have 5 algorithm summaries, but got {algo_summaries}"
+    # Retrieve algorithm summaries for test_user2
+    algo_summaries = db.get_algo_summaries(test_user2.email)
+    assert (
+        len(algo_summaries) == 3
+    ), f"User should have 3 algorithm summaries, but got {algo_summaries}"
 
     print("All tests passed!")
 

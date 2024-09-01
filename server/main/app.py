@@ -59,7 +59,8 @@ def cleanup() -> None:
         db.save_cached_demo_db()
 
 
-# Register the cleanup function to run at exit
+# Register the cleanup function to run at exit. Note that if FLASK_DEBUG is not 0, then this will run twice, which we
+# don't want.
 atexit.register(cleanup)
 
 
@@ -117,7 +118,7 @@ def save() -> Response:
             name=name,
             algo_script=algo_script,
             viz_script=viz_script,
-            public=publish,
+            requested_public=publish,
             cached_events=cached_events,
         )
         db.save_algo(args)
