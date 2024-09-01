@@ -16,7 +16,6 @@ import os
 from functools import wraps
 from typing import Any
 from typing import Callable
-from typing import TypeVar
 
 import attrs
 import firebase_admin  # type: ignore[import]
@@ -31,10 +30,7 @@ from google.cloud import datastore
 from server.main.db.models import User
 from server.main.db.protocol import DatabaseProtocol
 
-a = TypeVar("a")
-
 PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT")
-default_app = firebase_admin.initialize_app()
 client = datastore.Client(project=PROJECT)
 
 
