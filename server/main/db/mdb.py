@@ -118,11 +118,25 @@ class MemoryDatabase(DatabaseProtocol):
 
     def get_public_algos(self) -> list[ScriptDemoInfo]:
         values = self.algos.values()
-        print(f"values {values}")
-        return [
+        result = [
             ScriptDemoInfo.from_algorithm(algo)
             for algo in values
             if algo.requested_public is True and len(algo.cached_events) > 0
+        ]
+        return result
+
+    def cache_events(self, author_email: str, name: str, events: list[Event]) -> None:
+        algo_key = self._make_algo_key(author_email, name)
+        algo = self.algos.get(algo_key)
+        if algo is None:
+            raise ValueError(f"Algorithm {algo_key} not found.")
+        algo.cached_events = events
+
+    def get_algos_needing_caching(self) -> list[AlgorithmSummary]:
+        return [
+            AlgorithmSummary(name=algo.name, author_email=algo.author_email)
+            for algo in self.algos.values()
+            if (algo.requested_public is True and len(algo.cached_events) == 0)
         ]
 
     def to_dict(self) -> dict:
@@ -140,13 +154,13 @@ class MemoryDatabase(DatabaseProtocol):
     def save_cached_demo_db(self) -> None:
         # Save the database to a file when the object is deleted so we can
         # load it next time.
-        with open("main/cached_demo_db.json", "w") as f:
+        with open("server/main/cached_demo_db.json", "w") as f:
             json.dump(self.to_dict(), f)
 
     @classmethod
     def load_cached_demo_db(cls) -> MemoryDatabase:
         try:
-            with open("main/cached_demo_db.json", "r") as f:
+            with open("server/main/cached_demo_db.json", "r") as f:
                 loaded_dict = json.load(f)
                 # print(f"loaded_dict {loaded_dict}")
 

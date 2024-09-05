@@ -45,3 +45,13 @@ class DatabaseProtocol(Protocol):
 
     def get_public_algos(self) -> list[ScriptDemoInfo]:
         ...
+
+    def cache_events(self, author_email: str, name: str, events: list[Event]) -> None:
+        ...
+
+    """
+    Get a summary of each algorithm for which requested_public is True but has no cached events.
+    """
+
+    def get_algos_needing_caching(self) -> list[AlgorithmSummary]:
+        ...

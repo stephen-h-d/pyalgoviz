@@ -8,8 +8,9 @@ from RestrictedPython import compile_restricted
 from RestrictedPython import safe_builtins
 from RestrictedPython import safe_globals
 from RestrictedPython.Eval import default_guarded_getiter
-from shared.executor import Executor
-from shared.executor import make_error_dict
+
+from server.shared.executor import Executor
+from server.shared.executor import make_error_dict
 
 
 def allowed_import(name, globals=None, locals=None, fromlist=(), level=0):

@@ -5,7 +5,6 @@ google-cloud-datastore
 firebase-admin>=6.2.0
 Flask-Login
 attrs
-pre-commit
 mypy
 flake8
 RestrictedPython

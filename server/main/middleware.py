@@ -58,11 +58,6 @@ class JWTAuthenticator:
                     login_user(user)
                 except InvalidIdTokenError as exc:
                     logging.log(logging.ERROR, f"Invalid token: {exc}")
-                    # TODO figure out how to indicate to the client that the token is
-                    # invalid.  It might not be that big a deal, though, if all the
-                    # Python code is just an API.
-                    # However, there might be some pages that we don't want to load if
-                    # the user is not logged in.  Not sure yet.
                     return Response(
                         status=403, response="Not allowed without logging in first"
                     )
@@ -70,6 +65,9 @@ class JWTAuthenticator:
                     # This will be raised if the token is expired or any other
                     # verification checks fail.
                     error_message = str(exc)
+                    logging.log(
+                        logging.ERROR, f"Error with authentication: {error_message}"
+                    )
                     return Response(
                         status=403,
                         response=f"Error with authentication: {error_message}",

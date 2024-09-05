@@ -126,7 +126,6 @@ def test_database_protocol(db: DatabaseProtocol) -> None:
     print("All tests passed!")
 
 
-# main function
 def main() -> None:
     db_type = sys.argv[1]
     db: DatabaseProtocol

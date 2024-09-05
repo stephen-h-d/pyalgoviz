@@ -1,8 +1,10 @@
 from datetime import datetime
 from typing import cast
 from typing import List
+from typing import Literal
 from typing import Optional
 from typing import TypeVar
+from typing import Union
 
 import attrs
 import firebase_admin  # type: ignore[import]
@@ -110,20 +112,40 @@ class FirestoreDatabase(DatabaseProtocol):
         public_algos_ref = self._client.collection("algorithms").where(
             "requested_public", "==", True
         )
-        public_algos = public_algos_ref.stream()
+        requested_public_algos = public_algos_ref.stream()
         return [
             ScriptDemoInfo(
                 author_email=algo.get("author_email"),
                 name=algo.get("name"),
                 cached_events=[Event(**event) for event in algo.get("cached_events")],
             )
-            for algo in public_algos
+            for algo in requested_public_algos
             if get_with_default(algo, "cached_events", default=[]) != []
         ]
 
+    def cache_events(self, author_email: str, name: str, events: list[Event]) -> None:
+        algo_ref = self._client.collection("algorithms").document(
+            f"{author_email}-{name}"
+        )
+        algo_ref.update({"cached_events": [attrs.asdict(event) for event in events]})
+
+    def get_algos_needing_caching(self) -> list[AlgorithmSummary]:
+        public_algos_ref = self._client.collection("algorithms").where(
+            "requested_public", "==", True
+        )
+        requested_public_algos = public_algos_ref.stream()
+        return [
+            AlgorithmSummary(author_email=algo.get("author_email"), name=algo.get("name"))
+            for algo in requested_public_algos
+            if get_with_default(algo, "cached_events", default=[]) == []
+        ]
+
+
+DatabaseId = Union[Literal["pyalgoviz-test"], Literal["unit-test"]]
+
 
 def connect_to_fs(
-    project: str, credentials_file: str, database_id: str
+    project: str, credentials_file: str, database_id: DatabaseId
 ) -> firestore.Client:
     firebase_admin.initialize_app()
     credentials = service_account.Credentials.from_service_account_file(credentials_file)

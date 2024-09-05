@@ -312,12 +312,6 @@ export function SaveScriptDialog(props: {
     <>
       <dialog open={props.open()}>
         <input type="text" use:text_input={[algoName, setAlgoName]} />
-        <CheckBox
-          id="publish"
-          label="Make Public (will be visible to all users after it is checked for malicious content)"
-          value={requestPublic}
-          setValue={setRequestPublic}
-        />
         <button onClick={() => props.setOpen(false)}>
           Cancel
         </button>
@@ -325,6 +319,13 @@ export function SaveScriptDialog(props: {
           Save
         </button>
         <p>{saving() && 'Saving...'}</p>
+        <br/>
+        <CheckBox
+          id="publish"
+          label="Make Public (will be visible to all users after it is checked for malicious content)"
+          value={requestPublic}
+          setValue={setRequestPublic}
+        />
       </dialog>
       <SuccessDialog open={successOpen} setOpen={setSuccessOpen} />
       <ErrorDialog open={errorOpen} setOpen={setErrorOpen} text={savingErrorText}/>

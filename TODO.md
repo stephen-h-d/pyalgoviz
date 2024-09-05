@@ -17,6 +17,7 @@
    7. the "Save As" button
    8. more stuff...
 2. Fill in Header and Footer content
+3. Test cache_events and get_algos_needing_caching in the db test
 
 ### Ready-to-implement TODOs post-launch
 1. Tell the user when Pyodide is loading, when it is done loading, when the code is running, and when it is done running.

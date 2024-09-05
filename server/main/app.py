@@ -43,6 +43,12 @@ if USE_GOOGLE_DB.lower() == "true":
     client = connect_to_fs(PROJECT, CREDENTIALS, "pyalgoviz-test")
     db = FirestoreDatabase(client)
 else:
+    # we initialize the app here because we still use Firebase for user management even when we're using a
+    # MemoryDatabase
+    import firebase_admin  # type: ignore[import]
+
+    firebase_admin.initialize_app()
+
     from server.main.db.mdb import MemoryDatabase
 
     db = MemoryDatabase.load_cached_demo_db()
