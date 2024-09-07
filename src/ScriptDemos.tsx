@@ -1,5 +1,5 @@
 import { Accessor, For, createEffect, createResource } from 'solid-js';
-import * as styles from './index.css';
+import * as styles from './scriptdemos.css';
 import { EventNavSubjects } from './EventNavSubjects';
 import { VizEvent } from './exec_result';
 import { getSetupInfo, renderEvent } from './VizOutput';
@@ -59,7 +59,6 @@ function isMouseInsideDiv(div: HTMLDivElement): Observable<boolean> {
   return isInside$;
 }
 
-
 function vizrenderer(
   div: HTMLDivElement,
   argsAccessor: Accessor<RendererArgs>,
@@ -81,8 +80,11 @@ function vizrenderer(
 const ScriptDemo = (props: { scriptInfo: ScriptDemoInfo }) => {
   const eventNavSubjects: EventNavSubjects = new EventNavSubjects();
   // This next line should be fine, as the events don't change, so we ignore the warning
-  // eslint-disable-next-line solid/reactivity
-  const [bBox, filteredEvents] = getSetupInfo(props.scriptInfo.cached_events, false);
+  const [bBox, filteredEvents] = getSetupInfo(
+    // eslint-disable-next-line solid/reactivity
+    props.scriptInfo.cached_events,
+    false,
+  );
 
   eventNavSubjects.speed$.next('Slow (20/s)');
 
@@ -137,10 +139,19 @@ export const ScriptDemos = () => {
   };
 
   return (
-    <div class={styles.container}>
-      <For each={scriptsList()}>
-        {script => <ScriptDemo scriptInfo={script} />}
-      </For>
+    <div class={styles.pageContainer}>
+      {/* Title Section */}
+      <h1 class={styles.pageTitle}>
+        PyAlgoViz: Python Algorithm Visualizations done in Python running in the
+        browser.
+      </h1>
+
+      {/* Script Demos Section */}
+      <div class={styles.container}>
+        <For each={scriptsList()}>
+          {script => <ScriptDemo scriptInfo={script} />}
+        </For>
+      </div>
     </div>
   );
 };

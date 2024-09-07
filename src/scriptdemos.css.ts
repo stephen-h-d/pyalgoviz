@@ -39,3 +39,16 @@ export const scriptName = style({
 export const scriptAuthor = style({
   color: 'gray',
 });
+
+export const pageContainer = style({
+  width: '100%',
+  textAlign: 'center',
+  padding: '1rem',
+});
+
+export const pageTitle = style({
+  fontSize: '1.5rem',
+  fontWeight: 'bold',
+  marginBottom: '2rem',
+  fontFamily: 'Arial, sans-serif',
+});
