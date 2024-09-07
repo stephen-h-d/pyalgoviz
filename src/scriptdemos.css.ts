@@ -47,7 +47,7 @@ export const pageContainer = style({
 });
 
 export const pageTitle = style({
-  fontSize: '1.5rem',
+  fontSize: '1.8rem',
   fontWeight: 'bold',
   marginBottom: '2rem',
   fontFamily: 'Arial, sans-serif',

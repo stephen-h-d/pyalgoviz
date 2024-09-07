@@ -66,6 +66,9 @@ function vizrenderer(
   const args = argsAccessor();
 
   const eventNavSubjects = args.eventNavSubjects;
+  // not sure why, but hitting next twice is necessary to get the first one to show up
+  eventNavSubjects.next$.next(null);
+  eventNavSubjects.next$.next(null);
 
   isMouseInsideDiv(div).subscribe(value => {
     eventNavSubjects.playPause$.next(value);
@@ -140,13 +143,12 @@ export const ScriptDemos = () => {
 
   return (
     <div class={styles.pageContainer}>
-      {/* Title Section */}
       <h1 class={styles.pageTitle}>
-        PyAlgoViz: Python Algorithm Visualizations done in Python running in the
-        browser.
+        PyAlgoViz: Python Algorithm Visualizations
+        <br />
+        run by Pyodide in the browser.
       </h1>
 
-      {/* Script Demos Section */}
       <div class={styles.container}>
         <For each={scriptsList()}>
           {script => <ScriptDemo scriptInfo={script} />}
