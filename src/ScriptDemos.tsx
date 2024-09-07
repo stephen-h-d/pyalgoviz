@@ -8,9 +8,7 @@ import { fromEvent, Observable } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map } from 'rxjs/operators';
 
 const fetchScripts = async () => {
-  // console.log('fetching...');
   const fetchResult = await fetch('/api/public_scripts');
-  // console.log('fetchResult', fetchResult);
   return (await fetchResult.json()) as object;
 };
 
@@ -80,23 +78,11 @@ function vizrenderer(
   });
 }
 
-// NOTE: RendererArgs and vizrenderer are also in `edit.tsx`.  They are duplicated
-// because of a weird bug with importing declared modules.  TODO fix this
-// declare module 'solid-js' {
-//   // eslint-disable-next-line @typescript-eslint/no-namespace
-//   namespace JSX {
-//     interface Directives {
-//       // use:vizrenderer
-//       vizrenderer: RendererArgs;
-//     }
-//   }
-// }
-
-const ScriptDemo = (props: { events: VizEvent[] }) => {
+const ScriptDemo = (props: { scriptInfo: ScriptDemoInfo }) => {
   const eventNavSubjects: EventNavSubjects = new EventNavSubjects();
   // This next line should be fine, as the events don't change, so we ignore the warning
   // eslint-disable-next-line solid/reactivity
-  const [bBox, filteredEvents] = getSetupInfo(props.events, false);
+  const [bBox, filteredEvents] = getSetupInfo(props.scriptInfo.cached_events, false);
 
   eventNavSubjects.speed$.next('Slow (20/s)');
 
@@ -106,7 +92,6 @@ const ScriptDemo = (props: { events: VizEvent[] }) => {
       py_error: null,
       // This next line should be fine, as the events don't change, so we ignore the warning.
       // We also cast the events because we know they are only VizEvents
-
       events: filteredEvents as VizEvent[],
     },
   );
@@ -116,8 +101,18 @@ const ScriptDemo = (props: { events: VizEvent[] }) => {
     bBox,
     eventNavSubjects,
   };
+
   return (
-    <div id="blah" class={styles.rectangle} use:vizrenderer={rendererArgs} />
+    <div class={styles.scriptDemoContainer}>
+      {/* Display Script Name and Author */}
+      <div class={styles.scriptInfo}>
+        <div class={styles.scriptName}>{props.scriptInfo.name}</div>
+        <div class={styles.scriptAuthor}>{props.scriptInfo.author_email}</div>
+      </div>
+
+      {/* The VizRenderer Div */}
+      <div id="blah" class={styles.rectangle} use:vizrenderer={rendererArgs} />
+    </div>
   );
 };
 
@@ -144,14 +139,8 @@ export const ScriptDemos = () => {
   return (
     <div class={styles.container}>
       <For each={scriptsList()}>
-        {script => <ScriptDemo events={script.cached_events} />}
+        {script => <ScriptDemo scriptInfo={script} />}
       </For>
     </div>
   );
 };
-
-const rootDiv = document.getElementById('root');
-
-if (rootDiv === null) {
-  throw Error('Fatal error: root div is null');
-}

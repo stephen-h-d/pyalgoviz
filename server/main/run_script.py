@@ -1,16 +1,13 @@
 # type: ignore
-import sys
 from types import CodeType
 from typing import Any
 from typing import Mapping
 
-from RestrictedPython import compile_restricted
 from RestrictedPython import safe_builtins
 from RestrictedPython import safe_globals
 from RestrictedPython.Eval import default_guarded_getiter
 
 from server.shared.executor import Executor
-from server.shared.executor import make_error_dict
 
 
 def allowed_import(name, globals=None, locals=None, fromlist=(), level=0):
@@ -61,12 +58,12 @@ safe_globals["_iter_unpack_sequence_"] = guarded_iter_unpack_sequence
 
 
 def run_script(algo_script: str, viz_script: str) -> dict:
-    try:
-        algo_byte_code = compile_restricted(algo_script, "<inline>", "exec")
-        viz_byte_code = compile_restricted(viz_script, "<inline>", "exec")
-    except Exception as e:
-        error = make_error_dict(sys.exc_info()[2], e, [])
-        return {"py_error": error, "events": []}
+    # try:
+    #     algo_byte_code = compile_restricted(algo_script, "<inline>", "exec")
+    #     viz_byte_code = compile_restricted(viz_script, "<inline>", "exec")
+    # except Exception as e:
+    #     error = make_error_dict(sys.exc_info()[2], e, [])
+    #     return {"py_error": error, "events": []}
 
     def exec_fn(
         source: str | bytes | CodeType,
@@ -78,7 +75,8 @@ def run_script(algo_script: str, viz_script: str) -> dict:
             combined_globals.update(__globals)
         return exec(source, combined_globals, __locals)
 
-    result = Executor(algo_byte_code, viz_byte_code, exec_fn)
+    # result = Executor(algo_script, viz_script, exec_fn)
+    result = Executor(algo_script, viz_script)
     return {
         "py_error": result.error,
         "events": result.events,

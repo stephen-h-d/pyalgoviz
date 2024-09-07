@@ -8,11 +8,34 @@ export const rectangle = style({
   height: '20rem',
   border: '1px solid black',
   boxSizing: 'border-box',
-  margin: '2rem',
+  marginTop: '0.5rem',
+  marginRight: '2rem',
+  marginLeft: '2rem',
 });
 
 export const container = style({
   display: 'flex',
   flexWrap: 'wrap',
   width: '100%',
+});
+
+export const scriptDemoContainer = style({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  marginBottom: '0rem', // Adjusted the margin to reduce spacing
+});
+
+export const scriptInfo = style({
+  textAlign: 'center',
+  marginBottom: '0rem', // Reduced margin between the script info and the demo box
+});
+
+export const scriptName = style({
+  fontWeight: 'bold',
+  fontSize: '1.2rem',
+});
+
+export const scriptAuthor = style({
+  color: 'gray',
 });

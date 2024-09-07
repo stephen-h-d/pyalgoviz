@@ -36,6 +36,7 @@ class Event:
     viz_output: str
     viz_log: str
     algo_log: str
+    viz_error_line: int | None = None
 
 
 @attrs.define

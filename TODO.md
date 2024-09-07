@@ -18,6 +18,12 @@
    8. more stuff...
 2. Fill in Header and Footer content
 3. Test cache_events and get_algos_needing_caching in the db test
+4. On the main page script demos:
+   1. show the first event, but don't show the rest until the user hovers over the first one.
+   2. show the name of the script and the author.
+5. Put a title "PyAlgoViz: Python Algorithm Visualizations done in Python running in the browser."
+   1. Maybe add a "powered by Pyodide" or something.
+6. Add an "author name" to Author and display the author name instead of
 
 ### Ready-to-implement TODOs post-launch
 1. Tell the user when Pyodide is loading, when it is done loading, when the code is running, and when it is done running.
