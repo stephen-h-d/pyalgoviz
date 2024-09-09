@@ -16,7 +16,7 @@ export function signInWithGoogle(_event: MouseEvent) {
       }
       // The signed-in user info.
       const user = result.user;
-      console.log("cookie",document.cookie);
+      // console.log("cookie",document.cookie);
       if (user) {
         // call verify_login to make sure the token is valid
         fetch('/api/verify_login', {})

@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-import os
 from functools import wraps
 from typing import Any
 from typing import Callable
@@ -25,13 +24,9 @@ from flask import request
 from flask import Response
 from flask_login import current_user  # type: ignore[import]
 from flask_login import login_user
-from google.cloud import datastore
 
 from server.main.db.models import User
 from server.main.db.protocol import DatabaseProtocol
-
-PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT")
-client = datastore.Client(project=PROJECT)
 
 
 @attrs.define
@@ -73,6 +68,7 @@ class JWTAuthenticator:
                         response=f"Error with authentication: {error_message}",
                     )
             else:
+                logging.log(logging.ERROR, "No token was provided to auth middleware.")
                 return Response(
                     status=403, response="Not allowed without logging in first"
                 )

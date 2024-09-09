@@ -23,6 +23,12 @@ from server.main.db.protocol import DatabaseProtocol
 from server.main.db.protocol import SaveAlgorithmArgs
 from server.main.middleware import JWTAuthenticator
 
+# move this to the top to debug Dockerfile-related module import issues
+# import sys
+# print("Current working directory:", os.getcwd())
+# print("Python path:", sys.path)  # To print the current PYTHONPATH and other paths
+
+
 # from server.main.run_script import run_script  # type: ignore[attr-defined]
 
 logger = logging.getLogger(__name__)
@@ -40,7 +46,7 @@ db: DatabaseProtocol
 if USE_GOOGLE_DB.lower() == "true":
     from server.main.db.fsdb import FirestoreDatabase, connect_to_fs
 
-    client = connect_to_fs(PROJECT, CREDENTIALS, "pyalgoviz-test")
+    client = connect_to_fs(PROJECT, "pyalgoviz-test")
     db = FirestoreDatabase(client)
 else:
     # we initialize the app here because we still use Firebase for user management even when we're using a

@@ -48,8 +48,7 @@ def main() -> None:
         db = MemoryDatabase.load_cached_demo_db()
     elif db_type == "firestore":
         project = os.environ.get("GOOGLE_CLOUD_PROJECT")
-        cred_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
-        client = connect_to_fs(project, cred_path, "pyalgoviz-test")
+        client = connect_to_fs(project, "pyalgoviz-test")
         db = FirestoreDatabase(client)
     else:
         raise ValueError(f"Unknown database type: {db_type}")

@@ -40,7 +40,6 @@ import { EventNavSubjects } from './EventNavSubjects';
 import toast, { Toaster } from 'solid-toast';
 
 declare module 'solid-js' {
-
   namespace JSX {
     interface Directives {
       // use:vizrenderer
@@ -57,7 +56,6 @@ interface EditorArgs {
   extensions: Array<Extension>;
   textReadOnly: boolean;
 }
-
 
 function editor(element: HTMLInputElement, argsAccessor: Accessor<EditorArgs>) {
   const args = argsAccessor();
@@ -95,7 +93,6 @@ function editor(element: HTMLInputElement, argsAccessor: Accessor<EditorArgs>) {
 }
 
 declare module 'solid-js' {
-
   namespace JSX {
     interface Directives {
       // use:editor
@@ -103,7 +100,6 @@ declare module 'solid-js' {
     }
   }
 }
-
 
 function range_input(
   element: HTMLInputElement,
@@ -123,7 +119,6 @@ function range_input(
 }
 
 declare module 'solid-js' {
-
   namespace JSX {
     interface Directives {
       // use:range_input
@@ -172,7 +167,6 @@ function TopLeftContents(props: {
   // TODO finish checking whether the current saved script matches whether it is loaded,
   // and if so, warn user
 
-
   const [currentSavedScript, setCurrentSavedScript] =
     createSignal<PyAlgoVizScript | null>(null);
   // the success/error dialogs for saving (as opposed to "saving as")
@@ -187,7 +181,7 @@ function TopLeftContents(props: {
   let autoPlay = false;
   const setAutoPlay = (val: boolean) => {
     autoPlay = val;
-  }
+  };
 
   const autoPlayAcc = () => autoPlay;
 
@@ -229,7 +223,7 @@ function TopLeftContents(props: {
     const current = currentScript();
     // console.log('currentSaved', currentSaved, 'current', current);
     return !isEqual(currentSaved, current);
-  }
+  };
   const saveDisabled = () => {
     return user() === null || props.algoName() === '' || !unsavedChanges();
   };
@@ -249,7 +243,13 @@ function TopLeftContents(props: {
   // auto-play effect
   createEffect(() => {
     const currentEventIdx = props.currentEventIdx();
-    if (currentEventIdx.current < 0 && !props.playing() && currentEventIdx.total > 0 && !props.running() && autoPlay) {
+    if (
+      currentEventIdx.current < 0 &&
+      !props.playing() &&
+      currentEventIdx.total > 0 &&
+      !props.running() &&
+      autoPlay
+    ) {
       // console.log('currentEventIdx', currentEventIdx, 'auto-playing');
       props.eventNavSubjects.playPause$.next(null);
     }
@@ -273,14 +273,17 @@ function TopLeftContents(props: {
       name,
     });
 
-    if (saveResult.type === "Ok") {
+    if (saveResult.type === 'Ok') {
       setCurrentSavedScript({
         algo_script,
         viz_script,
       });
       setSuccessOpen(true);
-    } else if (saveResult.type === "Unauthorized") {
-      setUserAndAuthError(null, 'Authorization error saving script. You have been logged out.');
+    } else if (saveResult.type === 'Unauthorized') {
+      setUserAndAuthError(
+        null,
+        'Authorization error saving script. You have been logged out.',
+      );
     } else {
       console.error('Error saving script:', saveResult);
       setErrorOpen(true);
@@ -293,7 +296,7 @@ function TopLeftContents(props: {
       return -1;
     }
     return currentEvent.lineno;
-  }
+  };
 
   const editorArgs: EditorArgs = {
     // eslint-disable-next-line solid/reactivity
@@ -325,7 +328,11 @@ function TopLeftContents(props: {
         finishLoading={setCurrentSavedScriptInfo}
       />
       <SuccessDialog open={successOpen} setOpen={setSuccessOpen} />
-      <ErrorDialog open={errorOpen} setOpen={setErrorOpen} text={savingErrorText} />
+      <ErrorDialog
+        open={errorOpen}
+        setOpen={setErrorOpen}
+        text={savingErrorText}
+      />
       <UnsavedChangesDialog
         open={unsavedDialogOpen}
         setOpen={setUnsavedDialogOpen}
@@ -339,7 +346,6 @@ function TopLeftContents(props: {
         <button
           disabled={runDisabled()}
           class={styles.input}
-
           onClick={() => props.run(true)}
         >
           Run
@@ -349,7 +355,12 @@ function TopLeftContents(props: {
           selected={selectedSpeed}
           setSelected={setSelectedSpeed}
         />
-        <CheckBox id="autoplay" label="Auto-play" value={autoPlayAcc} setValue={setAutoPlay} />
+        <CheckBox
+          id="autoplay"
+          label="Auto-play"
+          value={autoPlayAcc}
+          setValue={setAutoPlay}
+        />
         <button
           disabled={prevDisabled()}
           class={styles.input}
@@ -678,25 +689,10 @@ function IDE(props: {
   });
 
   const [algo, setAlgo] = createSignal(`
-for x in range(50, 500, 50):
-    for y in range(50, 500, 50):
-        n = y / 50
-        log(f"n {n}")
+# Your algorithm code goes here. Need inspiration? Click "Load" and select one of the public algorithms.
 `);
   const [viz, setViz] = createSignal(`
-from math import pi
-
-text(x, y, "x=%s y=%s n=%d" % (x, y, n), size=10 + n*3, font="Arial", color='red')
-rect(450, 50, 50 + n*10, 50 + n*10, fill="brown", border="lightyellow")
-line(50, 50, x, y, color="purple", width=6)
-circle(300, 200, n * 25, fill="transparent", border="green")
-arc(100,
-    325,
-    innerRadius=50,
-    outerRadius=100,
-    startAngle=(n - 1) * 2 * pi/7,
-    endAngle=n * 2 * pi/7,
-    color="orange")
+# Your visualization code goes here. After every line of code in your algorithm is executed, this code will run.
 `);
 
   const [algoLog, setAlgoLog] = createSignal('');
@@ -724,13 +720,16 @@ arc(100,
       }
     } else {
       setRunningScript(true);
-      const run_result = (await postJson('/api/run', toRun));
-      if (run_result.type === "Ok") {
+      const run_result = await postJson('/api/run', toRun);
+      if (run_result.type === 'Ok') {
         setRunningScript(false);
         setExecResult(run_result.data as ExecResult);
-      } else if (run_result.type === "Unauthorized") {
+      } else if (run_result.type === 'Unauthorized') {
         setRunningScript(false);
-        setUserAndAuthError(null, 'Authorization error running script. You have been logged out.');
+        setUserAndAuthError(
+          null,
+          'Authorization error running script. You have been logged out.',
+        );
       } else {
         setRunningScript(false);
       }
@@ -752,18 +751,24 @@ arc(100,
 
   const algoErrorLine = () => {
     const execResultVal = execResult();
-    if (execResultVal.py_error === null || execResultVal.py_error.script !== 'algo') {
+    if (
+      execResultVal.py_error === null ||
+      execResultVal.py_error.script !== 'algo'
+    ) {
       return null;
     }
     return execResultVal.py_error.lineno;
-  }
+  };
 
   const vizErrorLine = () => {
     const execResultVal = execResult();
     const currentEvent = eventNavigator.getEventVal()();
 
     // first check if it's a syntax viz error
-    if (execResultVal.py_error !== null && execResultVal.py_error.script === 'viz') {
+    if (
+      execResultVal.py_error !== null &&
+      execResultVal.py_error.script === 'viz'
+    ) {
       // console.log('viz syntax  error line:', execResultVal.py_error.lineno);
       return execResultVal.py_error.lineno;
     }
@@ -773,7 +778,7 @@ arc(100,
     }
     // console.log('viz error line for event:', currentEvent.viz_error_line);
     return currentEvent.viz_error_line;
-  }
+  };
 
   const logMgr = new LogManager();
   createEffect(() => {
@@ -786,8 +791,7 @@ arc(100,
       errorMsg += currExecResult.py_error.error_msg;
       setAlgoLog(errorMsg);
       setVizLog('');
-    }
-    else if (
+    } else if (
       currEventIdx.current != -1 &&
       currEventIdx.current < currExecResult.events.length
     ) {
@@ -834,8 +838,11 @@ arc(100,
           />
         </div>
         <div class={styles.bottom_left_cell}>
-          <BottomLeftContents viz={viz} setViz={setViz}
-            vizErrorLine={vizErrorLine} />
+          <BottomLeftContents
+            viz={viz}
+            setViz={setViz}
+            vizErrorLine={vizErrorLine}
+          />
           <div
             class={styles.top_edge}
             onMouseDown={resizer.resize_cell_11_listener()}
@@ -880,20 +887,15 @@ function Header(props: { algoName: Accessor<string> }) {
   function Inner() {
     const userObj = user();
     if (userObj !== null) {
-
       return (
         <>
           <span>{userObj.email}</span>
-          <button
-            class={styles.logoutBtn}
-            onClick={logout}
-          >
+          <button class={styles.logoutBtn} onClick={logout}>
             Log Out
           </button>
         </>
       );
     } else {
-
       return (
         <button class={styles.loginBtn} onClick={loginWithGoogle}>
           Log In
@@ -953,7 +955,7 @@ export function Edit() {
   const authErrorText = () => {
     const val = authError();
     return val === null ? '' : val;
-  }
+  };
   createEffect(() => {
     if (authError() !== null) {
       setErrorOpen(true);

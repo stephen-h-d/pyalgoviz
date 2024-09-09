@@ -10,7 +10,6 @@ import attrs
 import firebase_admin  # type: ignore[import]
 from firebase_admin import firestore
 from google.cloud.firestore_v1 import DocumentSnapshot
-from google.oauth2 import service_account
 
 from server.main.db.models import Algorithm
 from server.main.db.models import AlgorithmSummary
@@ -144,9 +143,6 @@ class FirestoreDatabase(DatabaseProtocol):
 DatabaseId = Union[Literal["pyalgoviz-test"], Literal["unit-test"]]
 
 
-def connect_to_fs(
-    project: str, credentials_file: str, database_id: DatabaseId
-) -> firestore.Client:
+def connect_to_fs(project: str, database_id: DatabaseId) -> firestore.Client:
     firebase_admin.initialize_app()
-    credentials = service_account.Credentials.from_service_account_file(credentials_file)
-    return firestore.Client(project, credentials, database_id)
+    return firestore.Client(project, database=database_id)

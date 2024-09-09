@@ -133,8 +133,7 @@ def main() -> None:
         db = MemoryDatabase()
     elif db_type == "firestore":
         project = os.environ.get("GOOGLE_CLOUD_PROJECT")
-        cred_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
-        client = connect_to_fs(project, cred_path, "unit-test")
+        client = connect_to_fs(project, "unit-test")
         # clear the collections before testing. This is why we use a separate "unit-test" database
         empty_all_collections(client)
         db = FirestoreDatabase(client)
