@@ -8,6 +8,26 @@ const app = initializeApp(firebaseConfig);
 // Initialize Firebase Authentication and get a reference to the service
 const auth = getAuth(app);
 
+// This handles automatic refreshes to the token.
+auth.onIdTokenChanged(async user => {
+  if (user) {
+    try {
+      const token = await user.getIdToken();
+      // Update the token cookie
+      document.cookie = 'token=' + token + '; path=/; SameSite=None; Secure';
+    } catch (error) {
+      console.error('Error getting ID token:', error);
+    }
+  } else {
+    // User is signed out; clear the token cookie
+    document.cookie =
+      'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=None; Secure';
+  }
+});
+
+// This handles the initial login state.
+// When we verify login, we also set it there, because this code could run
+// after the verify_login API call.
 auth.onAuthStateChanged(
   function (user) {
     if (user) {
@@ -20,18 +40,20 @@ auth.onAuthStateChanged(
           // SECURITY NOTE: As cookies can easily be modified, only put the
           // token (which is verified server-side) in a cookie; do not add other
           // user information.
-          document.cookie = 'token=' + token + '; SameSite=None ; Secure';
+          document.cookie =
+            'token=' + token + '; path=/; SameSite=None; Secure';
+          console.log('Successfully got login token');
         })
-        .catch(error => console.log(error));
+        .catch(error => console.log('Error getting token:', error));
     } else {
       // User is signed out.
       // Clear the token cookie.
-      document.cookie = 'token=' + '; SameSite=None ; Secure';
+      document.cookie =
+        'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=None; Secure';
     }
   },
   function (error) {
-    console.error(error);
-    alert('Unable to log in: ' + String(error));
+    console.error('Unable to log in:', error);
   },
 );
 
