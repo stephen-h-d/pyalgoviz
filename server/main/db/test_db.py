@@ -123,6 +123,54 @@ def test_database_protocol(db: DatabaseProtocol) -> None:
         len(algo_summaries) == 3
     ), f"User should have 3 algorithm summaries, but got {algo_summaries}"
 
+    # Test get_algos_needing_caching()
+    algos_needing_caching = db.get_algos_needing_caching()
+    assert (
+        len(algos_needing_caching) == 2
+    ), f"Expected 2 algorithms needing caching, but got {len(algos_needing_caching)}"
+    # Verify the names of the algorithms needing caching
+    algo_names_needing_caching = {algo.name for algo in algos_needing_caching}
+    assert "test_algo_2" in algo_names_needing_caching, "test_algo_2 should need caching"
+    assert "test_algo_6" in algo_names_needing_caching, "test_algo_6 should need caching"
+
+    # Test cache_events()
+    new_events = [
+        Event(
+            lineno=10,
+            viz_output="new_viz_output",
+            viz_log="new_viz_log",
+            algo_log="new_algo_log",
+        )
+    ]
+    db.cache_events(test_user.email, "test_algo_2", new_events)
+
+    # Retrieve the algorithm and verify that events were cached
+    cached_algo = db.get_algo(test_user.email, "test_algo_2")
+    assert (
+        cached_algo is not None
+    ), "Algorithm should be retrieved successfully after caching events"
+    assert len(cached_algo.cached_events) == 1, "Algorithm should now have 1 cached event"
+    cached_event = cached_algo.cached_events[0]
+    assert cached_event.lineno == 10, "Cached event lineno should match"
+    assert (
+        cached_event.viz_output == "new_viz_output"
+    ), "Cached event viz_output should match"
+    assert cached_event.viz_log == "new_viz_log", "Cached event viz_log should match"
+    assert cached_event.algo_log == "new_algo_log", "Cached event algo_log should match"
+
+    # After caching, test_algo_2 should no longer need caching
+    algos_needing_caching = db.get_algos_needing_caching()
+    assert (
+        len(algos_needing_caching) == 1
+    ), f"Expected 1 algorithm needing caching, but got {len(algos_needing_caching)}"
+    algo_names_needing_caching = {algo.name for algo in algos_needing_caching}
+    assert (
+        "test_algo_6" in algo_names_needing_caching
+    ), "test_algo_6 should still need caching"
+    assert (
+        "test_algo_2" not in algo_names_needing_caching
+    ), "test_algo_2 should no longer need caching"
+
     print("All tests passed!")
 
 
