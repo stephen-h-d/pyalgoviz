@@ -173,7 +173,7 @@ class MemoryDatabase(DatabaseProtocol):
 # quick and dirty test of to_dict and from_dict
 def main() -> None:
     db = MemoryDatabase()
-    user = User(firebase_user_id="test_user", email="test@exampl.com")
+    user = User(firebase_user_id="test_user", email="test@example.com", display_name=None)
     db.save_user(user)
     algo = SaveAlgorithmArgs(
         author_email=user.email,

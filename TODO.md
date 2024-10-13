@@ -20,7 +20,7 @@
 3. On the main page script demos:
    1. show the first event, but don't show the rest until the user hovers over the first one.
    2. show the name of the script and the author.
-4. Add an "author name" to Author and display the author name instead of email
+4. If the author display_name is not None, display it instead of email. Allow the user to edit it somewhere.
 
 ### Ready-to-implement TODOs post-launch
 1. Tell the user when Pyodide is loading, when it is done loading, when the code is running, and when it is done running.

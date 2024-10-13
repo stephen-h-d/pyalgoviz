@@ -40,12 +40,23 @@ class FirestoreDatabase(DatabaseProtocol):
         user_doc = user_ref.get()
         if user_doc.exists:
             data = user_doc.to_dict()
-            return User(firebase_user_id=user_id, email=data["email"])
+            return User(
+                firebase_user_id=user_id,
+                email=data["email"],
+                display_name=data.get(
+                    "display_name"
+                ),  # Retrieve display_name if it exists
+            )
         return None
 
     def save_user(self, user: User) -> None:
         user_ref = self._client.collection("users").document(user.firebase_user_id)
-        user_ref.set({"email": user.email})
+        data = {"email": user.email}
+        if user.display_name is not None:
+            data[
+                "display_name"
+            ] = user.display_name  # Include display_name if it's not None
+        user_ref.set(data)
 
     def get_algo(self, author_email: str, name: str) -> Optional[Algorithm]:
         algo_ref = self._client.collection("algorithms").document(

@@ -29,10 +29,12 @@ def empty_all_collections(client: firestore.Client) -> None:
         _empty_collection(collection)
 
 
-def create_test_user(db: DatabaseProtocol, id: str, email: str) -> User:
-    user = User(firebase_user_id=id, email=email)
+def create_test_user(
+    db: DatabaseProtocol, fb_user_id: str, email: str, display_name: str | None = None
+) -> User:
+    user = User(firebase_user_id=fb_user_id, email=email, display_name=display_name)
     db.save_user(user)
-    retrieved_user = db.get_user(id)
+    retrieved_user = db.get_user(fb_user_id)
     assert retrieved_user is not None, "User should be retrieved successfully"
     assert (
         retrieved_user.firebase_user_id == user.firebase_user_id

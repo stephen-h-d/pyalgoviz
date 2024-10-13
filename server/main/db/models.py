@@ -11,6 +11,7 @@ FirebaseUserId = str
 class User:
     firebase_user_id: FirebaseUserId
     email: str
+    display_name: str | None
 
     # The following three properties and method are necessary for use in conjunction with
     # the flask-login library
