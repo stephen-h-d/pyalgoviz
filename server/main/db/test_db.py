@@ -55,7 +55,7 @@ def save_algo(
     algorithm_count += 1
     name = f"test_algo_{algorithm_count}"
     save_args = SaveAlgorithmArgs(
-        author_email=user.email,
+        author_firebase_user_id=user.firebase_user_id,
         name=name,
         algo_script="print('Hello World')",
         viz_script="print('Visualize Hello World')",
@@ -72,9 +72,11 @@ def save_algo(
         else [],
     )
     db.save_algo(save_args)
-    algo = db.get_algo(user.email, name)
+    algo = db.get_algo(user.firebase_user_id, name)
     assert algo is not None, "Algorithm should be retrieved successfully"
-    assert algo.author_email == save_args.author_email, "Author email should match"
+    assert (
+        algo.author_firebase_user_id == save_args.author_firebase_user_id
+    ), "Author ID should match"
     assert algo.name == name, "Algorithm name should match"
     assert algo.algo_script == save_args.algo_script, "Algorithm script should match"
     assert algo.viz_script == save_args.viz_script, "Visualization script should match"
@@ -144,10 +146,10 @@ def test_database_protocol(db: DatabaseProtocol) -> None:
             algo_log="new_algo_log",
         )
     ]
-    db.cache_events(test_user.email, "test_algo_2", new_events)
+    db.cache_events(test_user.firebase_user_id, "test_algo_2", new_events)
 
     # Retrieve the algorithm and verify that events were cached
-    cached_algo = db.get_algo(test_user.email, "test_algo_2")
+    cached_algo = db.get_algo(test_user.firebase_user_id, "test_algo_2")
     assert (
         cached_algo is not None
     ), "Algorithm should be retrieved successfully after caching events"

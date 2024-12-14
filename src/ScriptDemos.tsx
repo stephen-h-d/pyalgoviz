@@ -13,7 +13,7 @@ const fetchScripts = async () => {
 };
 
 interface ScriptDemoInfo {
-  author_email: string;
+  author_display_name: string;
   name: string;
   cached_events: VizEvent[];
 }
@@ -112,7 +112,7 @@ const ScriptDemo = (props: { scriptInfo: ScriptDemoInfo }) => {
       {/* Display Script Name and Author */}
       <div class={styles.scriptInfo}>
         <div class={styles.scriptName}>{props.scriptInfo.name}</div>
-        <div class={styles.scriptAuthor}>{props.scriptInfo.author_email}</div>
+        <div class={styles.scriptAuthor}>{props.scriptInfo.author_display_name}</div>
       </div>
 
       {/* The VizRenderer Div */}

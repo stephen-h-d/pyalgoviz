@@ -40,15 +40,17 @@ class Event:
     viz_error_line: int | None = None
 
 
+# An ephemeral summary of an algorithm used for listing available algorithms.
 @attrs.define
 class AlgorithmSummary:
-    author_email: str
+    author_firebase_user_id: FirebaseUserId
+    author_display_name: str
     name: str
 
 
 @attrs.define(kw_only=True)
 class Algorithm:
-    author_email: str
+    author_firebase_user_id: FirebaseUserId
     name: str
     algo_script: str
     viz_script: str
@@ -60,7 +62,7 @@ class Algorithm:
 
     def to_dict(self) -> dict:
         return {
-            "author_email": self.author_email,
+            "author_firebase_user_id": self.author_firebase_user_id,
             "name": self.name,
             "algo_script": self.algo_script,
             "viz_script": self.viz_script,
@@ -76,7 +78,7 @@ class Algorithm:
         events = [Event(**event) for event in d["cached_events"]]
         last_updated = datetime.strptime(d["last_updated"], "%Y-%m-%d %H:%M:%S")
         return cls(
-            author_email=d["author_email"],
+            author_firebase_user_id=d["author_firebase_user_id"],
             name=d["name"],
             algo_script=d["algo_script"],
             viz_script=d["viz_script"],
@@ -88,32 +90,17 @@ class Algorithm:
 
 @attrs.define(kw_only=True)
 class ScriptDemoInfo:
-    author_email: str
+    author_display_name: str
     name: str
     cached_events: list[Event]
 
     @classmethod
-    def from_algorithm(cls, algo: Algorithm) -> ScriptDemoInfo:
+    def from_algorithm(cls, algo: Algorithm, author_display_name: str) -> ScriptDemoInfo:
         if algo.requested_public is False:
             raise ValueError("Only public algorithms can be used as script demos")
 
         return cls(
-            author_email=algo.author_email,
+            author_display_name=author_display_name,
             name=algo.name,
             cached_events=algo.cached_events,
         )
-
-
-@attrs.define
-class Log:
-    author: FirebaseUserId
-    msg: str
-    timestamp: datetime
-
-
-@attrs.define
-class Comment:
-    author: FirebaseUserId
-    name: str
-    content: str
-    timestamp: datetime

@@ -67,7 +67,7 @@ class FirestoreDatabase(DatabaseProtocol):
             data = algo_doc.to_dict()
             events = [Event(**event) for event in data["cached_events"]]
             return Algorithm(
-                author_email=data["author_email"],
+                author_firebase_user_id=data["author_firebase_user_id"],
                 name=data["name"],
                 algo_script=data["algo_script"],
                 viz_script=data["viz_script"],
@@ -79,11 +79,11 @@ class FirestoreDatabase(DatabaseProtocol):
 
     def save_algo(self, algo: SaveAlgorithmArgs) -> None:
         algo_ref = self._client.collection("algorithms").document(
-            f"{algo.author_email}-{algo.name}"
+            f"{algo.author_firebase_user_id}-{algo.name}"
         )
         algo_ref.set(
             {
-                "author_email": algo.author_email,
+                "author_firebase_user_id": algo.author_firebase_user_id,
                 "name": algo.name,
                 "algo_script": algo.algo_script,
                 "viz_script": algo.viz_script,
@@ -100,7 +100,9 @@ class FirestoreDatabase(DatabaseProtocol):
         )
         algos = algos_ref.stream()
         summaries = [
-            AlgorithmSummary(author_email=algo.get("author_email"), name=algo.get("name"))
+            AlgorithmSummary(
+                author_display_name=algo.get("author_email"), name=algo.get("name")
+            )
             for algo in algos
         ]
 
@@ -112,7 +114,9 @@ class FirestoreDatabase(DatabaseProtocol):
         )
         public_algos = public_algos_ref.stream()
         summaries += [
-            AlgorithmSummary(author_email=algo.get("author_email"), name=algo.get("name"))
+            AlgorithmSummary(
+                author_display_name=algo.get("author_email"), name=algo.get("name")
+            )
             for algo in public_algos
             if get_with_default(algo, "cached_events", default=[]) != []
         ]
@@ -125,7 +129,7 @@ class FirestoreDatabase(DatabaseProtocol):
         requested_public_algos = public_algos_ref.stream()
         return [
             ScriptDemoInfo(
-                author_email=algo.get("author_email"),
+                author_display_name=algo.get("author_email"),
                 name=algo.get("name"),
                 cached_events=[Event(**event) for event in algo.get("cached_events")],
             )

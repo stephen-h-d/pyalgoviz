@@ -126,7 +126,7 @@ def save() -> Response:
         #         )
 
         args = SaveAlgorithmArgs(
-            author_email=author.email,
+            author_firebase_user_id=author.firebase_user_id,
             name=name,
             algo_script=algo_script,
             viz_script=viz_script,
@@ -196,9 +196,9 @@ def load() -> Response:
     author: User = current_user
     try:
         script_name = request.args.get("script_name")
-        author_email = request.args.get("author_email")
-        if script_name is None or author_email is None:
-            logger.error(f"Missing one or more arguments. {script_name}, {author_email}")
+        firebase_user_id = request.args.get("firebase_user_id")
+        if script_name is None or firebase_user_id is None:
+            logger.error("Missing one or more arguments.")
             response = jsonify(
                 {
                     "result": "Whoops!  Loading script failed. Missing arguments.  Please report this bug."
@@ -206,11 +206,9 @@ def load() -> Response:
             )
             return make_response(response, HTTPStatus.BAD_REQUEST)
 
-        algo = db.get_algo(author.email, script_name)
+        algo = db.get_algo(author.firebase_user_id, script_name)
         if algo is None:
-            logger.error(
-                f"Could not find script with name {script_name} and author email {author.email}"
-            )
+            logger.error(f"Could not find script with name {script_name}")
             response = jsonify(
                 {
                     "result": "Whoops!  Loading script failed. Could not find script.  Please report this bug."

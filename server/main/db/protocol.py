@@ -12,7 +12,7 @@ from server.main.db.models import User
 
 @attrs.define(kw_only=True)
 class SaveAlgorithmArgs:
-    author_email: str
+    author_firebase_user_id: FirebaseUserId
     name: str
     algo_script: str
     viz_script: str
@@ -29,7 +29,9 @@ class DatabaseProtocol(Protocol):
     def save_user(self, user: User) -> None:
         ...
 
-    def get_algo(self, author_email: str, name: str) -> Algorithm | None:
+    def get_algo(
+        self, author_firebase_user_id: FirebaseUserId, name: str
+    ) -> Algorithm | None:
         ...
 
     def save_algo(self, algo: SaveAlgorithmArgs) -> None:
@@ -40,13 +42,17 @@ class DatabaseProtocol(Protocol):
     These are the ones that the user can load.
     """
 
-    def get_algo_summaries(self, author_email: str) -> list[AlgorithmSummary]:
+    def get_algo_summaries(
+        self, author_firebase_user_id: FirebaseUserId
+    ) -> list[AlgorithmSummary]:
         ...
 
     def get_public_algos(self) -> list[ScriptDemoInfo]:
         ...
 
-    def cache_events(self, author_email: str, name: str, events: list[Event]) -> None:
+    def cache_events(
+        self, author_firebase_user_id: FirebaseUserId, name: str, events: list[Event]
+    ) -> None:
         ...
 
     """

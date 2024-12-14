@@ -78,15 +78,17 @@ class MemoryDatabase(DatabaseProtocol):
         self.users[user.firebase_user_id] = user
 
     @staticmethod
-    def _make_algo_key(author_email: str, algo_name: str) -> str:
-        return author_email + ":" + algo_name
+    def _make_algo_key(author_firebase_user_id: FirebaseUserId, algo_name: str) -> str:
+        return str(author_firebase_user_id) + ":" + algo_name
 
-    def get_algo(self, author_email: str, name: str) -> Algorithm | None:
-        algo_key = self._make_algo_key(author_email, name)
+    def get_algo(
+        self, author_firebase_user_id: FirebaseUserId, name: str
+    ) -> Algorithm | None:
+        algo_key = self._make_algo_key(author_firebase_user_id, name)
         return self.algos.get(algo_key)
 
     def save_algo(self, args: SaveAlgorithmArgs) -> None:
-        algo_key = self._make_algo_key(args.author_email, args.name)
+        algo_key = self._make_algo_key(args.author_firebase_user_id, args.name)
         public = args.requested_public
         if public is None:
             prev_algo = self.algos.get(algo_key)
@@ -98,7 +100,7 @@ class MemoryDatabase(DatabaseProtocol):
             else:
                 public = prev_algo.requested_public
         algo = Algorithm(
-            author_email=args.author_email,
+            author_firebase_user_id=args.author_firebase_user_id,
             name=args.name,
             algo_script=args.algo_script,
             viz_script=args.viz_script,
@@ -109,24 +111,43 @@ class MemoryDatabase(DatabaseProtocol):
         self.algos[algo_key] = algo
 
     def get_algo_summaries(self, author_email: str) -> list[AlgorithmSummary]:
-        return [
-            AlgorithmSummary(name=algo.name, author_email=algo.author_email)
-            for algo in self.algos.values()
-            if author_email == algo.author_email
-            or (algo.requested_public is True and len(algo.cached_events) > 0)
-        ]
+        """Get summaries of algorithms authored by the user or that are public."""
+        summaries = []
+        for algo in self.algos.values():
+            if (
+                algo.author_firebase_user_id in self.users
+                and self.users[algo.author_firebase_user_id].email == author_email
+            ) or (algo.requested_public and algo.cached_events):
+                summaries.append(
+                    AlgorithmSummary(
+                        author_firebase_user_id=algo.author_firebase_user_id,
+                        name=algo.name,
+                        author_display_name=self.users[
+                            algo.author_firebase_user_id
+                        ].display_name,
+                    )
+                )
+        return summaries
 
     def get_public_algos(self) -> list[ScriptDemoInfo]:
-        values = self.algos.values()
-        result = [
-            ScriptDemoInfo.from_algorithm(algo)
-            for algo in values
-            if algo.requested_public is True and len(algo.cached_events) > 0
-        ]
-        return result
+        """Get details of all public algorithms."""
+        public_algos = []
+        for algo in self.algos.values():
+            if algo.requested_public and algo.cached_events:
+                author_display_name = (
+                    self.users[algo.author_firebase_user_id].display_name
+                    if algo.author_firebase_user_id in self.users
+                    else "Unknown Author"
+                )
+                public_algos.append(
+                    ScriptDemoInfo.from_algorithm(algo, author_display_name)
+                )
+        return public_algos
 
-    def cache_events(self, author_email: str, name: str, events: list[Event]) -> None:
-        algo_key = self._make_algo_key(author_email, name)
+    def cache_events(
+        self, author_firebase_user_id: FirebaseUserId, name: str, events: list[Event]
+    ) -> None:
+        algo_key = self._make_algo_key(author_firebase_user_id, name)
         algo = self.algos.get(algo_key)
         if algo is None:
             raise ValueError(f"Algorithm {algo_key} not found.")
@@ -134,7 +155,11 @@ class MemoryDatabase(DatabaseProtocol):
 
     def get_algos_needing_caching(self) -> list[AlgorithmSummary]:
         return [
-            AlgorithmSummary(name=algo.name, author_email=algo.author_email)
+            AlgorithmSummary(
+                name=algo.name,
+                author_firebase_user_id=algo.author_firebase_user_id,
+                author_display_name=self.users[algo.author_firebase_user_id].display_name,
+            )
             for algo in self.algos.values()
             if (algo.requested_public is True and len(algo.cached_events) == 0)
         ]

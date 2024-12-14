@@ -54,11 +54,11 @@ def main() -> None:
         raise ValueError(f"Unknown database type: {db_type}")
 
     if command == "cache":
-        author_email = sys.argv[3]
+        author_firebase_user_id = sys.argv[3]
         name = sys.argv[4]
-        algo = db.get_algo(author_email, name)
+        algo = db.get_algo(author_firebase_user_id, name)
         if algo is None:
-            print(f"Algorithm {author_email}-{name} not found")
+            print(f"Algorithm {author_firebase_user_id}-{name} not found")
             return
 
         res = run_script(algo.algo_script, algo.viz_script)
@@ -72,10 +72,10 @@ def main() -> None:
                 print(f"Could not cache events for public view: {e}")
                 return
 
-            db.cache_events(author_email, name, cached_events)
+            db.cache_events(author_firebase_user_id, name, cached_events)
             if isinstance(db, MemoryDatabase):
                 db.save_cached_demo_db()
-            print(f"Successfully cached events for {author_email}-{name}")
+            print(f"Successfully cached events for {author_firebase_user_id}-{name}")
         else:
             print(
                 f"Could not run script to cache events for public view: {res['py_error']}"

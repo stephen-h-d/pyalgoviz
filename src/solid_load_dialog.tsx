@@ -1,4 +1,3 @@
-
 /* @refresh reload */
 import {
   createResource,
@@ -45,12 +44,12 @@ function SelectDialogEl(props: {
   }
 
   return (
-    <div
-      classList={getCl()}
-      onClick={_e => optionClicked(props.option)}
-    >
+    <div classList={getCl()} onClick={_e => optionClicked(props.option)}>
       {props.option.name}
-      {(userObj === null || userObj.email !== props.option.author_email) ? " (Public)" : ""}
+      {userObj === null ||
+      userObj.firebase_user_id !== props.option.author_firebase_user_id
+        ? ' (Public)'
+        : ''}
     </div>
   );
 }
@@ -61,9 +60,8 @@ function SelectDialog(props: {
   setOpen: Setter<boolean>;
   setSelected: Setter<AlgorithmSummary | null>;
 }) {
-  const [innerSelectedSig, setinnerSelectedSig] = createSignal<AlgorithmSummary | null>(
-    null
-  );
+  const [innerSelectedSig, setinnerSelectedSig] =
+    createSignal<AlgorithmSummary | null>(null);
 
   function setSelectedAndClose(_e: MouseEvent) {
     props.setSelected(innerSelectedSig());
@@ -94,19 +92,15 @@ function SelectDialog(props: {
       >
         Load Selected Script
       </button>
-      <button
-
-        onClick={_e => props.setOpen(false)}
-      >
-        Cancel
-      </button>
+      <button onClick={_e => props.setOpen(false)}>Cancel</button>
     </dialog>
   );
 }
 
 interface AlgorithmSummary {
   name: string;
-  author_email: string;
+  author_firebase_user_id: string;
+  author_display_name: string;
 }
 
 interface AlgorithmSummaries {
@@ -117,7 +111,6 @@ const fetchScriptNames = async () => {
   const fetchResult = await fetch('/api/script_names');
   return (await fetchResult.json()) as AlgorithmSummaries;
 };
-
 
 function text_input(
   element: HTMLInputElement,
@@ -132,7 +125,6 @@ function text_input(
 }
 
 declare module 'solid-js' {
-
   namespace JSX {
     interface Directives {
       // use:text_input
@@ -176,10 +168,10 @@ export function WarningDialog(props: {
 }) {
   const onConfirm = () => {
     props.onConfirm();
-  }
+  };
   const onCancel = () => {
     props.onCancel();
-  }
+  };
 
   return (
     <dialog open={props.open()}>
@@ -207,7 +199,8 @@ function DuplicateNameDialog(props: {
   );
 }
 
-export const savingErrorText = () => 'Error saving script. Please try again. If that does not work, please report this bug.';
+export const savingErrorText = () =>
+  'Error saving script. Please try again. If that does not work, please report this bug.';
 
 export function SaveScriptDialog(props: {
   open: Accessor<boolean>;
@@ -216,7 +209,7 @@ export function SaveScriptDialog(props: {
   viz: Accessor<string>;
   savedCb: (script: PyAlgoVizScript, algoName: string) => void;
 }) {
-  const [algoSummAries, { refetch }] = createResource(fetchScriptNames);
+  const [algoSummaries, { refetch }] = createResource(fetchScriptNames);
   const [algoName, setAlgoName] = createSignal('');
   const [requestPublic, setRequestPublic] = createSignal(false);
   const [saving, setSaving] = createSignal(false);
@@ -230,36 +223,35 @@ export function SaveScriptDialog(props: {
     }
   });
 
-  const getAlgoSummaries = () => {
+  const getUserAlgoSummaries = () => {
     const userObj = user();
     const names = [];
-    if (algoSummAries.loading || algoSummAries.error || userObj === null) {
+    if (algoSummaries.loading || algoSummaries.error || userObj === null) {
       if (userObj === null) {
         console.error('User not logged in');
       }
-      if (algoSummAries.error !== undefined) {
-        console.error('Error loading script names', algoSummAries.error);
+      if (algoSummaries.error !== undefined) {
+        console.error('Error loading script names', algoSummaries.error);
       }
       return [];
     }
 
-    const fetched = algoSummAries() as AlgorithmSummaries;
+    const fetched = algoSummaries() as AlgorithmSummaries;
     for (const name of fetched.result) {
-      // discard the public ones; this function is just for checking whether
+      // discard the ones from other users; this function is just for checking whether
       // they are saving a duplicate.
-      if (name.author_email === userObj.email) {
+      if (name.author_firebase_user_id === userObj.firebase_user_id) {
         names.push(name.name);
       }
     }
     return names;
   };
 
-
   const save = async (_event: MouseEvent) => {
     const name = algoName();
 
     await refetch();
-    const scriptNamesResult = getAlgoSummaries();
+    const scriptNamesResult = getUserAlgoSummaries();
 
     if (scriptNamesResult.includes(name)) {
       setDuplicateOpen(true);
@@ -281,18 +273,23 @@ export function SaveScriptDialog(props: {
       name,
       requested_public: requestPublic(),
     });
-    if (saveResult.type === "Ok") {
-      props.savedCb({
-        algo_script,
-        viz_script,
-      },name);
+    if (saveResult.type === 'Ok') {
+      props.savedCb(
+        {
+          algo_script,
+          viz_script,
+        },
+        name,
+      );
       setSaving(false);
       props.setOpen(false);
       setSuccessOpen(true);
-    }
-    else if (saveResult.type === "Unauthorized") {
-      console.error("Encountered unauthorized error while saving script");
-      setUserAndAuthError(null, 'Authorization error encountered while saving script. You have been logged out.');
+    } else if (saveResult.type === 'Unauthorized') {
+      console.error('Encountered unauthorized error while saving script');
+      setUserAndAuthError(
+        null,
+        'Authorization error encountered while saving script. You have been logged out.',
+      );
     } else {
       setSaving(false);
       setErrorOpen(true);
@@ -312,14 +309,10 @@ export function SaveScriptDialog(props: {
     <>
       <dialog open={props.open()}>
         <input type="text" use:text_input={[algoName, setAlgoName]} />
-        <button onClick={() => props.setOpen(false)}>
-          Cancel
-        </button>
-        <button onClick={save}>
-          Save
-        </button>
+        <button onClick={() => props.setOpen(false)}>Cancel</button>
+        <button onClick={save}>Save</button>
         <p>{saving() && 'Saving...'}</p>
-        <br/>
+        <br />
         <CheckBox
           id="publish"
           label="Make Public (will be visible to all users after it is checked for malicious content)"
@@ -328,7 +321,11 @@ export function SaveScriptDialog(props: {
         />
       </dialog>
       <SuccessDialog open={successOpen} setOpen={setSuccessOpen} />
-      <ErrorDialog open={errorOpen} setOpen={setErrorOpen} text={savingErrorText}/>
+      <ErrorDialog
+        open={errorOpen}
+        setOpen={setErrorOpen}
+        text={savingErrorText}
+      />
       <DuplicateNameDialog
         open={duplicateOpen}
         setOpen={setDuplicateOpen}
@@ -338,7 +335,6 @@ export function SaveScriptDialog(props: {
     </>
   );
 }
-
 
 export function LoadScriptDialog(props: {
   open: Accessor<boolean>;
@@ -367,14 +363,19 @@ export function LoadScriptDialog(props: {
   createEffect(() => {
     const selectedScript = selected();
     if (selectedScript !== null) {
-      fetch(`/api/load?script_name=${selectedScript.name}&author_email=${selectedScript.author_email}`)
+      fetch(
+        `/api/load?script_name=${selectedScript.name}&firebase_user_id=${selectedScript.author_firebase_user_id}`,
+      )
         .then(response => response.json())
         // eslint-disable-next-line solid/reactivity
         .then(data => {
-          props.finishLoading({
-            algo_script: data.algo_script,
-            viz_script: data.viz_script,
-          },selectedScript.name);
+          props.finishLoading(
+            {
+              algo_script: data.algo_script,
+              viz_script: data.viz_script,
+            },
+            selectedScript.name,
+          );
         })
         .catch(error => console.error(error));
 
