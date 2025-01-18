@@ -1,7 +1,19 @@
-import { Accessor, Setter, createSignal, createEffect } from 'solid-js';
+import { Accessor, Setter, createSignal, createEffect, Signal } from 'solid-js';
 import { postJson } from './postJson';
 import { SuccessDialog } from './SuccessDialog';
 import { ErrorDialog } from './ErrorDialog';
+
+declare module 'solid-js' {
+  namespace JSX {
+    interface Directives {
+      // use:text_input
+      text_input: Signal<string>;
+    }
+  }
+}
+
+const savingErrorText = () =>
+  'Error updating display name. Please try again. If that does not work, please report this bug.';
 
 export function UpdateDisplayNameDialog(props: {
   open: Accessor<boolean>;
@@ -33,7 +45,9 @@ export function UpdateDisplayNameDialog(props: {
         setSuccessOpen(true);
       } else if (saveResult.type === 'Unauthorized') {
         // Handle any user re-auth or logout logic here
-        console.error('Encountered unauthorized error while updating display name');
+        console.error(
+          'Encountered unauthorized error while updating display name',
+        );
         setSaving(false);
         setErrorOpen(true);
       } else {
@@ -57,7 +71,11 @@ export function UpdateDisplayNameDialog(props: {
         <p>{saving() && 'Saving...'}</p>
       </dialog>
       <SuccessDialog open={successOpen} setOpen={setSuccessOpen} />
-      <ErrorDialog open={errorOpen} setOpen={setErrorOpen} text="Error updating display name" />
+      <ErrorDialog
+        open={errorOpen}
+        setOpen={setErrorOpen}
+        text={savingErrorText}
+      />
     </>
   );
 }

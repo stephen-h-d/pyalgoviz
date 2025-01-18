@@ -10,11 +10,7 @@ import {
   Ref,
 } from 'solid-js';
 import isEqual from 'lodash/isEqual';
-import {
-  LoadScriptDialog,
-  SaveScriptDialog,
-  savingErrorText,
-} from './solid_load_dialog';
+import { LoadScriptDialog, savingErrorText } from './solid_load_dialog';
 import { SuccessDialog } from './SuccessDialog';
 import { ErrorDialog } from './ErrorDialog';
 import { WarningDialog } from './WarningDialog';
@@ -38,6 +34,7 @@ import { postJson } from './postJson';
 import { CheckBox } from './CheckBox';
 import { EventNavSubjects } from './EventNavSubjects';
 import toast, { Toaster } from 'solid-toast';
+import { SaveScriptDialog } from './SaveScriptDialog';
 
 declare module 'solid-js' {
   namespace JSX {
