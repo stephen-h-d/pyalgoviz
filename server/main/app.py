@@ -148,6 +148,39 @@ def save() -> Response:
     return make_response(response, HTTPStatus.OK)
 
 
+@app.route("/api/update_display_name", methods=["POST", "OPTIONS"])
+@jwta.authenticated
+def update_display_name() -> Response:
+    user: User = current_user
+    try:
+        data = request.get_json(force=True)
+        new_display_name = data.get("display_name", "").strip()
+        if not new_display_name:
+            response = jsonify({"result": "Missing display_name in request body."})
+            return make_response(response, HTTPStatus.BAD_REQUEST)
+
+        # Update the user's display name
+        user.display_name = new_display_name
+
+        # Persist changes
+        db.save_user(user)
+
+        response = jsonify(
+            {
+                "result": "Display name updated",
+                "display_name": user.display_name,
+            }
+        )
+        return make_response(response, HTTPStatus.OK)
+
+    except Exception as e:
+        msg = f"Failed to update display name: {e}"
+        logger.error(msg)
+        logger.exception(e)
+        response = jsonify({"result": "An error occurred while updating display name."})
+        return make_response(response, HTTPStatus.INTERNAL_SERVER_ERROR)
+
+
 @app.route("/api/verify_login", methods=["GET", "OPTIONS"])
 @jwta.authenticated
 def verify_login() -> Response:

@@ -11,13 +11,13 @@ import {
 } from 'solid-js';
 import isEqual from 'lodash/isEqual';
 import {
-  ErrorDialog,
   LoadScriptDialog,
   SaveScriptDialog,
   savingErrorText,
-  SuccessDialog,
-  WarningDialog,
 } from './solid_load_dialog';
+import { SuccessDialog } from './SuccessDialog';
+import { ErrorDialog } from './ErrorDialog';
+import { WarningDialog } from './WarningDialog';
 import * as styles from './edit3.css';
 import { Extension } from '@codemirror/state';
 import { Editor } from './editor';

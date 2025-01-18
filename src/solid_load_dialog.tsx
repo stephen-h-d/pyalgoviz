@@ -14,6 +14,9 @@ import { postJson } from './postJson';
 import { PyAlgoVizScript } from './exec_result';
 import { CheckBox } from './CheckBox';
 import { setUserAndAuthError, user } from './authSignal';
+import { DuplicateNameDialog } from './DuplicateNameDialog';
+import { ErrorDialog } from './ErrorDialog';
+import { SuccessDialog } from './SuccessDialog';
 
 function SelectDialogEl(props: {
   option: AlgorithmSummary;
@@ -131,72 +134,6 @@ declare module 'solid-js' {
       text_input: Signal<string>;
     }
   }
-}
-
-export function SuccessDialog(props: {
-  open: Accessor<boolean>;
-  setOpen: Setter<boolean>;
-}) {
-  return (
-    <dialog open={props.open()}>
-      <p>Script saved successfully.</p>
-      <button onClick={() => props.setOpen(false)}>OK</button>
-    </dialog>
-  );
-}
-
-export function ErrorDialog(props: {
-  open: Accessor<boolean>;
-  setOpen: Setter<boolean>;
-  text: Accessor<string>;
-  className?: string;
-}) {
-  return (
-    <dialog open={props.open()} class={props.className}>
-      <p>{props.text()}</p>
-      <button onClick={() => props.setOpen(false)}>OK</button>
-    </dialog>
-  );
-}
-
-export function WarningDialog(props: {
-  text: string;
-  open: Accessor<boolean>;
-  setOpen: Setter<boolean>;
-  onConfirm: () => void;
-  onCancel: () => void;
-}) {
-  const onConfirm = () => {
-    props.onConfirm();
-  };
-  const onCancel = () => {
-    props.onCancel();
-  };
-
-  return (
-    <dialog open={props.open()}>
-      <p>{props.text}</p>
-      <button onClick={onConfirm}>Yes</button>
-      <button onClick={onCancel}>No</button>
-    </dialog>
-  );
-}
-
-function DuplicateNameDialog(props: {
-  open: Accessor<boolean>;
-  setOpen: Setter<boolean>;
-  onConfirm: () => void;
-  onCancel: () => void;
-}) {
-  return (
-    <WarningDialog
-      text="A script with that name already exists. Do you want to overwrite it?"
-      open={props.open}
-      setOpen={props.setOpen}
-      onConfirm={props.onConfirm}
-      onCancel={props.onCancel}
-    />
-  );
 }
 
 export const savingErrorText = () =>

@@ -47,7 +47,8 @@ class JWTAuthenticator:
                     uid = decoded_token["uid"]
                     user = self.db.get_user(uid)
                     if user is None:
-                        user = User(firebase_user_id=uid, email=decoded_token["email"])
+                        email = decoded_token["email"]
+                        user = User(firebase_user_id=uid, email=email, display_name=email)
                         self.db.save_user(user)
 
                     login_user(user)
