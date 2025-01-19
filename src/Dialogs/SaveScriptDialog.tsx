@@ -5,16 +5,16 @@ import {
   createSignal,
   createEffect,
 } from 'solid-js';
-import { user, setUserAndAuthError } from './authSignal';
-import { CheckBox } from './CheckBox';
-import { DuplicateNameDialog } from './DuplicateNameDialog';
+import { user, setUserAndAuthError } from '../authSignal';
+import { CheckBox } from '../CheckBox';
+import { DuplicateNameDialog } from '../DuplicateNameDialog';
 import { ErrorDialog } from './ErrorDialog';
-import { PyAlgoVizScript } from './exec_result';
-import { postJson } from './postJson';
-import { savingErrorText } from './solid_load_dialog';
+import { PyAlgoVizScript } from '../exec_result';
+import { postJson } from '../postJson';
+import { savingErrorText } from '../solid_load_dialog';
 import { SuccessDialog } from './SuccessDialog';
-import { fetchScriptNames, AlgorithmSummaries } from './fetchScriptNames';
-import { text_input } from './text_input';
+import { fetchScriptNames, AlgorithmSummaries } from '../fetchScriptNames';
+import { text_input } from '../text_input';
 
 console.log(text_input); // prevent it from being removed by minification
 

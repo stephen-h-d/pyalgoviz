@@ -1,5 +1,5 @@
 import { Accessor, Setter } from 'solid-js';
-import * as styles from './edit3.css';
+import * as styles from '../styles.css';
 
 export function ErrorDialog(props: {
   open: Accessor<boolean>;

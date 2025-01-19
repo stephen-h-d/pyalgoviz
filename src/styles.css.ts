@@ -13,7 +13,20 @@ export const header = style({
   flex: '0 1 auto',
 });
 export const headerContent = style({});
-export const loginBtn = style({
+
+export const headerBtnContainer = style({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+});
+export const updateDisplayNameBtn = style({
+  background: 'blue',
+  color: 'white',
+  padding: '8px 16px',
+  borderRadius: '4px',
+  cursor: 'pointer',
+});
+export const headerBtn = style({
   background: 'blue',
   color: 'white',
   padding: '8px 16px',
@@ -27,6 +40,7 @@ export const logoutBtn = style({
   borderRadius: '4px',
   cursor: 'pointer',
 });
+
 export const content = style({
   flex: '1 1 auto',
   marginLeft: '2px',
@@ -186,8 +200,11 @@ export const selectedTab = style({
 });
 
 export const dialog = style({
-  position: 'absolute',
-  zIndex: 2,
+  position: 'fixed',
+  top: '00%',
+  left: '00%',
+  transform: 'translate(-50%, -50%)',
+  zIndex: 9999,
 });
 
 const global_args = { height: '100%', margin: '0' };

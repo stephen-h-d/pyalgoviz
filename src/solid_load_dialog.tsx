@@ -15,9 +15,9 @@ import { PyAlgoVizScript } from './exec_result';
 import { CheckBox } from './CheckBox';
 import { setUserAndAuthError, user } from './authSignal';
 import { DuplicateNameDialog } from './DuplicateNameDialog';
-import { ErrorDialog } from './ErrorDialog';
-import { SuccessDialog } from './SuccessDialog';
-import { UpdateDisplayNameDialog } from './UpdateDisplayName';
+import { ErrorDialog } from './Dialogs/ErrorDialog';
+import { SuccessDialog } from './Dialogs/SuccessDialog';
+import { UpdateDisplayNameDialog } from './Dialogs/UpdateDisplayName';
 import {
   AlgorithmSummary,
   fetchScriptNames,
@@ -104,27 +104,6 @@ function SelectDialog(props: {
       <button onClick={_e => props.setOpen(false)}>Cancel</button>
     </dialog>
   );
-}
-
-function text_input(
-  element: HTMLInputElement,
-  value: Accessor<Signal<string>>,
-) {
-  const [field, setField] = value();
-  createRenderEffect(() => (element.value = field()));
-  element.addEventListener('input', e => {
-    const value = (e.target as HTMLInputElement).value;
-    setField(value);
-  });
-}
-
-declare module 'solid-js' {
-  namespace JSX {
-    interface Directives {
-      // use:text_input
-      text_input: Signal<string>;
-    }
-  }
 }
 
 export const savingErrorText = () =>

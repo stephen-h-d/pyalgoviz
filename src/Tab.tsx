@@ -1,4 +1,4 @@
-import * as styles from './edit3.css';
+import * as styles from './styles.css';
 
 export const Tab = (props: {
   id: number;

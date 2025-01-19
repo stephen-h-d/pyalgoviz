@@ -1,9 +1,9 @@
 import { Accessor, Setter, createSignal, createEffect } from 'solid-js';
-import { postJson } from './postJson';
+import { postJson } from '../postJson';
 import { SuccessDialog } from './SuccessDialog';
 import { ErrorDialog } from './ErrorDialog';
-import { text_input } from './text_input';
-import * as styles from './edit3.css';
+import { text_input } from '../text_input';
+import * as styles from '../styles.css';
 
 console.log(text_input); // prevent it from being removed by minification
 
@@ -16,7 +16,15 @@ export function UpdateDisplayNameDialog(props: {
   displayName: Accessor<string>;
   savedCb: (newName: string) => void;
 }) {
-  const [tempName, setTempName] = createSignal(props.displayName());
+  const [tempName, setTempName] = createSignal('');
+
+  createEffect(() => {
+    // Whenever dialog opens, set the local state to the current display name
+    if (props.open()) {
+      setTempName(props.displayName());
+    }
+  });
+
   const [saving, setSaving] = createSignal(false);
   const [successOpen, setSuccessOpen] = createSignal(false);
   const [errorOpen, setErrorOpen] = createSignal(false);
@@ -65,7 +73,11 @@ export function UpdateDisplayNameDialog(props: {
         <button onClick={save}>Save</button>
         <p>{saving() && 'Saving...'}</p>
       </dialog>
-      <SuccessDialog open={successOpen} setOpen={setSuccessOpen} text="Display name updated." />
+      <SuccessDialog
+        open={successOpen}
+        setOpen={setSuccessOpen}
+        text="Display name updated."
+      />
       <ErrorDialog
         open={errorOpen}
         setOpen={setErrorOpen}

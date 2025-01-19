@@ -11,10 +11,10 @@ import {
 } from 'solid-js';
 import isEqual from 'lodash/isEqual';
 import { LoadScriptDialog, savingErrorText } from './solid_load_dialog';
-import { SuccessDialog } from './SuccessDialog';
-import { ErrorDialog } from './ErrorDialog';
+import { SuccessDialog } from './Dialogs/SuccessDialog';
+import { ErrorDialog } from './Dialogs/ErrorDialog';
 import { WarningDialog } from './WarningDialog';
-import * as styles from './edit3.css';
+import * as styles from './styles.css';
 import { Extension } from '@codemirror/state';
 import { Editor } from './editor';
 import { python } from '@codemirror/lang-python';
@@ -34,8 +34,8 @@ import { postJson } from './postJson';
 import { CheckBox } from './CheckBox';
 import { EventNavSubjects } from './EventNavSubjects';
 import toast, { Toaster } from 'solid-toast';
-import { SaveScriptDialog } from './SaveScriptDialog';
-import { UpdateDisplayNameDialog } from './UpdateDisplayName';
+import { SaveScriptDialog } from './Dialogs/SaveScriptDialog';
+import { UpdateDisplayNameDialog } from './Dialogs/UpdateDisplayName';
 
 declare module 'solid-js' {
   namespace JSX {
@@ -325,7 +325,11 @@ function TopLeftContents(props: {
         setOpen={setShowLoadDialog}
         finishLoading={setCurrentSavedScriptInfo}
       />
-      <SuccessDialog open={successOpen} setOpen={setSuccessOpen} />
+      <SuccessDialog
+        open={successOpen}
+        setOpen={setSuccessOpen}
+        text="Script saved."
+      />
       <ErrorDialog
         open={errorOpen}
         setOpen={setErrorOpen}
@@ -891,18 +895,24 @@ function Header(props: { algoName: Accessor<string> }) {
     if (userObj !== null) {
       return (
         <>
-          <span>{userObj.email}</span>
-          <button class={styles.loginBtn} onClick={() => setDialogOpen(true)}>
-            Update Display Name
-          </button>
-          <button class={styles.logoutBtn} onClick={logout}>
-            Log Out
-          </button>
+          <span>{userObj.display_name}</span>
+          <div class={styles.headerBtnContainer}>
+            <button
+              class={styles.headerBtn}
+              disabled={user() === null}
+              onClick={() => setDialogOpen(true)}
+            >
+              Update Display Name
+            </button>
+            <button class={styles.headerBtn} onClick={logout}>
+              Log Out
+            </button>
+          </div>
         </>
       );
     } else {
       return (
-        <button class={styles.loginBtn} onClick={loginWithGoogle}>
+        <button class={styles.headerBtn} onClick={loginWithGoogle}>
           Log In
         </button>
       );

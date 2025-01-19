@@ -2,7 +2,7 @@ import { render } from 'solid-js/web';
 import { Router, Route, Routes } from '@solidjs/router';
 import { ScriptDemos } from './ScriptDemos';
 import { Edit } from './Edit';
-import * as styles from './edit3.css';
+import * as styles from './styles.css';
 
 const rootDiv = document.getElementById('root');
 

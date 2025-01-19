@@ -31,11 +31,12 @@ export async function signInWithGoogle(_event: MouseEvent) {
           }
           return response.json();
         })
-        .then(_data => {
+        .then(data => {
           console.log('Verified login');
           const newUser = {
             firebase_user_id: user.uid,
             email: user.email || '',
+            display_name: data.display_name,
           };
           setUserAndAuthError(newUser, null);
         })
