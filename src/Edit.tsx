@@ -28,13 +28,14 @@ import { ExecResult, PyAlgoVizScript, VizEvent } from './exec_result';
 import { renderEvent } from './VizOutput';
 import EnumSelect from './EnumSelect';
 import { signInWithGoogle as loginWithGoogle, logout } from './login';
-import { authError, setUserAndAuthError, user } from './authSignal';
+import { authError, setUser, setUserAndAuthError, user } from './authSignal';
 import { LogManager } from './LogManager';
 import { postJson } from './postJson';
 import { CheckBox } from './CheckBox';
 import { EventNavSubjects } from './EventNavSubjects';
 import toast, { Toaster } from 'solid-toast';
 import { SaveScriptDialog } from './SaveScriptDialog';
+import { UpdateDisplayNameDialog } from './UpdateDisplayName';
 
 declare module 'solid-js' {
   namespace JSX {
@@ -555,8 +556,6 @@ function BottomRightContents(props: {
   );
 }
 
-export default BottomRightContents;
-
 class Resizer {
   private cell_11_height: Accessor<number>;
   private set_cell_11_height: Setter<number>;
@@ -876,10 +875,16 @@ function IDE(props: {
 }
 
 function Header(props: { algoName: Accessor<string> }) {
-  // We have to use an `Inner` function here in order for the component
-  // to rerender correctly.  We need to have an `if` statement that checks
-  // if the `userObj` is null for better type-checking, and the only way
-  // to do that is an `Inner` function component of sorts.
+  // Control the "UpdateDisplayNameDialog" open/close
+  const [dialogOpen, setDialogOpen] = createSignal(false);
+
+  // Callback for when the display name is successfully updated
+  function savedCb(newName: string) {
+    // Update the global user state so reactivity flows throughout the app
+    setUser(prev =>
+      prev !== null ? { ...prev, display_name: newName } : null,
+    );
+  }
 
   function Inner() {
     const userObj = user();
@@ -887,6 +892,9 @@ function Header(props: { algoName: Accessor<string> }) {
       return (
         <>
           <span>{userObj.email}</span>
+          <button class={styles.loginBtn} onClick={() => setDialogOpen(true)}>
+            Update Display Name
+          </button>
           <button class={styles.logoutBtn} onClick={logout}>
             Log Out
           </button>
@@ -901,16 +909,22 @@ function Header(props: { algoName: Accessor<string> }) {
     }
   }
 
-  const nameToDisplay = (): string => {
-    return props.algoName() === '' ? 'Untitled' : props.algoName();
-  };
+  const algoNameToDisplay = (): string =>
+    props.algoName() === '' ? 'Untitled' : props.algoName();
 
   return (
     <>
       <div class={styles.header}>
-        <div class={styles.headerContent}>{nameToDisplay()}</div>
+        <div class={styles.headerContent}>{algoNameToDisplay()}</div>
         {Inner()}
       </div>
+      <UpdateDisplayNameDialog
+        open={dialogOpen}
+        setOpen={setDialogOpen}
+        // Provide the latest display name from the user store, or '' if not available
+        displayName={() => (user() && user()!.display_name) || ''}
+        savedCb={savedCb}
+      />
     </>
   );
 }
@@ -962,7 +976,6 @@ export function Edit() {
   return (
     <div class={styles.app}>
       <ErrorDialog
-        className={styles.errorDialog}
         text={authErrorText}
         open={errorOpen}
         setOpen={setErrorOpen}

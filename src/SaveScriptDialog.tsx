@@ -4,7 +4,6 @@ import {
   createResource,
   createSignal,
   createEffect,
-  Signal,
 } from 'solid-js';
 import { user, setUserAndAuthError } from './authSignal';
 import { CheckBox } from './CheckBox';
@@ -137,7 +136,11 @@ export function SaveScriptDialog(props: {
           setValue={setRequestPublic}
         />
       </dialog>
-      <SuccessDialog open={successOpen} setOpen={setSuccessOpen} />
+      <SuccessDialog
+        open={successOpen}
+        setOpen={setSuccessOpen}
+        text="Script saved."
+      />
       <ErrorDialog
         open={errorOpen}
         setOpen={setErrorOpen}

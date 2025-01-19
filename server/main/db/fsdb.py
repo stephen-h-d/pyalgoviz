@@ -149,10 +149,18 @@ class FirestoreDatabase(DatabaseProtocol):
         )
         requested_public_algos = public_algos_ref.stream()
         return [
-            AlgorithmSummary(author_email=algo.get("author_email"), name=algo.get("name"))
+            AlgorithmSummary(
+                author_email=algo.get("author_email"), name=algo.get("name")
+            )
             for algo in requested_public_algos
             if get_with_default(algo, "cached_events", default=[]) == []
         ]
+
+    def update_display_name(
+        self, firebase_user_id: FirebaseUserId, new_display_name: str
+    ) -> None:
+        user_ref = self._client.collection("users").document(firebase_user_id)
+        user_ref.update({"display_name": new_display_name})
 
 
 DatabaseId = Union[Literal["pyalgoviz-test"], Literal["unit-test"]]

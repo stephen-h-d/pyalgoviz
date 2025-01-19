@@ -61,3 +61,8 @@ class DatabaseProtocol(Protocol):
 
     def get_algos_needing_caching(self) -> list[AlgorithmSummary]:
         ...
+
+    def update_display_name(
+        self, firebase_user_id: FirebaseUserId, new_display_name: str
+    ) -> None:
+        ...

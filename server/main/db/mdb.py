@@ -56,7 +56,9 @@ def dict_to_attrs(class_type: Type[T], d: Dict) -> T:
             new_list = []
             for item in d[field]:
                 new_item = (
-                    dict_to_attrs(element_type, item) if attrs.has(element_type) else item
+                    dict_to_attrs(element_type, item)
+                    if attrs.has(element_type)
+                    else item
                 )
                 new_list.append(new_item)
             d[field] = new_list
@@ -76,6 +78,12 @@ class MemoryDatabase(DatabaseProtocol):
 
     def save_user(self, user: User) -> None:
         self.users[user.firebase_user_id] = user
+
+    def update_display_name(
+        self, firebase_user_id: FirebaseUserId, new_display_name: str
+    ) -> None:
+        if firebase_user_id in self.users:
+            self.users[firebase_user_id].display_name = new_display_name
 
     @staticmethod
     def _make_algo_key(author_firebase_user_id: FirebaseUserId, algo_name: str) -> str:
@@ -158,7 +166,9 @@ class MemoryDatabase(DatabaseProtocol):
             AlgorithmSummary(
                 name=algo.name,
                 author_firebase_user_id=algo.author_firebase_user_id,
-                author_display_name=self.users[algo.author_firebase_user_id].display_name,
+                author_display_name=self.users[
+                    algo.author_firebase_user_id
+                ].display_name,
             )
             for algo in self.algos.values()
             if (algo.requested_public is True and len(algo.cached_events) == 0)
@@ -198,7 +208,9 @@ class MemoryDatabase(DatabaseProtocol):
 # quick and dirty test of to_dict and from_dict
 def main() -> None:
     db = MemoryDatabase()
-    user = User(firebase_user_id="test_user", email="test@example.com", display_name=None)
+    user = User(
+        firebase_user_id="test_user", email="test@example.com", display_name=None
+    )
     db.save_user(user)
     algo = SaveAlgorithmArgs(
         author_email=user.email,
@@ -206,7 +218,9 @@ def main() -> None:
         algo_script="print('Hello World')",
         viz_script="print('Visualize Hello World')",
         requested_public=True,
-        cached_events=[Event(lineno=1, viz_output="viz", viz_log="log", algo_log="log")],
+        cached_events=[
+            Event(lineno=1, viz_output="viz", viz_log="log", algo_log="log")
+        ],
     )
     db.save_algo(algo)
 

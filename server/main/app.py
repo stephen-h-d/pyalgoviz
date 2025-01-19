@@ -142,7 +142,9 @@ def save() -> Response:
         msg = "Could not save script: %s" % e
         logger.error(msg)
         logger.exception(e)
-        response = jsonify({"result": "Whoops!  Saving failed.  Please report this bug."})
+        response = jsonify(
+            {"result": "Whoops!  Saving failed.  Please report this bug."}
+        )
         return make_response(response, HTTPStatus.INTERNAL_SERVER_ERROR)
     response = jsonify({"result": msg})
     return make_response(response, HTTPStatus.OK)
@@ -159,11 +161,10 @@ def update_display_name() -> Response:
             response = jsonify({"result": "Missing display_name in request body."})
             return make_response(response, HTTPStatus.BAD_REQUEST)
 
-        # Update the user's display name
-        user.display_name = new_display_name
-
-        # Persist changes
-        db.save_user(user)
+        # Note: For reasons having to do with the middleware that I don't fully understand, calling db.save_user() here
+        # results in infinite recursion when subsequent requests are handled. So we need a separate method to update the
+        # display name in the database.
+        db.update_display_name(user.firebase_user_id, new_display_name)
 
         response = jsonify(
             {
@@ -186,7 +187,7 @@ def update_display_name() -> Response:
 def verify_login() -> Response:
     user: User = current_user
     logging.info(f"User {user.email} is logged in.")
-    return jsonify({"result": "success"})
+    return jsonify({"result": "success", "display_name": user.display_name})
 
 
 @app.route("/api/script_names", methods=["GET", "OPTIONS"])

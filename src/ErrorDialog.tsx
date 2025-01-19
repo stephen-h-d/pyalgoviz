@@ -1,13 +1,13 @@
 import { Accessor, Setter } from 'solid-js';
+import * as styles from './edit3.css';
 
 export function ErrorDialog(props: {
   open: Accessor<boolean>;
   setOpen: Setter<boolean>;
   text: Accessor<string>;
-  className?: string;
 }) {
   return (
-    <dialog open={props.open()} class={props.className}>
+    <dialog open={props.open()} class={styles.dialog}>
       <p>{props.text()}</p>
       <button onClick={() => props.setOpen(false)}>OK</button>
     </dialog>

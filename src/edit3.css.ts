@@ -185,7 +185,7 @@ export const selectedTab = style({
   backgroundColor: '#d9d9d9',
 });
 
-export const errorDialog = style({
+export const dialog = style({
   position: 'absolute',
   zIndex: 2,
 });
