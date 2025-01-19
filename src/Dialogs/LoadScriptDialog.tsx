@@ -9,20 +9,20 @@ import {
   Accessor,
   Setter,
 } from 'solid-js';
-import * as styles from './solid_load_dialog.css';
-import { postJson } from './postJson';
-import { PyAlgoVizScript } from './exec_result';
-import { CheckBox } from './CheckBox';
-import { setUserAndAuthError, user } from './authSignal';
-import { DuplicateNameDialog } from './DuplicateNameDialog';
-import { ErrorDialog } from './Dialogs/ErrorDialog';
-import { SuccessDialog } from './Dialogs/SuccessDialog';
-import { UpdateDisplayNameDialog } from './Dialogs/UpdateDisplayName';
+import * as styles from './LoadScriptDialog.css';
+import { postJson } from '../postJson';
+import { PyAlgoVizScript } from '../exec_result';
+import { CheckBox } from '../CheckBox';
+import { setUserAndAuthError, user } from '../authSignal';
+import { DuplicateNameDialog } from '../DuplicateNameDialog';
+import { BasicDialog } from './BasicDialog';
+import { UpdateDisplayNameDialog } from './UpdateDisplayName';
 import {
   AlgorithmSummary,
   fetchScriptNames,
   AlgorithmSummaries,
-} from './fetchScriptNames';
+} from '../fetchScriptNames';
+import { Dialog } from './Dialog';
 
 function SelectDialogEl(props: {
   option: AlgorithmSummary;
@@ -88,12 +88,7 @@ function SelectDialog(props: {
   }
 
   return (
-    <dialog
-      open={props.open()}
-      class={styles.dialog}
-      role="dialog"
-      aria-modal="true"
-    >
+    <Dialog open={props.open} setOpen={props.setOpen}>
       <For each={props.options}>{showSelectDialog}</For>
       <button
         disabled={innerSelectedSig() == null}
@@ -102,12 +97,9 @@ function SelectDialog(props: {
         Load Selected Script
       </button>
       <button onClick={_e => props.setOpen(false)}>Cancel</button>
-    </dialog>
+    </Dialog>
   );
 }
-
-export const savingErrorText = () =>
-  'Error saving script. Please try again. If that does not work, please report this bug.';
 
 export function LoadScriptDialog(props: {
   open: Accessor<boolean>;

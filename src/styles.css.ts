@@ -201,10 +201,33 @@ export const selectedTab = style({
 
 export const dialog = style({
   position: 'fixed',
-  top: '00%',
-  left: '00%',
+  // display: 'block',
+  top: '50%',
+  left: '50%',
+  WebkitTransform: 'translate(-50%, -50%)',
+  MozTransform: 'translate(-50%, -50%)',
+  msTransform: 'translate(-50%, -50%)',
   transform: 'translate(-50%, -50%)',
   zIndex: 9999,
+});
+
+export const dialogOverlay = style({
+  position: 'fixed',
+  inset: 0,
+  background: 'rgba(0, 0, 0, 0.5)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  zIndex: 9998
+});
+
+export const dialogContent = style({
+  backgroundColor: '#fff',
+  padding: '1rem',
+  borderRadius: '8px',
+  minWidth: '300px',
+  maxWidth: '80%',
+  zIndex: 9999
 });
 
 const global_args = { height: '100%', margin: '0' };

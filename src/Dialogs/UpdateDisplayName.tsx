@@ -1,14 +1,11 @@
 import { Accessor, Setter, createSignal, createEffect } from 'solid-js';
 import { postJson } from '../postJson';
-import { SuccessDialog } from './SuccessDialog';
-import { ErrorDialog } from './ErrorDialog';
+import { BasicDialog } from './BasicDialog';
 import { text_input } from '../text_input';
 import * as styles from '../styles.css';
+import { Dialog } from './Dialog';
 
 console.log(text_input); // prevent it from being removed by minification
-
-const savingErrorText = () =>
-  'Error updating display name. Please try again. If that does not work, please report this bug.';
 
 export function UpdateDisplayNameDialog(props: {
   open: Accessor<boolean>;
@@ -66,22 +63,22 @@ export function UpdateDisplayNameDialog(props: {
 
   return (
     <>
-      <dialog open={props.open()} class={styles.dialog}>
+      <Dialog open={props.open} setOpen={props.setOpen}>
         <h3>Update Display Name</h3>
         <input type="text" use:text_input={[tempName, setTempName]} />
         <button onClick={() => props.setOpen(false)}>Cancel</button>
         <button onClick={save}>Save</button>
         <p>{saving() && 'Saving...'}</p>
-      </dialog>
-      <SuccessDialog
+      </Dialog>
+      <BasicDialog
         open={successOpen}
         setOpen={setSuccessOpen}
         text="Display name updated."
       />
-      <ErrorDialog
+      <BasicDialog
         open={errorOpen}
         setOpen={setErrorOpen}
-        text={savingErrorText}
+        text="Error updating name. Please try again. If that does not work, please report this bug."
       />
     </>
   );

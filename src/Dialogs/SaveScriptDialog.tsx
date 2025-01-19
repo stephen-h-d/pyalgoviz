@@ -1,20 +1,19 @@
 import {
   Accessor,
   Setter,
-  createResource,
   createSignal,
   createEffect,
+  createResource,
 } from 'solid-js';
-import { user, setUserAndAuthError } from '../authSignal';
+import { Dialog } from './Dialog'; // your new base dialog
 import { CheckBox } from '../CheckBox';
 import { DuplicateNameDialog } from '../DuplicateNameDialog';
-import { ErrorDialog } from './ErrorDialog';
 import { PyAlgoVizScript } from '../exec_result';
 import { postJson } from '../postJson';
-import { savingErrorText } from '../solid_load_dialog';
-import { SuccessDialog } from './SuccessDialog';
-import { fetchScriptNames, AlgorithmSummaries } from '../fetchScriptNames';
+import { BasicDialog } from './BasicDialog';
 import { text_input } from '../text_input';
+import { user, setUserAndAuthError } from '../authSignal';
+import { fetchScriptNames, AlgorithmSummaries } from '../fetchScriptNames';
 
 console.log(text_input); // prevent it from being removed by minification
 
@@ -123,28 +122,29 @@ export function SaveScriptDialog(props: {
 
   return (
     <>
-      <dialog open={props.open()}>
+      <Dialog open={props.open} setOpen={props.setOpen}>
+        <h2>Save Script</h2>
         <input type="text" use:text_input={[algoName, setAlgoName]} />
         <button onClick={() => props.setOpen(false)}>Cancel</button>
         <button onClick={save}>Save</button>
         <p>{saving() && 'Saving...'}</p>
-        <br />
         <CheckBox
           id="publish"
           label="Make Public (will be visible to all users after it is checked for malicious content)"
           value={requestPublic}
           setValue={setRequestPublic}
         />
-      </dialog>
-      <SuccessDialog
+      </Dialog>
+
+      <BasicDialog
         open={successOpen}
         setOpen={setSuccessOpen}
         text="Script saved."
       />
-      <ErrorDialog
+      <BasicDialog
         open={errorOpen}
         setOpen={setErrorOpen}
-        text={savingErrorText}
+        text="Error saving script. Please try again. If that does not work, please report this bug."
       />
       <DuplicateNameDialog
         open={duplicateOpen}

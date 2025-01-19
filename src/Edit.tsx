@@ -10,9 +10,8 @@ import {
   Ref,
 } from 'solid-js';
 import isEqual from 'lodash/isEqual';
-import { LoadScriptDialog, savingErrorText } from './solid_load_dialog';
-import { SuccessDialog } from './Dialogs/SuccessDialog';
-import { ErrorDialog } from './Dialogs/ErrorDialog';
+import { LoadScriptDialog } from './Dialogs/LoadScriptDialog';
+import { BasicDialog } from './Dialogs/BasicDialog';
 import { WarningDialog } from './WarningDialog';
 import * as styles from './styles.css';
 import { Extension } from '@codemirror/state';
@@ -325,15 +324,15 @@ function TopLeftContents(props: {
         setOpen={setShowLoadDialog}
         finishLoading={setCurrentSavedScriptInfo}
       />
-      <SuccessDialog
+      <BasicDialog
         open={successOpen}
         setOpen={setSuccessOpen}
         text="Script saved."
       />
-      <ErrorDialog
+      <BasicDialog
         open={errorOpen}
         setOpen={setErrorOpen}
-        text={savingErrorText}
+        text="Error saving script. Please try again. If that does not work, please report this bug."
       />
       <UnsavedChangesDialog
         open={unsavedDialogOpen}
@@ -972,7 +971,7 @@ function Footer() {
 
 export function Edit() {
   const [algoName, setAlgoName] = createSignal('');
-  const [errorOpen, setErrorOpen] = createSignal(false);
+  const [errorOpen, setErrorOpen] = createSignal(true);
   const authErrorText = () => {
     const val = authError();
     return val === null ? '' : val;
@@ -985,7 +984,7 @@ export function Edit() {
 
   return (
     <div class={styles.app}>
-      <ErrorDialog
+      <BasicDialog
         text={authErrorText}
         open={errorOpen}
         setOpen={setErrorOpen}
