@@ -44,11 +44,13 @@ USE_GOOGLE_DB = os.environ.get("USE_GOOGLE_DB", "False")
 db: DatabaseProtocol
 
 if USE_GOOGLE_DB.lower() == "true":
+    print("Using Google Firestore database")
     from server.main.db.fsdb import FirestoreDatabase, connect_to_fs
 
     client = connect_to_fs(PROJECT, "pyalgoviz-test")
     db = FirestoreDatabase(client)
 else:
+    print("Using Memory database")
     # we initialize the app here because we still use Firebase for user management even when we're using a
     # MemoryDatabase
     import firebase_admin  # type: ignore[import]

@@ -10,13 +10,8 @@ import {
   Setter,
 } from 'solid-js';
 import * as styles from './LoadScriptDialog.css';
-import { postJson } from '../postJson';
 import { PyAlgoVizScript } from '../exec_result';
-import { CheckBox } from '../CheckBox';
-import { setUserAndAuthError, user } from '../authSignal';
-import { DuplicateNameDialog } from '../DuplicateNameDialog';
-import { BasicDialog } from './BasicDialog';
-import { UpdateDisplayNameDialog } from './UpdateDisplayName';
+import { user } from '../authSignal';
 import {
   AlgorithmSummary,
   fetchScriptNames,

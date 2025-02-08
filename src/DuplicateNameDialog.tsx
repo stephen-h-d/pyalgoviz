@@ -1,5 +1,5 @@
 import { Accessor, Setter } from 'solid-js';
-import { WarningDialog } from './WarningDialog';
+import { WarningDialog } from './Dialogs/WarningDialog';
 
 export function DuplicateNameDialog(props: {
   open: Accessor<boolean>;

@@ -12,7 +12,7 @@ import {
 import isEqual from 'lodash/isEqual';
 import { LoadScriptDialog } from './Dialogs/LoadScriptDialog';
 import { BasicDialog } from './Dialogs/BasicDialog';
-import { WarningDialog } from './WarningDialog';
+import { WarningDialog } from './Dialogs/WarningDialog';
 import * as styles from './styles.css';
 import { Extension } from '@codemirror/state';
 import { Editor } from './editor';
@@ -971,7 +971,7 @@ function Footer() {
 
 export function Edit() {
   const [algoName, setAlgoName] = createSignal('');
-  const [errorOpen, setErrorOpen] = createSignal(true);
+  const [errorOpen, setErrorOpen] = createSignal(false);
   const authErrorText = () => {
     const val = authError();
     return val === null ? '' : val;

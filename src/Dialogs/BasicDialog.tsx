@@ -13,7 +13,7 @@ export function BasicDialog(props: {
     <Show when={props.open()}>
       <div class={styles.dialog}>
         <p>{getTextValue()}</p>
-        <button onClick={() => props.setOpen(false)}>OK</button>
+        <button onClick={() => props.setOpen(false)}>Okay</button>
       </div>
     </Show>
   );
