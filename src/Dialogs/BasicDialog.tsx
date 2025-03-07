@@ -1,5 +1,5 @@
-import { Accessor, Setter, Show } from 'solid-js';
-import * as styles from '../styles.css';
+import { Accessor, Setter } from 'solid-js';
+import { Dialog } from './Dialog';
 
 export function BasicDialog(props: {
   open: Accessor<boolean>;
@@ -10,11 +10,9 @@ export function BasicDialog(props: {
     typeof props.text === 'function' ? props.text() : props.text;
 
   return (
-    <Show when={props.open()}>
-      <div class={styles.dialog}>
-        <p>{getTextValue()}</p>
-        <button onClick={() => props.setOpen(false)}>Okay</button>
-      </div>
-    </Show>
+    <Dialog open={props.open} setOpen={props.setOpen}>
+      <p>{getTextValue()}</p>
+      <button onClick={() => props.setOpen(false)}>Okay</button>
+    </Dialog>
   );
 }
