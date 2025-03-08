@@ -21,9 +21,7 @@
    1. show the first event, but don't show the rest until the user hovers over the first one.
    2. show the name of the script and the author.
 4. Give some link to the "edit" page so the user knows how to get there from the main page
-5. Some of the dialogs aren't showing up correctly; fix that.
-   1. They need a border and to not show up transparently.
-   2. I need to set their z-indexes.
+5. The author's own display name is not showing up on the edit page until the author updates it
 
 ### Ready-to-implement TODOs post-launch
 1. Tell the user when Pyodide is loading, when it is done loading, when the code is running, and when it is done running.

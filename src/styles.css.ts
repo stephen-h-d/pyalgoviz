@@ -199,18 +199,6 @@ export const selectedTab = style({
   backgroundColor: '#d9d9d9',
 });
 
-export const dialog = style({
-  position: 'fixed',
-  // display: 'block',
-  top: '50%',
-  left: '50%',
-  WebkitTransform: 'translate(-50%, -50%)',
-  MozTransform: 'translate(-50%, -50%)',
-  msTransform: 'translate(-50%, -50%)',
-  transform: 'translate(-50%, -50%)',
-  zIndex: 9999,
-});
-
 export const dialogOverlay = style({
   position: 'fixed',
   inset: 0,

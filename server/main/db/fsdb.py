@@ -149,9 +149,7 @@ class FirestoreDatabase(DatabaseProtocol):
         )
         requested_public_algos = public_algos_ref.stream()
         return [
-            AlgorithmSummary(
-                author_email=algo.get("author_email"), name=algo.get("name")
-            )
+            AlgorithmSummary(author_email=algo.get("author_email"), name=algo.get("name"))
             for algo in requested_public_algos
             if get_with_default(algo, "cached_events", default=[]) == []
         ]

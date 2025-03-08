@@ -144,9 +144,7 @@ def save() -> Response:
         msg = "Could not save script: %s" % e
         logger.error(msg)
         logger.exception(e)
-        response = jsonify(
-            {"result": "Whoops!  Saving failed.  Please report this bug."}
-        )
+        response = jsonify({"result": "Whoops!  Saving failed.  Please report this bug."})
         return make_response(response, HTTPStatus.INTERNAL_SERVER_ERROR)
     response = jsonify({"result": msg})
     return make_response(response, HTTPStatus.OK)

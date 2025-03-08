@@ -109,14 +109,12 @@ const ScriptDemo = (props: { scriptInfo: ScriptDemoInfo }) => {
 
   return (
     <div class={styles.scriptDemoContainer}>
-      {/* Display Script Name and Author */}
       <div class={styles.scriptInfo}>
         <div class={styles.scriptName}>{props.scriptInfo.name}</div>
         <div class={styles.scriptAuthor}>{props.scriptInfo.author_display_name}</div>
       </div>
 
-      {/* The VizRenderer Div */}
-      <div id="blah" class={styles.rectangle} use:vizrenderer={rendererArgs} />
+      <div class={styles.rectangle} use:vizrenderer={rendererArgs} />
     </div>
   );
 };
