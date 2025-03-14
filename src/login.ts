@@ -32,12 +32,12 @@ export async function signInWithGoogle(_event: MouseEvent) {
           return response.json();
         })
         .then(data => {
-          console.log('Verified login');
           const newUser = {
             firebase_user_id: user.uid,
             email: user.email || '',
             display_name: data.display_name,
           };
+          console.log('Verified login',newUser);
           setUserAndAuthError(newUser, null);
         })
         .catch(error => {

@@ -25,36 +25,4 @@ auth.onIdTokenChanged(async user => {
   }
 });
 
-// This handles the initial login state.
-// When we verify login, we also set it there, because this code could run
-// after the verify_login API call.
-auth.onAuthStateChanged(
-  function (user) {
-    if (user) {
-      // User is signed in
-      user
-        .getIdToken()
-        .then(function (token) {
-          // Add the token to the browser's cookies. The server will then be
-          // able to verify the token against the API.
-          // SECURITY NOTE: As cookies can easily be modified, only put the
-          // token (which is verified server-side) in a cookie; do not add other
-          // user information.
-          document.cookie =
-            'token=' + token + '; path=/; SameSite=None; Secure';
-          console.log('Successfully got login token');
-        })
-        .catch(error => console.log('Error getting token:', error));
-    } else {
-      // User is signed out.
-      // Clear the token cookie.
-      document.cookie =
-        'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=None; Secure';
-    }
-  },
-  function (error) {
-    console.error('Unable to log in:', error);
-  },
-);
-
 export default auth;
